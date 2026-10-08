@@ -1,0 +1,20 @@
+{
+  "id": "./",
+  "name": "Focus - 할 일 관리",
+  "short_name": "Focus",
+  "description": "나만의 할 일 관리 앱. 작업, 우선순위, 필터와 자동 저장.",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f8fc",
+  "theme_color": "#625cf4",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
