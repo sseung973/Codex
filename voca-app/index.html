@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0c101b" />
+  <meta name="description" content="마이크로 음정을 실시간 확인하고 음계, 음정 도약, 롱톤을 연습하는 보컬 트레이닝 앱" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <title>VOCA — 나만의 보컬 연습실</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b0e17;--surface:#141927;--surface2:#1a2030;--border:rgba(222,228,255,.09);--line:rgba(222,228,255,.14);--text:#f2f5ff;--muted:#909bb6;--green:#94ffd7;--purple:#a392ff;--pink:#ff9bb7;--warning:#f9cf81;--radius:22px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse 650px 420px at 4% -13%,rgba(103,90,198,.19),transparent 70%),radial-gradient(ellipse 770px 400px at 92% -20%,rgba(52,178,142,.10),transparent 75%),var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased;line-height:1.48}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.42;cursor:not-allowed}button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--green);outline-offset:3px}a{color:inherit}
+    .shell{max-width:1200px;margin:auto;padding:0 32px 64px}.top{display:flex;align-items:center;justify-content:space-between;min-height:86px;gap:16px;border-bottom:1px solid rgba(255,255,255,.055)}.brand{display:flex;align-items:center;gap:11px}.logo{display:grid;place-items:center;width:38px;height:38px;border-radius:13px;background:linear-gradient(150deg,#9fffda,#8a86ff);box-shadow:0 8px 26px rgba(138,134,255,.19)}.logo svg{width:22px;height:22px}.brand-name{font-weight:900;font-size:21px;letter-spacing:.9px}.brand-small{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:1.7px;margin-top:-5px}.top-right{display:flex;align-items:center;gap:12px}.status{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:#afbad0;border:1px solid var(--border);padding:9px 12px;border-radius:30px;background:rgba(255,255,255,.025);white-space:nowrap}.dot{width:7px;height:7px;border-radius:50%;background:#8993a5}.status.live .dot{background:var(--green);box-shadow:0 0 0 4px rgba(148,255,215,.12)}.head-note{font-size:12px;color:var(--muted)}
+    .hero{padding:45px 0 30px;display:flex;align-items:end;justify-content:space-between;gap:18px}.eyebrow{font-size:11px;color:var(--green);letter-spacing:2.6px;font-weight:850;margin:0 0 11px}.hero h1{font-size:clamp(28px,3.65vw,43px);letter-spacing:-1.6px;line-height:1.25;margin:0 0 10px;font-weight:850}.hero h1 span{background:linear-gradient(105deg,#a7ffde,#a3a4ff);-webkit-background-clip:text;background-clip:text;color:transparent}.lead{margin:0;color:var(--muted);font-size:14px}.hero-meta{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end}.tiny-chip{padding:8px 11px;border-radius:40px;font-size:11px;font-weight:750;color:#bbc4d8;background:#181d2a;border:1px solid var(--border);white-space:nowrap}
+    .main-grid{display:grid;grid-template-columns:minmax(0,1.17fr) minmax(330px,.83fr);gap:18px}.card{background:linear-gradient(135deg,rgba(255,255,255,.025),transparent 45%),var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 15px 34px rgba(0,0,0,.085);overflow:hidden}.cardpad{padding:25px}.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}.card-title{font-size:16px;font-weight:830;letter-spacing:-.45px}.subhead{color:var(--muted);font-size:12px;margin-top:3px}.section-tag{font-size:10px;font-weight:850;color:var(--green);background:rgba(148,255,215,.07);border:1px solid rgba(148,255,215,.18);border-radius:30px;padding:6px 9px;white-space:nowrap}
+    .tuner{text-align:center;padding-top:9px}.mic-visual{height:56px;display:flex;align-items:center;justify-content:center;gap:5px}.mic-visual span{width:5px;border-radius:5px;background:linear-gradient(to top,var(--purple),var(--green));height:var(--h);opacity:.28;transition:height .08s,opacity .08s}.mic-visual.active span{opacity:.82;animation:wave .65s ease-in-out infinite alternate;animation-delay:var(--delay)}@keyframes wave{from{transform:scaleY(.56)}to{transform:scaleY(1.25)}}.pitch-big{font-size:clamp(78px,9vw,124px);line-height:1.11;letter-spacing:-6px;font-weight:900;font-variant-numeric:tabular-nums;margin:12px 0 0}.pitch-big.empty{font-size:62px;letter-spacing:0;color:#65728b;font-weight:550}.pitch-big .oct{font-size:.42em;vertical-align:20%;letter-spacing:-1px;color:#8cf4d1;margin-left:3px}.pitch-detail{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:4px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}.pitch-detail b{color:#ced8e8;font-weight:730}.pitch-detail .sep{width:3px;height:3px;background:var(--muted);border-radius:50%}.feedback{display:inline-flex;align-items:center;gap:6px;margin:21px auto 20px;padding:8px 13px;border:1px solid var(--border);background:#1a2030;border-radius:30px;font-size:12px;font-weight:740;color:#b6c1d6}.feedback.good{color:var(--green);border-color:rgba(148,255,215,.26);background:rgba(148,255,215,.08)}.feedback.warn{color:var(--warning);border-color:rgba(249,207,129,.19)}
+    .tune-gauge{padding:0 8px;margin-top:4px}.gauge-markers{display:flex;justify-content:space-between;color:#7f8ba5;font-size:11px;font-variant-numeric:tabular-nums;margin-bottom:11px}.gauge-track{height:13px;background:linear-gradient(90deg,#394052,#414057 28%,#397f7c 50%,#414057 72%,#394052);border-radius:50px;position:relative}.gauge-track:before{content:"";position:absolute;left:50%;transform:translateX(-50%);height:25px;top:-6px;width:2px;background:#aefce1;border-radius:2px}.needle{position:absolute;top:-9px;left:50%;width:13px;height:31px;background:#fff;box-shadow:0 0 18px rgba(155,255,220,.55);border-radius:10px;border:3px solid var(--surface);transform:translateX(-50%);transition:left .085s ease}.gauge-labels{display:flex;justify-content:space-between;margin-top:10px;color:#697690;font-size:11px}
+    .target-row{background:rgba(255,255,255,.026);border:1px solid var(--border);border-radius:17px;padding:15px 16px;margin-top:29px;display:flex;justify-content:space-between;align-items:center;gap:10px}.target-label{font-size:11px;color:var(--muted);font-weight:700}.target-value{font-weight:850;font-size:20px;margin-top:2px;letter-spacing:-.6px}.target-value small{color:#a6b3c8;font-size:12px;font-weight:600;margin-left:4px}.target-controls{display:flex;align-items:center;gap:7px}.icon-btn{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line);background:#22293a;color:#f0f4ff;border-radius:12px;font-size:18px;font-weight:700}.icon-btn:hover{background:#303950}.icon-btn:active{transform:scale(.97)}
+    .mic-btn{display:flex;justify-content:center;align-items:center;gap:10px;width:100%;min-height:54px;margin-top:15px;border-radius:15px;border:0;background:linear-gradient(110deg,#99f9d2,#9dc7fa);color:#0a1b25;font-size:14px;font-weight:900;box-shadow:0 9px 23px rgba(113,255,204,.12)}.mic-btn:hover{filter:brightness(1.05)}.mic-btn.on{background:#2b3346;color:var(--text);border:1px solid #44526a;box-shadow:none}.mic-btn svg{width:19px;height:19px}.mic-help{font-size:11px;color:#78859f;text-align:center;margin-top:12px;min-height:30px}
+    .modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.mode{background:#1b2131;border:1px solid var(--border);border-radius:14px;padding:15px 9px 13px;text-align:left;color:#d4dced;min-width:0;transition:background .15s,border-color .15s}.mode:hover{background:#242a3d}.mode.selected{border-color:rgba(163,146,255,.7);background:linear-gradient(140deg,rgba(162,146,255,.17),rgba(83,96,148,.09))}.mode .emo{font-size:20px;display:block;margin-bottom:10px}.mode strong{display:block;font-size:12px;white-space:nowrap;letter-spacing:-.4px}.mode small{display:block;color:#8792aa;font-size:10px;margin-top:3px;white-space:nowrap}.mode.selected strong{color:#c8bdff}.training-box{border:1px solid var(--border);background:#101521;border-radius:16px;padding:19px;margin-top:15px}.train-top{display:flex;justify-content:space-between;align-items:center;gap:8px}.train-top .caption{font-size:11px;color:#8995ad;font-weight:730}.train-top strong{font-size:12px;color:#bdb1ff}.train-note{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 17px}.train-note strong{font-size:25px;letter-spacing:-.7px}.train-note span{font-size:12px;color:var(--muted)}.steps{display:flex;gap:5px;min-height:8px}.steps i{flex:1;height:6px;border-radius:10px;background:#2c3446;transition:background .15s}.steps i.past{background:#93ffd5}.steps i.current{background:#a898ff}.progress-bg{height:4px;background:#303649;margin-top:15px;border-radius:10px;overflow:hidden}.progress-fill{width:0;height:100%;border-radius:10px;background:var(--green);transition:width .11s}.tipline{font-size:11px;color:#8793ad;margin:10px 0 0;min-height:16px}
+    .train-actions{display:flex;gap:9px;margin-top:14px}.btn{min-height:43px;border-radius:12px;padding:0 15px;font-weight:830;font-size:12px;display:inline-flex;align-items:center;justify-content:center;gap:8px}.btn-primary{flex:1;border:1px solid rgba(169,151,255,.35);background:linear-gradient(125deg,#9886f7,#7d84dc);color:#fff}.btn-outline{border:1px solid var(--line);background:#252b3a;color:#d9e1f2}.btn:hover:not(:disabled){filter:brightness(1.1)}.btn svg{width:16px;height:16px}
+    .divider{height:1px;background:var(--border);margin:19px 0}.tool-row{display:flex;align-items:center;justify-content:space-between;gap:8px}.tool-heading{font-size:13px;font-weight:750}.tool-sub{font-size:11px;color:var(--muted);margin-top:2px}.met-controls{display:flex;align-items:center;gap:9px}.bpm-input{display:flex;align-items:center;gap:4px;background:#22293a;border-radius:11px;padding:7px 9px;border:1px solid var(--border)}.bpm-input input{border:0;background:none;color:#f5f7ff;font-weight:800;font-size:14px;width:37px;outline:none;text-align:right}.bpm-input small{font-size:10px;color:#8e9bb3}.pill-toggle{position:relative;width:43px;height:26px;border:none;border-radius:30px;background:#323b51;padding:3px;transition:background .2s}.pill-toggle:before{content:"";display:block;width:20px;height:20px;border-radius:50%;background:#d5dbec;transition:transform .2s}.pill-toggle.active{background:#729dd6}.pill-toggle.active:before{transform:translateX(17px);background:white}.rec-btn{border:1px solid var(--line);color:#e8edfa;background:#202738;border-radius:11px;padding:10px 14px;display:inline-flex;align-items:center;gap:7px;font-weight:750;font-size:12px}.rec-dot{height:8px;width:8px;background:var(--pink);border-radius:50%}.rec-btn.recording{border-color:rgba(255,155,183,.52);background:rgba(255,155,183,.1)}.rec-btn.recording .rec-dot{animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.25}}.recorded{padding:13px;border-radius:12px;margin-top:13px;background:#101521;border:1px solid var(--border)}.recorded audio{width:100%;height:33px;margin-top:9px}.recorded .dl{font-size:11px;color:var(--green);text-decoration:none;font-weight:750}.recorded .dl:hover{text-decoration:underline}
+    .below-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,.7fr);gap:18px;margin-top:18px}.chart-card{padding:22px 24px}.chart-title{display:flex;justify-content:space-between;gap:12px;align-items:center}.chart-title h2{font-size:15px;margin:0;letter-spacing:-.3px}.chart-legend{display:flex;gap:13px;color:var(--muted);font-size:10px}.legend{display:inline-flex;align-items:center;gap:6px}.legend i{width:9px;height:9px;border-radius:50%;background:var(--green)}.legend.target i{background:var(--purple)}.chart-wrap{position:relative;height:224px;margin-top:15px}.chart-wrap canvas{width:100%;height:100%;display:block}.chart-empty{pointer-events:none;position:absolute;left:0;right:0;top:49%;transform:translateY(-50%);text-align:center;font-size:12px;color:#6c7992}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{padding:14px;background:#101522;border:1px solid var(--border);border-radius:13px;min-width:0}.metric label{display:block;color:#8e9bb3;font-size:11px;margin-bottom:6px}.metric strong{display:block;font-size:22px;letter-spacing:-.7px;font-variant-numeric:tabular-nums;white-space:nowrap}.metric small{font-size:10px;color:#7e8ba5;font-weight:600}.history-card{padding:23px 25px;margin-top:18px}.history-top{display:flex;align-items:center;justify-content:space-between;gap:12px}.history-top h2{font-size:15px;margin:0}.text-btn{border:0;background:transparent;color:#a6a0ee;font-size:11px;font-weight:700;padding:6px}.history-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}.history-table th{font-weight:720;color:#8591a9;text-align:left;border-bottom:1px solid var(--border);padding:11px 5px}.history-table td{color:#c8d1e1;border-bottom:1px solid rgba(255,255,255,.045);padding:12px 5px}.history-table td:last-child,.history-table th:last-child{text-align:right}.history-table tr:last-child td{border-bottom:none}.history-empty{color:#8793ad;text-align:center;font-size:12px;padding:25px 5px}.foot{display:flex;justify-content:space-between;gap:20px;font-size:11px;color:#6f7d98;padding:24px 0 0}.toast{position:fixed;bottom:30px;left:50%;transform:translate(-50%,20px);background:#e4fff4;color:#15372a;font-size:13px;font-weight:780;padding:13px 19px;border-radius:13px;box-shadow:0 14px 40px rgba(0,0,0,.32);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:9;text-align:center;min-width:215px}.toast.show{opacity:1;transform:translate(-50%,0)}.hidden{display:none!important}
+    @media(max-width:970px){.main-grid{grid-template-columns:minmax(0,1fr) minmax(320px,.95fr)}.shell{padding:0 23px 50px}.cardpad{padding:20px}.pitch-big{font-size:85px}.mode{padding:12px 7px}.mode small{font-size:9px}}
+    @media(max-width:740px){.shell{padding:0 15px 42px}.top{min-height:72px}.head-note{display:none}.hero{padding:32px 3px 23px;display:block}.hero h1{font-size:32px;letter-spacing:-1.5px}.lead{font-size:12px}.hero-meta{justify-content:flex-start;margin-top:18px}.main-grid,.below-grid{grid-template-columns:1fr;gap:13px}.card{border-radius:19px}.cardpad{padding:21px}.pitch-big{font-size:100px}.tuner{padding-top:4px}.mic-visual{height:52px}.chart-card{padding:19px}.below-grid{margin-top:13px}.chart-wrap{height:200px}.history-card{margin-top:13px;padding:21px}.foot{flex-direction:column;gap:7px}.status{font-size:11px;padding:8px 10px}.top-right{gap:5px}}
+    @media(max-width:380px){.hero h1{font-size:27px}.tiny-chip{font-size:10px}.mode strong{font-size:11px}.mode small{font-size:9px}.pitch-big{font-size:82px}.tool-heading{font-size:12px}.rec-btn{padding:8px 10px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="brand"><div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 12h2m2-5v10m3-14v18m3-12v6m3-10v14m3-11v8m2-4h1" stroke="#0d1730" stroke-width="2.2" stroke-linecap="round"/></svg></div><div><div class="brand-name">VOCA<span style="color:var(--green)">.</span></div><div class="brand-small">YOUR VOCAL STUDIO</div></div></div>
+      <div class="top-right"><div class="head-note">노래할수록 선명해지는 내 음정</div><div class="status" id="micStatus"><span class="dot"></span><span id="statusText">마이크 대기 중</span></div></div>
+    </header>
+    <section class="hero"><div><p class="eyebrow">YOUR DAILY VOCAL GYM</p><h1>오늘의 목소리, <span>한 음 더 정확하게.</span></h1><p class="lead">부르면 보여. 맞추면 올라가. 나만의 미니 보컬 트레이너 🎙️</p></div><div class="hero-meta"><span class="tiny-chip">🎯 실시간 피치</span><span class="tiny-chip">🎼 3가지 훈련</span><span class="tiny-chip">🔒 로컬 분석</span></div></section>
+    <main>
+      <div class="main-grid">
+        <section class="card cardpad" aria-label="실시간 음정 분석">
+          <div class="card-head"><div><div class="card-title">라이브 피치 모니터</div><div class="subhead">목소리의 음높이를 실시간으로 확인해봐</div></div><span class="section-tag" id="liveBadge">● READY</span></div>
+          <div class="tuner">
+            <div class="mic-visual" id="waveVisual" aria-hidden="true"><span style="--h:15px;--delay:-.1s"></span><span style="--h:31px;--delay:-.3s"></span><span style="--h:45px;--delay:-.5s"></span><span style="--h:29px;--delay:-.2s"></span><span style="--h:55px;--delay:-.7s"></span><span style="--h:35px;--delay:-.25s"></span><span style="--h:22px;--delay:-.47s"></span><span style="--h:43px;--delay:-.32s"></span><span style="--h:17px;--delay:-.59s"></span></div>
+            <div class="pitch-big empty" id="pitchDisplay" aria-live="off">—</div>
+            <div class="pitch-detail"><b id="pitchKorean">목소리를 들려줘</b><span class="sep"></span><span id="frequency">— Hz</span></div>
+            <div class="feedback" id="feedback">🎧 마이크를 켜면 음정이 표시돼</div>
+            <div class="tune-gauge"><div class="gauge-markers"><span>−50 cent</span><span>0</span><span>+50 cent</span></div><div class="gauge-track"><div class="needle" id="needle"></div></div><div class="gauge-labels"><span>낮아요 ↓</span><span>정확한 음정</span><span>↑ 높아요</span></div></div>
+          </div>
+          <div class="target-row"><div><div class="target-label">연습할 목표 음</div><div class="target-value" id="targetValue">C4 <small>도 · 261.6 Hz</small></div></div><div class="target-controls"><button type="button" class="icon-btn" id="targetDown" aria-label="목표 음 반음 낮추기">−</button><button type="button" class="icon-btn" id="targetUp" aria-label="목표 음 반음 높이기">+</button><button type="button" class="icon-btn" id="playTarget" aria-label="목표 음 듣기" title="목표 음 듣기">♫</button></div></div>
+          <button type="button" class="mic-btn" id="micButton"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/></svg><span id="micButtonText">마이크 켜고 연습하기</span></button>
+          <div class="mic-help" id="micHelp">🎙️ 처음 켤 때 마이크 권한을 허용해줘 · 이어폰 권장</div>
+        </section>
+        <section class="card cardpad" aria-label="음정 훈련"><div class="card-head"><div><div class="card-title">보컬 트레이닝</div><div class="subhead">하루 5분, 원하는 훈련부터 시작해봐</div></div><span class="section-tag">3 MODES</span></div>
+          <div class="modes" role="group" aria-label="훈련 모드 선택"><button class="mode selected" type="button" data-mode="scale" aria-pressed="true"><span class="emo">🎹</span><strong>음계 연습</strong><small>도레미 오르내리기</small></button><button class="mode" type="button" data-mode="leap" aria-pressed="false"><span class="emo">🚀</span><strong>음정 도약</strong><small>높낮이 바꿔 부르기</small></button><button class="mode" type="button" data-mode="sustain" aria-pressed="false"><span class="emo">🌿</span><strong>롱톤 훈련</strong><small>한 음을 안정적으로</small></button></div>
+          <div class="training-box"><div class="train-top"><span class="caption" id="trainMode">🎹 음계 연습</span><strong id="stepCount">1 / 9</strong></div><div class="train-note"><div><strong id="stepName">도 (C4)</strong><div><span id="stepDescription">정확히 맞추고 0.65초 유지해봐</span></div></div><span id="trainStatus">준비 완료</span></div><div class="steps" id="stepDots" aria-label="연습 진행 단계"></div><div class="progress-bg"><div class="progress-fill" id="holdBar"></div></div><p class="tipline" id="trainTip">시작을 누르면 목표 음을 들려줄게.</p></div>
+          <div class="train-actions"><button class="btn btn-primary" type="button" id="trainStart"><span id="trainStartText">▶ 훈련 시작</span></button><button class="btn btn-outline" type="button" id="replayBtn">♫ 음 듣기</button></div>
+          <div class="divider"></div>
+          <div class="tool-row"><div><div class="tool-heading">메트로놈</div><div class="tool-sub">일정한 박자로 호흡과 리듬 연습</div></div><div class="met-controls"><label class="bpm-input"><input id="bpm" type="number" inputmode="numeric" min="40" max="200" value="80" aria-label="메트로놈 BPM"/><small>BPM</small></label><button class="pill-toggle" id="metroToggle" aria-label="메트로놈 켜기" aria-pressed="false"></button></div></div>
+          <div class="divider"></div>
+          <div class="tool-row"><div><div class="tool-heading">내 목소리 녹음</div><div class="tool-sub">녹음은 서버에 전송되지 않아</div></div><button type="button" class="rec-btn" id="recordBtn"><span class="rec-dot"></span><span id="recordBtnText">녹음 시작</span></button></div>
+          <div class="recorded hidden" id="recorded"><a class="dl" id="downloadRecording" download="VOCA-recording.webm">↓ 방금 녹음 저장하기</a><audio id="recordPlayer" controls preload="metadata"></audio></div>
+        </section>
+      </div>
+      <div class="below-grid"><section class="card chart-card"><div class="chart-title"><div><h2>음정 흐름</h2><div class="subhead">최근 20초 · 가로로 흐르는 목소리 그래프</div></div><div class="chart-legend"><span class="legend"><i></i> 내 목소리</span><span class="legend target"><i></i> 목표 음</span></div></div><div class="chart-wrap"><canvas id="pitchChart" aria-label="지난 20초간 감지된 음정 그래프" role="img"></canvas><span class="chart-empty" id="chartEmpty">마이크를 켜면 여기에 음정의 궤적이 나타나</span></div></section>
+        <section class="card cardpad"><div class="card-head" style="margin-bottom:16px"><div><div class="card-title">오늘의 연습</div><div class="subhead">조금씩, 꾸준하게 🎵</div></div></div><div class="metrics"><div class="metric"><label>연습 시간</label><strong id="metricTime">00:00</strong></div><div class="metric"><label>목표 음 정확도</label><strong id="metricAcc">—<small> %</small></strong></div><div class="metric"><label>완료한 훈련</label><strong id="metricDone">0<small> 회</small></strong></div><div class="metric"><label>감지한 음역</label><strong id="metricRange" style="font-size:17px">—</strong></div></div></section></div>
+      <section class="card history-card"><div class="history-top"><div><h2>훈련 기록</h2><div class="subhead">훈련을 끝까지 완료하면 이 브라우저에 기록돼</div></div><button type="button" class="text-btn" id="clearHistory">기록 지우기</button></div><div id="historyArea" aria-live="polite"></div></section>
+    </main><footer class="foot"><span>VOCA STUDIO · 노래는 경쟁이 아니라 표현이니까, 편안한 음역에서 연습해봐.</span><span>오디오는 기기 안에서 처리돼 · 정확도는 참고용이야</span></footer>
+  </div><div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    (() => {
+      'use strict';
+      const $ = id => document.getElementById(id);
+      const NOTE_NAMES = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+      const KOREAN = ['도','도♯','레','레♯','미','파','파♯','솔','솔♯','라','라♯','시'];
+      const MODES = {
+        scale: {label:'🎹 음계 연습', name:'음계 연습', offsets:[0,2,4,5,7,5,4,2,0], hold:650, hint:'차례로 음을 따라 부르면 돼'},
+        leap: {label:'🚀 음정 도약', name:'음정 도약', offsets:[0,7,0,12,7,0], hold:780, hint:'높은 음으로 넘어갈 때 목에 힘을 주지 마'},
+        sustain: {label:'🌿 롱톤 훈련', name:'롱톤 훈련', offsets:[0], hold:3500, hint:'편안한 호흡으로 같은 음을 부드럽게 이어봐'}
+      };
+      const midiHz = n => 440 * 2 ** ((n - 69) / 12);
+      const midiName = n => NOTE_NAMES[((Math.round(n) % 12) + 12) % 12] + (Math.floor(Math.round(n) / 12) - 1);
+      const koreanName = n => KOREAN[((Math.round(n) % 12) + 12) % 12];
+      const fullName = n => `${koreanName(n)} (${midiName(n)})`;
+      const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
+      const fmtTime = s => `${String(Math.floor(s / 60)).padStart(2,'0')}:${String(Math.floor(s % 60)).padStart(2,'0')}`;
+      const today = () => new Date().toLocaleDateString('ko-KR',{month:'short',day:'numeric'});
+      const STORAGE = 'voca-studio-history-v1';
+      let audioCtx, analyser, mediaStream, sourceNode, dataBuffer, micOn=false, micBusy=false;
+      let mode = 'scale', baseMidi=60, targetMidi=60, stepIndex=0, steps=[], training=false, holdMs=0;
+      let ignoreUntil=0, lastDetectTime=0, spokenFrames=0, correctFrames=0, sessionStart=0;
+      let sessionRangeMin=Infinity,sessionRangeMax=-Infinity, activeSeconds=0, activeStart=0;
+      let completed=0, recorder=null, chunks=[], recordingUrl=null, metroOn=false, metroTimer=null, nextBeat=0, beat=0;
+      let plotHistory=[], pendingToastTimer=null, smoothMidi=null, previousPitchTime=0;
+      let history=[];
+      try {history=JSON.parse(localStorage.getItem(STORAGE) || '[]'); if(!Array.isArray(history))history=[];}catch{history=[];}
+      const showToast = msg => { $('toast').textContent=msg;$('toast').classList.add('show');clearTimeout(pendingToastTimer);pendingToastTimer=setTimeout(()=>$('toast').classList.remove('show'),3000); };
+      const saveHistory = () => { try{localStorage.setItem(STORAGE,JSON.stringify(history.slice(0,25)));}catch{} };
+      const refreshHistory = () => {
+        $('historyArea').replaceChildren();
+        if(history.length===0){const p=document.createElement('div');p.className='history-empty';p.textContent='아직 기록이 없어. 첫 훈련을 완료하고 첫 줄을 만들어봐 ✨';$('historyArea').append(p);return;}
+        const table=document.createElement('table');table.className='history-table';const head=document.createElement('thead');head.innerHTML='<tr><th>날짜</th><th>훈련</th><th>정확도</th><th>소요 시간</th></tr>';table.append(head);
+        const body=document.createElement('tbody');history.slice(0,12).forEach(item=>{const tr=document.createElement('tr');[item.date,item.mode,(item.accuracy===null?'—':`${item.accuracy}%`),fmtTime(item.seconds)].forEach(v=>{const td=document.createElement('td');td.textContent=v;tr.append(td)});body.append(tr)});table.append(body);$('historyArea').append(table);
+      };
+      function refreshTarget(){
+        const hz=midiHz(targetMidi);$('targetValue').innerHTML=`${midiName(targetMidi)} <small>${koreanName(targetMidi)} · ${hz.toFixed(1)} Hz</small>`;
+        $('stepName').textContent=fullName(targetMidi);
+      }
+      function buildSteps(){steps=MODES[mode].offsets.map(x=>baseMidi+x);stepIndex=0;holdMs=0;targetMidi=steps[0];
+        $('trainMode').textContent=MODES[mode].label;$('stepDescription').textContent=mode==='sustain'?'같은 음을 3.5초 동안 유지해봐':`정확히 맞추고 ${(MODES[mode].hold/1000).toFixed(2)}초 유지해봐`;
+        $('trainTip').textContent=training?MODES[mode].hint:'시작을 누르면 목표 음을 들려줄게.';refreshStep();}
+      function refreshStep(){
+        targetMidi=steps[stepIndex];refreshTarget();$('stepCount').textContent=`${stepIndex+1} / ${steps.length}`;
+        const dots=$('stepDots');dots.replaceChildren();steps.forEach((_,i)=>{const el=document.createElement('i');if(i<stepIndex)el.className='past';if(i===stepIndex)el.className='current';dots.append(el)});$('holdBar').style.width=`${clamp(holdMs/MODES[mode].hold*100,0,100)}%`;
+      }
+      function ensureAudio(){
+        if(!audioCtx){const AudioContextClass=window.AudioContext||window.webkitAudioContext;if(!AudioContextClass)throw new Error('이 브라우저에서는 Web Audio가 지원되지 않아.');audioCtx=new AudioContextClass();}
+        if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});
+      }
+      function playTone(note=targetMidi,length=.7){
+        try{ensureAudio();const t=audioCtx.currentTime+.025, osc=audioCtx.createOscillator(), overtone=audioCtx.createOscillator(), g=audioCtx.createGain(), g2=audioCtx.createGain();
+          osc.type='sine';osc.frequency.value=midiHz(note);overtone.type='sine';overtone.frequency.value=midiHz(note)*2;
+          g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.115,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+length);
+          g2.gain.setValueAtTime(.0001,t);g2.gain.exponentialRampToValueAtTime(.013,t+.03);g2.gain.exponentialRampToValueAtTime(.0001,t+length);
+          osc.connect(g);overtone.connect(g2);g.connect(audioCtx.destination);g2.connect(audioCtx.destination);osc.start(t);overtone.start(t);osc.stop(t+length+.03);overtone.stop(t+length+.03);
+          ignoreUntil=performance.now()+length*1000+180;
+        }catch(e){showToast(e.message)}
+      }
+      async function startMic(){
+        if(micOn || micBusy)return micOn;micBusy=true;$('micButtonText').textContent='마이크 연결 중...';
+        try{
+          if(!navigator.mediaDevices?.getUserMedia)throw new Error('마이크를 사용하려면 HTTPS 주소로 열어줘.');
+          ensureAudio();
+          try{mediaStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}})}catch(e){if(e.name==='OverconstrainedError'||e.name==='NotReadableError'){mediaStream=await navigator.mediaDevices.getUserMedia({audio:true})}else throw e}
+          if(audioCtx.state==='suspended')await audioCtx.resume();
+          sourceNode=audioCtx.createMediaStreamSource(mediaStream);analyser=audioCtx.createAnalyser();analyser.fftSize=4096;sourceNode.connect(analyser);dataBuffer=new Float32Array(analyser.fftSize);
+          micOn=true;activeStart=performance.now();$('micButton').classList.add('on');$('micButtonText').textContent='마이크 끄기';$('micStatus').classList.add('live');$('statusText').textContent='마이크 연결됨';$('liveBadge').textContent='● LIVE';$('waveVisual').classList.add('active');$('micHelp').textContent='목표 음을 따라 불러봐 · 음정이 실시간으로 표시돼';
+          lastDetectTime=0;requestAnimationFrame(loop);showToast('마이크 연결 성공! 이제 불러봐 🎤');return true;
+        }catch(e){let message='마이크를 켤 수 없어.';if(e.name==='NotAllowedError'||e.name==='PermissionDeniedError')message='브라우저에서 마이크 접근을 허용해줘.';else if(e.name==='NotFoundError')message='연결된 마이크를 찾지 못했어.';else if(e.message)message=e.message;
+          $('micHelp').textContent=message;showToast(message);$('micButtonText').textContent='마이크 켜고 연습하기';if(mediaStream){mediaStream.getTracks().forEach(t=>t.stop());mediaStream=null}return false;
+        }finally{micBusy=false}
+      }
+      function stopMic(){if(!micOn)return;micOn=false;if(training)stopTraining(false);if(recorder?.state==='recording')stopRecording();if(mediaStream){mediaStream.getTracks().forEach(t=>t.stop());mediaStream=null}sourceNode?.disconnect();analyser?.disconnect();analyser=null;sourceNode=null;
+        activeSeconds+=(performance.now()-activeStart)/1000;$('micButton').classList.remove('on');$('micButtonText').textContent='마이크 켜고 연습하기';$('micStatus').classList.remove('live');$('statusText').textContent='마이크 대기 중';$('liveBadge').textContent='● READY';$('waveVisual').classList.remove('active');$('micHelp').textContent='🎙️ 처음 켤 때 마이크 권한을 허용해줘 · 이어폰 권장';
+        $('pitchDisplay').classList.add('empty');$('pitchDisplay').textContent='—';$('pitchKorean').textContent='목소리를 들려줘';$('frequency').textContent='— Hz';$('needle').style.left='50%';$('feedback').textContent='🎧 마이크를 켜면 음정이 표시돼';$('feedback').className='feedback';drawChart();
+      }
+      // YIN pitch detector, time-domain difference + cumulative mean normalization.
+      function detectPitch(){
+        if(!analyser)return null;analyser.getFloatTimeDomainData(dataBuffer);
+        const stride=4,n=Math.floor(dataBuffer.length/stride),samples=new Float32Array(n),sampleRate=audioCtx.sampleRate/stride;
+        let sumSquares=0,mean=0;for(let i=0;i<n;i++){samples[i]=dataBuffer[i*stride];mean+=samples[i]}mean/=n;
+        for(let i=0;i<n;i++){samples[i]-=mean;sumSquares+=samples[i]*samples[i]}
+        const rms=Math.sqrt(sumSquares/n);if(rms<.013)return null;
+        const minLag=Math.max(3,Math.floor(sampleRate/950)),maxLag=Math.min(Math.floor(sampleRate/75),Math.floor(n*.47));
+        const diff=new Float32Array(maxLag+1),cmnd=new Float32Array(maxLag+1);let runningSum=0;
+        for(let tau=1;tau<=maxLag;tau++){
+          let d=0;for(let i=0;i<n-maxLag;i++){const delta=samples[i]-samples[i+tau];d+=delta*delta}
+          diff[tau]=d;runningSum+=d;cmnd[tau]=runningSum>0?d*tau/runningSum:1;
+        }
+        let candidate=-1;
+        for(let tau=minLag;tau<maxLag-1;tau++){
+          if(cmnd[tau]<.17){while(tau+1<=maxLag && cmnd[tau+1]<cmnd[tau])tau++;candidate=tau;break;}
+        }
+        if(candidate<0){let best=.31;for(let tau=minLag;tau<=maxLag;tau++)if(cmnd[tau]<best){best=cmnd[tau];candidate=tau}}
+        if(candidate<0)return null;
+        const x0=cmnd[candidate-1],x1=cmnd[candidate],x2=cmnd[candidate+1];const denom=2*(2*x1-x2-x0),offset=(candidate>1 && candidate<maxLag && Math.abs(denom)>1e-6)?(x2-x0)/denom:0;
+        const freq=sampleRate/(candidate+clamp(offset,-1,1));if(!Number.isFinite(freq)||freq<75||freq>950)return null;
+        return {freq,midi:69+12*Math.log2(freq/440),rms,quality:cmnd[candidate]};
+      }
+      function displayPitch(result,now){
+        if(!result){smoothMidi=null;$('pitchDisplay').classList.add('empty');$('pitchDisplay').textContent='—';$('pitchKorean').textContent='음정을 듣고 있어';$('frequency').textContent='— Hz';$('needle').style.left='50%';$('feedback').textContent='🎙️ 소리를 내면 음정을 보여줄게';$('feedback').className='feedback';return}
+        // Smooth small fluctuations without hiding quick note changes.
+        if(smoothMidi===null||Math.abs(result.midi-smoothMidi)>1.75)smoothMidi=result.midi;else smoothMidi=smoothMidi*.55+result.midi*.45;
+        $('pitchDisplay').classList.remove('empty');const nearest=Math.round(smoothMidi),cents=(smoothMidi-nearest)*100;
+        $('pitchDisplay').innerHTML=`${NOTE_NAMES[(nearest%12+12)%12]}<span class="oct">${Math.floor(nearest/12)-1}</span>`;
+        $('pitchKorean').textContent=koreanName(nearest);$('frequency').textContent=`${result.freq.toFixed(1)} Hz`;
+        $('needle').style.left=`${clamp(50+cents,1,99)}%`;
+        const targetCents=(smoothMidi-targetMidi)*100;
+        if(Math.abs(targetCents)<25){$('feedback').textContent='✦ 목표 음 정확해!';$('feedback').className='feedback good'}
+        else if(Math.abs(targetCents)<65){$('feedback').textContent=targetCents>0?'↘ 목표보다 조금 높아':'↗ 목표보다 조금 낮아';$('feedback').className='feedback warn'}
+        else {$('feedback').textContent=targetCents>0?'↓ 목표 음보다 높게 부르는 중':'↑ 목표 음보다 낮게 부르는 중';$('feedback').className='feedback'}
+        sessionRangeMin=Math.min(sessionRangeMin,nearest);sessionRangeMax=Math.max(sessionRangeMax,nearest);
+      }
+      function tickTraining(result,dt,now){
+        if(!training||now<ignoreUntil)return;
+        if(result){spokenFrames++;const difference=Math.abs((result.midi-targetMidi)*100);if(difference<=38){correctFrames++;holdMs+=Math.min(dt,190)}else holdMs=Math.max(0,holdMs-Math.min(dt,190)*1.45)}else holdMs=Math.max(0,holdMs-Math.min(dt,190)*1.7);
+        $('holdBar').style.width=`${clamp(holdMs/MODES[mode].hold*100,0,100)}%`;
+        if(holdMs>=MODES[mode].hold){
+          if(stepIndex===steps.length-1){finishTraining();return}
+          stepIndex++;holdMs=0;refreshStep();playTone(targetMidi,.45);
+        }
+      }
+      function loop(now){if(!micOn)return;requestAnimationFrame(loop);if(now-lastDetectTime<75)return;const dt=lastDetectTime?now-lastDetectTime:80;lastDetectTime=now;
+        const result=(now>ignoreUntil)?detectPitch():null;displayPitch(result,now);tickTraining(result,dt,now);
+        plotHistory.push({time:now,midi:result?.midi??null,target:targetMidi});while(plotHistory.length&&plotHistory[0].time<now-21000)plotHistory.shift();
+        $('chartEmpty').classList.toggle('hidden',plotHistory.some(p=>p.midi!==null));drawChart();refreshMetrics();
+      }
+      function refreshMetrics(){const duration=activeSeconds+(micOn?(performance.now()-activeStart)/1000:0);$('metricTime').textContent=fmtTime(duration);$('metricAcc').innerHTML=spokenFrames?`${Math.round(100*correctFrames/spokenFrames)}<small> %</small>`:'—<small> %</small>';$('metricDone').innerHTML=`${completed}<small> 회</small>`;$('metricRange').textContent=Number.isFinite(sessionRangeMin)?`${midiName(sessionRangeMin)}–${midiName(sessionRangeMax)}`:'—';}
+      async function startTraining(){if(training){stopTraining(false);return}if(!micOn){const ok=await startMic();if(!ok)return}
+        training=true;spokenFrames=0;correctFrames=0;sessionStart=performance.now();$('trainStartText').textContent='■ 훈련 중단';$('trainStatus').textContent='연습 중';$('trainTip').textContent=MODES[mode].hint;buildSteps();playTone(targetMidi,.6);showToast('목표 음을 듣고 따라 불러봐!');
+      }
+      function stopTraining(silent=false){if(!training)return;training=false;holdMs=0;$('trainStartText').textContent='▶ 훈련 시작';$('trainStatus').textContent='준비 완료';$('holdBar').style.width='0%';$('trainTip').textContent='시작을 누르면 목표 음을 들려줄게.';if(!silent)showToast('훈련을 중단했어. 다시 시작해도 괜찮아!');}
+      function finishTraining(){const duration=Math.max(1,(performance.now()-sessionStart)/1000),accuracy=spokenFrames?Math.round(correctFrames/spokenFrames*100):null;
+        const entry={date:today(),mode:MODES[mode].name,accuracy,seconds:duration};history.unshift(entry);history=history.slice(0,25);saveHistory();completed++;stopTraining(true);refreshHistory();refreshMetrics();$('trainStatus').textContent='완료 🎉';$('trainTip').textContent='좋았어! 다음 훈련도 도전해볼래?';showToast('훈련 완료! 오늘의 연습이 기록됐어 🎉');
+      }
+      function setMode(next){if(!MODES[next])return;if(training)stopTraining(true);mode=next;if(mode==='leap')baseMidi=Math.min(baseMidi,69);document.querySelectorAll('.mode').forEach(el=>{const selected=el.dataset.mode===mode;el.classList.toggle('selected',selected);el.setAttribute('aria-pressed',String(selected))});buildSteps();$('trainStatus').textContent='준비 완료';}
+      function shiftTarget(delta){if(training){showToast('훈련 중에는 목표 음이 자동으로 바뀌어.');return}baseMidi=clamp(baseMidi+delta,48,mode==='leap'?69:72);buildSteps();playTone(targetMidi,.55)}
+      function scheduleBeat(){if(!metroOn||!audioCtx)return;while(nextBeat<audioCtx.currentTime+.11){const mainBeat=beat%4===0,osc=audioCtx.createOscillator(),gain=audioCtx.createGain();osc.type='square';osc.frequency.value=mainBeat?1050:740;gain.gain.setValueAtTime(.0001,nextBeat);gain.gain.exponentialRampToValueAtTime(.035,nextBeat+.002);gain.gain.exponentialRampToValueAtTime(.0001,nextBeat+.075);osc.connect(gain);gain.connect(audioCtx.destination);osc.start(nextBeat);osc.stop(nextBeat+.085);beat++;nextBeat+=60/clamp(parseInt($('bpm').value)||80,40,200)}}
+      function switchMetro(){metroOn=!metroOn;$('metroToggle').classList.toggle('active',metroOn);$('metroToggle').setAttribute('aria-pressed',String(metroOn));$('metroToggle').setAttribute('aria-label',metroOn?'메트로놈 끄기':'메트로놈 켜기');
+        if(metroOn){try{ensureAudio();beat=0;nextBeat=audioCtx.currentTime+.03;metroTimer=setInterval(scheduleBeat,25)}catch(e){metroOn=false;showToast(e.message)}}else{clearInterval(metroTimer);metroTimer=null}}
+      async function toggleRecording(){if(recorder?.state==='recording'){stopRecording();return}if(!micOn){const ok=await startMic();if(!ok)return}
+        if(!window.MediaRecorder){showToast('이 브라우저는 녹음 기능을 지원하지 않아.');return}
+        try{const types=['audio/mp4','audio/webm;codecs=opus','audio/webm'];const mime=types.find(t=>MediaRecorder.isTypeSupported(t));recorder=new MediaRecorder(mediaStream,mime?{mimeType:mime}:undefined);chunks=[];
+          recorder.addEventListener('dataavailable',e=>{if(e.data.size)chunks.push(e.data)});recorder.addEventListener('stop',()=>{
+            if(!chunks.length){showToast('녹음 파일이 비어 있어.');return}if(recordingUrl)URL.revokeObjectURL(recordingUrl);
+            const blob=new Blob(chunks,{type:recorder.mimeType||'audio/webm'});recordingUrl=URL.createObjectURL(blob);const ext=blob.type.includes('mp4')?'m4a':'webm';
+            $('recorded').classList.remove('hidden');$('recordPlayer').src=recordingUrl;$('downloadRecording').href=recordingUrl;$('downloadRecording').download=`VOCA-${new Date().toISOString().slice(0,10)}.${ext}`;showToast('녹음 완료! 아래에서 들어보거나 저장해봐.');
+          },{once:true});recorder.start();$('recordBtn').classList.add('recording');$('recordBtnText').textContent='녹음 종료';showToast('🔴 녹음하고 있어');
+        }catch(e){showToast('녹음을 시작할 수 없어: '+e.message)}
+      }
+      function stopRecording(){if(!recorder||recorder.state!=='recording')return;recorder.stop();$('recordBtn').classList.remove('recording');$('recordBtnText').textContent='녹음 시작';}
+      const canvas=$('pitchChart'),ctx=canvas.getContext('2d');
+      function drawChart(){
+        if(!ctx)return;const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return;const dpr=Math.min(window.devicePixelRatio||1,2),w=rect.width,h=rect.height;if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr)}ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+        const left=37,right=10,top=13,bottom=h-24,plotW=w-left-right,plotH=bottom-top;
+        const valid=plotHistory.filter(x=>x.midi!==null).map(x=>x.midi);valid.push(targetMidi);const center=targetMidi;let min=Math.min(...valid),max=Math.max(...valid);min=Math.min(min,center-5);max=Math.max(max,center+5);const pad=2;let lower=Math.floor((min-pad)/2)*2,upper=Math.ceil((max+pad)/2)*2;if(upper-lower<14){lower=Math.floor((center-7)/2)*2;upper=lower+16}
+        const y=m=>top+(upper-m)/(upper-lower)*plotH;
+        ctx.font='10px -apple-system, sans-serif';ctx.textAlign='left';
+        for(let tick=Math.ceil(lower/2)*2;tick<=upper;tick+=2){const yy=y(tick);ctx.strokeStyle='rgba(201,218,245,.075)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(left,yy);ctx.lineTo(w-right,yy);ctx.stroke();if(tick%4===0){ctx.fillStyle='#74829b';ctx.fillText(midiName(tick),1,yy+3)}}
+        const now=performance.now(),start=now-20000,xx=t=>left+(t-start)/20000*plotW;
+        ctx.strokeStyle='rgba(182,195,230,.07)';for(let s=0;s<=20;s+=5){const x=left+s/20*plotW;ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,bottom);ctx.stroke();ctx.fillStyle='#6c7c95';ctx.fillText(`${20-s}s`,Math.min(x+3,w-24),h-6)}
+        const targetY=y(targetMidi);ctx.save();ctx.strokeStyle='rgba(170,153,255,.76)';ctx.lineWidth=1.5;ctx.setLineDash([6,5]);ctx.beginPath();ctx.moveTo(left,targetY);ctx.lineTo(w-right,targetY);ctx.stroke();ctx.restore();
+        let started=false;ctx.beginPath();for(const p of plotHistory){if(p.time<start||p.midi===null){started=false;continue}const px=xx(p.time),py=y(clamp(p.midi,lower,upper));if(!started){ctx.moveTo(px,py);started=true}else ctx.lineTo(px,py)}
+        ctx.strokeStyle='#96ffdb';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.lineCap='round';ctx.shadowBlur=9;ctx.shadowColor='rgba(140,255,205,.37)';ctx.stroke();ctx.shadowBlur=0;
+        const last=[...plotHistory].reverse().find(p=>p.midi!==null&&p.time>now-500);if(last){ctx.fillStyle='#9affdf';ctx.beginPath();ctx.arc(xx(last.time),y(clamp(last.midi,lower,upper)),4.3,0,Math.PI*2);ctx.fill()}
+      }
+      $('micButton').addEventListener('click',()=>micOn?stopMic():startMic());$('targetDown').addEventListener('click',()=>shiftTarget(-1));$('targetUp').addEventListener('click',()=>shiftTarget(1));$('playTarget').addEventListener('click',()=>playTone());$('replayBtn').addEventListener('click',()=>playTone());$('trainStart').addEventListener('click',startTraining);document.querySelectorAll('.mode').forEach(btn=>btn.addEventListener('click',()=>setMode(btn.dataset.mode)));$('metroToggle').addEventListener('click',switchMetro);$('recordBtn').addEventListener('click',toggleRecording);
+      $('bpm').addEventListener('change',()=>{$('bpm').value=String(clamp(parseInt($('bpm').value)||80,40,200));if(metroOn&&audioCtx)nextBeat=audioCtx.currentTime+.07});
+      $('clearHistory').addEventListener('click',()=>{if(!history.length){showToast('지울 기록이 아직 없어.');return}if(confirm('저장된 훈련 기록을 모두 지울까?')){history=[];saveHistory();refreshHistory();showToast('훈련 기록을 지웠어.')}});
+      window.addEventListener('resize',drawChart);document.addEventListener('visibilitychange',()=>{if(document.hidden && metroOn)switchMetro()});window.addEventListener('pagehide',()=>{if(micOn)stopMic();if(metroOn)switchMetro()});
+      buildSteps();refreshHistory();refreshMetrics();drawChart();
+      if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    })();
+  </script>
+</body>
+</html>
