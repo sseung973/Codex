@@ -1,0 +1,11 @@
+{
+  "name": "VOCA - 나만의 보컬 연습실",
+  "short_name": "VOCA",
+  "description": "실시간 피치 분석, 음계/도약/롱톤 훈련, 녹음 기능을 갖춘 보컬 트레이닝 앱",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b0e17",
+  "theme_color": "#0c101b",
+  "lang": "ko",
+  "icons": [{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}
