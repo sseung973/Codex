@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111716" />
+    <meta
+      name="description"
+      content="RELAY ZERO. Hold Sector 07 against five waves of rogue sentinels. A fast browser arena FPS."
+    />
+    <title>RELAY ZERO — Sector 07</title>
+    <link rel="icon" href="./favicon.svg" />
+  </head>
+  <body>
+    <div
+      id="boot"
+      style="
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-content: center;
+        background: #142020;
+        color: #d8f98a;
+        font: 600 16px Arial;
+        letter-spacing: 3px;
+        z-index: 100;
+      "
+    >
+      RELAY ZERO<span style="font-size: 11px; color: #9baf9f; margin-top: 18px"
+        >LOADING SYSTEMS…</span
+      >
+    </div>
+    <canvas id="game" aria-label="RELAY ZERO 3D game arena"></canvas>
+    <div id="ui"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
