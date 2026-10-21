@@ -1632,3 +1632,49 @@ select {
     max-height: 35vh;
   }
 }
+
+/* Damage feedback stays crisp at viewport resolution, independently of WebGL. */
+#damage-flash {
+  pointer-events: none;
+  z-index: 4;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 35%,
+    #b526261c 60%,
+    #c72c2cb8 100%
+  );
+  box-shadow: inset 0 0 90px 18px #b31c1c99;
+  transition: none;
+}
+#damage-arrow {
+  z-index: 6;
+  pointer-events: none;
+  font-size: 36px;
+  line-height: 1;
+  font-weight: 800;
+  color: #ff746b;
+  text-shadow:
+    0 2px 3px #0b101a,
+    0 0 5px #951616;
+  transition: none;
+}
+#damage-label {
+  position: absolute;
+  top: calc(50% + 82px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  pointer-events: none;
+  padding: 5px 12px;
+  border: 1px solid #ff9286b3;
+  border-radius: 3px;
+  background: #3f1212d9;
+  color: #fff0ec;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  opacity: 0;
+}
+#health.recent-damage {
+  color: #ff8176;
+}

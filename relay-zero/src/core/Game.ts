@@ -446,7 +446,10 @@ export class Game {
     });
     this.stats.damage += before - this.player.health;
     const dir = origin.subtract(this.player.feet);
-    this.hud.damage(Math.atan2(dir.x, dir.z) - this.player.yaw);
+    this.hud.damage(
+      Math.atan2(dir.x, dir.z) - this.player.yaw,
+      before - this.player.health,
+    );
     if (dead && !this.resolvingBlast) this.finish(false);
   }
   continueEndless(): void {
@@ -511,7 +514,11 @@ export class Game {
   private applyGraphics(): void {
     const quality = this.graphics.quality;
     this.engine.setHardwareScalingLevel(
-      this.graphics.scaling(window.innerWidth, window.innerHeight),
+      this.graphics.scaling(
+        window.innerWidth,
+        window.innerHeight,
+        window.devicePixelRatio || 1,
+      ),
     );
     this.scene.shadowsEnabled = quality === "high";
     for (const light of this.level.lights.slice(2))
@@ -519,7 +526,8 @@ export class Game {
     // Keep the flash light registered between shots: toggling lights invalidates shaders.
     this.weapon.muzzleLight.setEnabled(quality === "high");
     this.pipeline.imageProcessingEnabled = quality !== "low";
-    this.pipeline.fxaaEnabled = quality !== "low";
+    this.pipeline.fxaaEnabled =
+      quality !== "low" && (window.devicePixelRatio || 1) <= 1.25;
     this.pipeline.bloomEnabled = quality === "high";
     this.pipeline.samples = 1;
     for (const material of this.scene.materials)
@@ -527,7 +535,7 @@ export class Game {
     this.engine.resize();
     this.hud.set(
       "graphics-detail",
-      `현재 적용: ${{ low: "낮음", medium: "중간", high: "높음" }[quality]} · ${this.settings.autoGraphics ? "자동 성능 조절 켜짐" : "수동 설정"}`,
+      `화면 해상도 유지 · 효과: ${{ low: "낮음", medium: "중간", high: "높음" }[quality]} · ${this.settings.autoGraphics ? "효과 자동 조절" : "수동 설정"}`,
     );
   }
   start(practice: boolean): void {
@@ -814,7 +822,10 @@ export class Game {
       });
       this.stats.damage += previousHealth - this.player.health;
       const dir = e.position.subtract(this.player.feet);
-      this.hud.damage(Math.atan2(dir.x, dir.z) - this.player.yaw);
+      this.hud.damage(
+        Math.atan2(dir.x, dir.z) - this.player.yaw,
+        previousHealth - this.player.health,
+      );
       if (dead) this.finish(false);
     }
   }

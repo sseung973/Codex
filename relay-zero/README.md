@@ -199,3 +199,12 @@ Validation uses executable Node tests and Babylon NullEngine integration checks.
 | 12 robots | 467 | 279 |
 
 These counts measure scene/render work in the benchmark, **not GPU FPS**. No browser-control tool was connected, so physical GPU frame rate, visual appearance, context-loss recovery and full pointer-lock gameplay still need a desktop browser check. The existing large Babylon JavaScript bundle remains a startup/download limitation; this patch primarily reduces continuous frame cost.
+
+
+## Clarity and incoming damage feedback — 2.2
+
+This update replaces 2.1's render pixel budgets and automatic resolution reduction. All quality modes now retain viewport resolution. High-DPI screens render at up to 1.5 device pixels per CSS pixel; FXAA is skipped above 1.25 DPR to avoid additional softening. The selected effects quality is respected at startup. Automatic control reduces effects one level at a time under sustained load and restores the selected effects after sustained recovery; it never reduces framebuffer resolution. Arena sign textures are restored to 1024×256. Geometry batching, cached world queries, collision lists and inactive-screen throttling remain enabled.
+
+Actual player HP loss immediately triggers a red edge vignette, a larger direction arrow, a **피격 −N** label and a highlighted health number. Recent burst hits accumulate their actual HP loss; misses, zero damage and attacks on an already defeated player do not trigger it. Effects fade over 0.85 seconds, preserve state while paused and clear on restart. The center of the screen remains transparent. Idle damage indicators do not update styles each frame.
+
+Validation: 68 executable tests pass, including resolution preservation through repeated slow frames, High-DPI scaling, effects recovery, actual damage versus overkill, indicator direction, burst accumulation, immediate HUD updates and restart cleanup. The production build passes. Physical GPU FPS and the appearance of the overlay still require a desktop browser check because no browser-control connection was available.

@@ -237,37 +237,44 @@ test("merged robots preserve exact head/body hit tests and finite shutdown geome
   engine.dispose();
 });
 
-test("automatic graphics starts conservatively, caps pixel counts, adapts slowly, recovers and respects manual settings", () => {
+test("automatic graphics preserves sharp resolution under load and adapts only effects", () => {
   const budget = new PerformanceBudget();
   budget.configure("high", true);
-  assert.equal(budget.quality, "medium");
-  const scale = budget.scaling(3840, 2160);
-  assert.ok((3840 / scale) * (2160 / scale) <= 1280 * 720 + 1);
-  let changes = 0;
-  for (let i = 0; i < 100; i++) changes += Number(budget.sample(40));
-  assert.equal(budget.quality, "low");
-  assert.ok(changes > 0);
-  assert.ok(budget.multiplier > 1);
-  for (let i = 0; i < 1000; i++) budget.sample(100);
-  assert.ok(budget.multiplier <= 1.6);
-  const previous = budget.multiplier;
-  for (let i = 0; i < 1500; i++) budget.sample(16);
-  assert.ok(budget.multiplier < previous);
-  budget.configure("high", false);
-  for (let i = 0; i < 200; i++) budget.sample(100);
   assert.equal(budget.quality, "high");
-  assert.equal(budget.multiplier, 1);
+  const native = budget.scaling(3840, 2160);
+  assert.equal(
+    native,
+    1,
+    "4K viewports must not be stretched from a 540p/720p buffer",
+  );
+  assert.equal(budget.scaling(1920, 1080, 2), 1 / 1.5);
+  for (let i = 0; i < 100; i++) budget.sample(40);
+  assert.equal(budget.quality, "low");
+  assert.equal(
+    budget.scaling(3840, 2160),
+    native,
+    "automatic adaptation must never blur the framebuffer",
+  );
+  for (let i = 0; i < 1000; i++) budget.sample(100);
+  assert.equal(budget.scaling(3840, 2160), native);
+  for (let i = 0; i < 1500; i++) budget.sample(16);
+  assert.equal(
+    budget.quality,
+    "high",
+    "healthy frames recover the selected effects level",
+  );
+  budget.configure("high", false);
+  for (let i = 0; i < 200; i++) assert.equal(budget.sample(100), false);
+  assert.equal(budget.quality, "high");
   budget.configure("low", true);
   for (let i = 0; i < 1000; i++) budget.sample(16);
   assert.equal(budget.quality, "low");
+  assert.equal(budget.scaling(1920, 1080), 1);
   budget.configure("medium", true);
   assert.equal(budget.sample(5000), false);
   for (let i = 0; i < 8; i++) budget.sample(500);
-  assert.equal(
-    budget.quality,
-    "low",
-    "severely slow foreground frames still trigger adaptation",
-  );
+  assert.equal(budget.quality, "low");
+  assert.equal(budget.scaling(1920, 1080, NaN), 1);
 });
 
 test("legacy graphics preferences keep sensitivity but enable automatic performance control", () => {

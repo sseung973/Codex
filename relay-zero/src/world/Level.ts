@@ -405,17 +405,17 @@ export class Level {
   ): void {
     const tex = new DynamicTexture(
       "sign " + text,
-      { width: 512, height: 128 },
+      { width: 1024, height: 256 },
       this.scene,
       false,
     );
     const ctx = tex.getContext();
-    ctx.clearRect(0, 0, 512, 128);
+    ctx.clearRect(0, 0, 1024, 256);
     tex.drawText(
       text,
       null,
-      85,
-      "bold 52px sans-serif",
+      170,
+      "bold 104px sans-serif",
       color,
       "transparent",
       true,
