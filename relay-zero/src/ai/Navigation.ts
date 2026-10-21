@@ -6,12 +6,18 @@ export class Navigation {
   readonly cell = 2;
   blocked = new Set<number>();
   constructor(public level: Level) {
+    this.rebuild();
+  }
+  rebuild(): void {
+    this.blocked.clear();
+    const level = this.level;
+    for (const mesh of level.solids) mesh.computeWorldMatrix(true);
     for (let z = 0; z < this.size; z++)
       for (let x = 0; x < this.size; x++) {
         const p = this.world(x, z);
         const hit = level.scene.pickWithRay(
           new Ray(p.add(new Vector3(0, 7, 0)), Vector3.Down(), 6.7),
-          (m) => m.metadata?.world === true,
+          (m) => m.isEnabled() && m.metadata?.world === true,
         );
         if (hit?.hit) this.blocked.add(z * this.size + x);
       }

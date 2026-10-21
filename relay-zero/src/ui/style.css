@@ -1255,11 +1255,23 @@ button:disabled {
 }
 
 /* Brief shot confirmation, independent of the aim point and spread. */
-#hitmarker.critical { font-size: 30px; }
-#hitmarker.confirmed { font-weight: 700; }
-#ammo.empty-feedback { color: var(--color-danger); }
-#ammo.reloading { opacity: .5; }
-#ammo { transition: color 100ms, opacity 120ms; }
+#hitmarker.critical {
+  font-size: 30px;
+}
+#hitmarker.confirmed {
+  font-weight: 700;
+}
+#ammo.empty-feedback {
+  color: var(--color-danger);
+}
+#ammo.reloading {
+  opacity: 0.5;
+}
+#ammo {
+  transition:
+    color 100ms,
+    opacity 120ms;
+}
 
 /* RZ facility interface: restrained, legible surface hierarchy. */
 :root {
@@ -1271,32 +1283,71 @@ button:disabled {
   --facility-amber: #edac58;
 }
 .vignette {
-  background: linear-gradient(90deg, #101922f0 0%, #101922d9 22%, #10192278 53%, transparent 86%),
+  background:
+    linear-gradient(
+      90deg,
+      #101922f0 0%,
+      #101922d9 22%,
+      #10192278 53%,
+      transparent 86%
+    ),
     linear-gradient(0deg, #101922bb 0%, transparent 38%);
 }
-.in-game .vignette { opacity: .11; }
-.topbar { border-bottom-color: var(--facility-line); }
-.brand-symbol { color: var(--facility-amber); }
-.menu-actions, .dialog {
+.in-game .vignette {
+  opacity: 0.11;
+}
+.topbar {
+  border-bottom-color: var(--facility-line);
+}
+.brand-symbol {
+  color: var(--facility-amber);
+}
+.menu-actions,
+.dialog {
   background: linear-gradient(145deg, #202e3af2, #111a24f0);
   border: 1px solid var(--facility-line);
   border-top: 2px solid var(--facility-amber);
   border-radius: 2px;
   box-shadow: 0 14px 40px #050a1073;
 }
-.menu-actions { padding: 22px 24px; }
-.difficulty-detail, .settings-note { color: var(--facility-secondary) !important; }
-.difficulty-select, select {
+.menu-actions {
+  padding: 22px 24px;
+}
+.difficulty-detail,
+.settings-note {
+  color: var(--facility-secondary) !important;
+}
+.difficulty-select,
+select {
   background: var(--facility-ink);
   border: 1px solid var(--facility-line);
   color: var(--facility-cool);
   border-radius: 2px;
 }
-.primary { background: var(--facility-amber); color: var(--facility-ink); }
-.primary:hover { background: #f3bb70; filter: none; }
-.secondary, .shop-card { background: #253543; border: 1px solid var(--facility-line); color: var(--facility-cool); }
-.secondary:hover, .shop-card:not(:disabled):hover { border-color: var(--facility-amber); background: #304252; filter: none; }
-.overlay { background: #09121bc4; backdrop-filter: blur(3px); }
+.primary {
+  background: var(--facility-amber);
+  color: var(--facility-ink);
+}
+.primary:hover {
+  background: #f3bb70;
+  filter: none;
+}
+.secondary,
+.shop-card {
+  background: #253543;
+  border: 1px solid var(--facility-line);
+  color: var(--facility-cool);
+}
+.secondary:hover,
+.shop-card:not(:disabled):hover {
+  border-color: var(--facility-amber);
+  background: #304252;
+  filter: none;
+}
+.overlay {
+  background: #09121bc4;
+  backdrop-filter: blur(3px);
+}
 .objective {
   padding: 11px 15px 12px;
   border: 1px solid var(--facility-line);
@@ -1304,62 +1355,174 @@ button:disabled {
   background: #111a24c9;
   box-shadow: 0 5px 18px #080e1730;
 }
-.objective > span, .hud-label { color: var(--facility-secondary); }
-.objective b { color: var(--facility-cool); }
-.objective small { color: var(--facility-secondary); }
+.objective > span,
+.hud-label {
+  color: var(--facility-secondary);
+}
+.objective b {
+  color: var(--facility-cool);
+}
+.objective small {
+  color: var(--facility-secondary);
+}
 #mission-status {
   padding: 10px 13px;
   background: #111a24c9;
   border: 1px solid var(--facility-line);
   border-left: 2px solid #8fc3df;
 }
-#mission-fill { background: var(--facility-amber); }
-.score { padding: 10px 13px; background: #111a24ba; border-right: 2px solid var(--facility-line); }
-.score span { color: var(--facility-secondary); }
-.health, .weapon-hud {
+#mission-fill {
+  background: var(--facility-amber);
+}
+.score {
+  padding: 10px 13px;
+  background: #111a24ba;
+  border-right: 2px solid var(--facility-line);
+}
+.score span {
+  color: var(--facility-secondary);
+}
+.health,
+.weapon-hud {
   background: linear-gradient(0deg, #111a24e8, #17232fc4);
   border: 1px solid var(--facility-line);
   border-left: 2px solid #8fc3df;
 }
-.weapon-hud { border-left: 1px solid var(--facility-line); border-right: 2px solid var(--facility-amber); }
-.health-track { background: #72869765; }
-.health-track i { background: #aac9dc; }
-.health-value span, .ammo > span, .weapon-slots { color: var(--facility-secondary); }
-.weapon-slots .active { color: var(--facility-amber); }
-#crosshair i, #crosshair b { background: #e2edf0; box-shadow: 0 0 0 1px #101820aa; }
-#damage-flash { box-shadow: inset 0 0 70px #aa3436; }
-#damage-arrow { color: #e56561; }
-#reload-bar { background: #17232fc9; }
-#reload-bar i { background: var(--facility-amber); }
-#toast, #kill-feedback { color: var(--facility-amber); text-shadow: 0 2px 6px #111a24; }
-.result-grid div { background: #253543; border: 1px solid var(--facility-line); }
+.weapon-hud {
+  border-left: 1px solid var(--facility-line);
+  border-right: 2px solid var(--facility-amber);
+}
+.health-track {
+  background: #72869765;
+}
+.health-track i {
+  background: #aac9dc;
+}
+.health-value span,
+.ammo > span,
+.weapon-slots {
+  color: var(--facility-secondary);
+}
+.weapon-slots .active {
+  color: var(--facility-amber);
+}
+#crosshair i,
+#crosshair b {
+  background: #e2edf0;
+  box-shadow: 0 0 0 1px #101820aa;
+}
+#damage-flash {
+  box-shadow: inset 0 0 70px #aa3436;
+}
+#damage-arrow {
+  color: #e56561;
+}
+#reload-bar {
+  background: #17232fc9;
+}
+#reload-bar i {
+  background: var(--facility-amber);
+}
+#toast,
+#kill-feedback {
+  color: var(--facility-amber);
+  text-shadow: 0 2px 6px #111a24;
+}
+.result-grid div {
+  background: #253543;
+  border: 1px solid var(--facility-line);
+}
 @media (max-width: 700px) {
-  .mission-stack { max-width: calc(100vw - 155px); }
-  .health, .weapon-hud { padding: 8px; }
+  .mission-stack {
+    max-width: calc(100vw - 155px);
+  }
+  .health,
+  .weapon-hud {
+    padding: 8px;
+  }
   /* The centered keyboard hint collides with both lower HUD panels on narrow viewports. */
-  .bottom-hint { display: none; }
-  #debug { top: auto; bottom: 142px; right: 12px; left: 12px; max-width: none; font-size: 10px; }
+  .bottom-hint {
+    display: none;
+  }
+  #debug {
+    top: auto;
+    bottom: 142px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+    font-size: 10px;
+  }
 }
 @media (max-width: 560px) {
   /* Stack score above the mission panel instead of squeezing both into one row. */
-  .score { top: 70px; right: 12px; max-width: calc(100vw - 24px); padding: 6px 10px; }
-  .score b { font-size: 25px; }
-  .score small { font-size: 9px; }
-  .mission-stack { top: 157px; left: 12px; width: min(270px, calc(100vw - 24px)); max-width: none; gap: 7px; }
-  .objective { padding: 8px 10px; gap: 5px; }
-  .objective b { font-size: 14px; }
-  .health { left: 12px; width: 108px; bottom: 12px; }
-  .weapon-hud { right: 12px; bottom: 12px; max-width: calc(100vw - 144px); }
-  .health-value b, .ammo > b { font-size: 36px; }
-  .health-value span, .ammo > span { font-size: 13px; }
-  .weapon-slots { flex-wrap: wrap; justify-content: flex-end; gap: 3px 8px; }
-  #debug { bottom: 113px; }
+  .score {
+    top: 70px;
+    right: 12px;
+    max-width: calc(100vw - 24px);
+    padding: 6px 10px;
+  }
+  .score b {
+    font-size: 25px;
+  }
+  .score small {
+    font-size: 9px;
+  }
+  .mission-stack {
+    top: 157px;
+    left: 12px;
+    width: min(270px, calc(100vw - 24px));
+    max-width: none;
+    gap: 7px;
+  }
+  .objective {
+    padding: 8px 10px;
+    gap: 5px;
+  }
+  .objective b {
+    font-size: 14px;
+  }
+  .health {
+    left: 12px;
+    width: 108px;
+    bottom: 12px;
+  }
+  .weapon-hud {
+    right: 12px;
+    bottom: 12px;
+    max-width: calc(100vw - 144px);
+  }
+  .health-value b,
+  .ammo > b {
+    font-size: 36px;
+  }
+  .health-value span,
+  .ammo > span {
+    font-size: 13px;
+  }
+  .weapon-slots {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 3px 8px;
+  }
+  #debug {
+    bottom: 113px;
+  }
 }
 @media (max-width: 420px) {
-  .weapon-slots { display: none; }
-  .weapon-hud { min-width: 118px; }
-  .weapon-hud .hud-label { font-size: 9px; letter-spacing: .5px; }
-  .ammo { gap: 5px; margin-bottom: 0; }
+  .weapon-slots {
+    display: none;
+  }
+  .weapon-hud {
+    min-width: 118px;
+  }
+  .weapon-hud .hud-label {
+    font-size: 9px;
+    letter-spacing: 0.5px;
+  }
+  .ammo {
+    gap: 5px;
+    margin-bottom: 0;
+  }
 }
 /* Final-wave command unit stays outside the central aiming area. */
 #boss-panel {
@@ -1376,10 +1539,96 @@ button:disabled {
   color: var(--facility-cool);
   pointer-events: none;
 }
-#boss-panel span { display: block; font-size: 9px; letter-spacing: 1.8px; color: var(--facility-secondary); }
-#boss-panel b { display: block; padding: 5px 0 7px; font-size: 12px; font-weight: 600; }
-.boss-track { width: 100%; height: 4px; background: #72869765; }
-#boss-fill { display: block; height: 100%; width: 100%; background: var(--color-danger); transition: width 120ms; }
+#boss-panel span {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 1.8px;
+  color: var(--facility-secondary);
+}
+#boss-panel b {
+  display: block;
+  padding: 5px 0 7px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.boss-track {
+  width: 100%;
+  height: 4px;
+  background: #72869765;
+}
+#boss-fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--color-danger);
+  transition: width 120ms;
+}
 @media (max-width: 800px) {
-  #boss-panel { top: auto; bottom: 124px; width: min(264px, calc(100vw - 24px)); }
+  #boss-panel {
+    top: auto;
+    bottom: 124px;
+    width: min(264px, calc(100vw - 24px));
+  }
+}
+
+/* Tactical expansion: retain the facility palette and keep controls readable. */
+#tactical-hud {
+  position: absolute;
+  bottom: 112px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 20px;
+  width: min(560px, 80vw);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--color-accent, #edac58);
+  text-shadow: 0 1px 4px #111;
+}
+#tactical-hud small {
+  flex-basis: 100%;
+  text-align: center;
+  min-height: 20px;
+  color: #d9e9f1;
+}
+#emp-status {
+  color: #8fc3df;
+}
+#dash-status.cooling {
+  color: #9ca9b0;
+}
+#overlay .dialog {
+  max-height: 90vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#shop-items {
+  max-height: 44vh;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+.attachment-heading {
+  margin: 20px 0 8px;
+  color: #8fc3df;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+.attachment-card {
+  border-left: 2px solid #8fc3df;
+}
+.equipment-card {
+  border-color: #8fc3df;
+}
+#endless {
+  margin-bottom: 12px;
+}
+@media (max-height: 760px) {
+  #tactical-hud {
+    bottom: 84px;
+  }
+  #shop-items {
+    max-height: 35vh;
+  }
 }

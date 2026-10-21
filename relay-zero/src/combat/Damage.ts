@@ -8,7 +8,7 @@ export interface DamageInfo {
   hitPoint: Vector3;
   hitNormal: Vector3;
   isHeadshot: boolean;
-  damageType: "hitscan" | "melee";
+  damageType: "hitscan" | "melee" | "explosion";
 }
 export interface IDamageable {
   id: string;

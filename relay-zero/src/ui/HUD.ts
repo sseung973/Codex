@@ -1,3 +1,6 @@
+import { attachments, type AttachmentId } from "../weapons/Attachments";
+import type { Equipment } from "../weapons/Equipment";
+import { EndlessRecords } from "../core/RunStats";
 import { sightMarkup } from "./Sights";
 import { Wallet, catalog, starters } from "../weapons/Arsenal";
 import { RunStats, Records, clock } from "../core/RunStats";
@@ -16,6 +19,9 @@ export class HUD {
   screen: Screen = "start";
   selectedDifficulty: DifficultyId = loadDifficulty();
   selectedPistol = "p12";
+  onEndless: () => void = () => {};
+  onEMPBuy: () => void = () => {};
+  onAttachment: (weaponId: string, id: AttachmentId) => void = () => {};
   onShop: () => void = () => {};
   onBuy: (id: string) => void = () => {};
   onPlay: () => void = () => {};
@@ -35,10 +41,10 @@ export class HUD {
     this.root.innerHTML = `
  <div class="vignette"></div><header class="topbar"><a class="wordmark" href="#" aria-label="Relay Zero home"><span class="brand-symbol">R/</span> RELAY ZERO<span class="edition">ARENA</span></a><div class="top-right"><span id="sector-tag" class="sector-tag">SECTOR 07</span><button id="fullscreen" class="icon-button" aria-label="Toggle fullscreen">⛶</button><button id="sound" class="icon-button" aria-label="Toggle sound">♪</button></div></header>
  <main id="menu" class="menu"><div class="menu-copy"><div class="eyebrow"><span></span> COMBAT SIMULATION / TRAINING DIVISION</div><h1>RELAY<br><em>ZERO</em><span class="title-period">.</span></h1><p class="tagline">훈련은 끝났다.<br>이제 중계기를 지켜라.</p><div class="mission"><span id="mission-number" class="mission-number">07</span><div><b id="map-title">THE FOUNDRY</b><p>Five waves. One relay. No backup.</p></div></div><div class="menu-actions"><label for="map-choice" class="difficulty-label">전장 선택</label><select id="map-choice" class="difficulty-select"><option value="foundry">주조 공장</option><option value="cargo">화물 터미널</option><option value="nexus">넥서스 연구소</option></select><p id="map-detail" class="difficulty-detail"></p><label class="difficulty-label" for="difficulty">난이도</label><select id="difficulty" class="difficulty-select"><option value="easy">쉬움</option><option value="normal">보통</option><option value="hard">어려움</option><option value="nightmare">악몽</option></select><p id="difficulty-detail" class="difficulty-detail"></p><p id="personal-best" class="difficulty-detail"></p><label for="starter-pistol" class="difficulty-label">시작 피스톨</label><select id="starter-pistol" class="difficulty-select"></select><button id="play" class="primary">게임 시작 <span>↗</span></button><button id="practice" class="secondary">사격 연습장 <span>⌖</span></button><div class="minor-actions"><button id="settings">SETTINGS</button><span>/</span><button id="controls">CONTROLS</button></div></div><p class="desktop-note">DESKTOP EXPERIENCE · KEYBOARD + MOUSE</p></div><aside class="arena-caption"><span class="caption-line"></span><div>RELAY STATION <b id="map-caption">07 / FOUNDRY</b></div><span class="coordinates">TRAINING FACILITY / AUTHORIZED ACCESS</span></aside></main>
- <section id="overlay" class="overlay" hidden><div class="dialog"><p class="eyebrow" id="overlay-label">SESSION PAUSED</p><h2 id="overlay-title">Take a breath.</h2><p id="overlay-detail">Your run is right where you left it.</p><p id="run-difficulty"></p><div id="results"></div><div id="shop-items" hidden></div><button id="open-shop" class="secondary">B · 무기 상점 (웨이브 사이)</button><button id="resume" class="primary">게임으로 돌아가기 <span>↗</span></button><button id="restart" class="secondary">다시 시작</button><button id="exit" class="secondary">메인 화면으로 나가기</button><button id="pause-settings" class="text-button">SETTINGS</button></div></section>
+ <section id="overlay" class="overlay" hidden><div class="dialog"><p class="eyebrow" id="overlay-label">SESSION PAUSED</p><h2 id="overlay-title">Take a breath.</h2><p id="overlay-detail">Your run is right where you left it.</p><p id="run-difficulty"></p><div id="results"></div><div id="shop-items" hidden></div><button id="endless" class="primary" hidden>무한 웨이브 도전 <span>∞</span></button><button id="open-shop" class="secondary">B · 무기 상점 (웨이브 사이)</button><button id="resume" class="primary">게임으로 돌아가기 <span>↗</span></button><button id="restart" class="secondary">다시 시작</button><button id="exit" class="secondary">메인 화면으로 나가기</button><button id="pause-settings" class="text-button">SETTINGS</button></div></section>
  <section id="settings-panel" class="overlay" hidden><div class="dialog settings-dialog"><div class="panel-heading"><h2>Settings</h2><button id="close-settings" class="icon-button" aria-label="Close settings">✕</button></div><label for="sensitivity">Mouse sensitivity <output id="sensitivity-out"></output><input id="sensitivity" type="range" min="0.15" max="3" step="0.05"></label><label for="masterVolume">Master volume <output id="masterVolume-out"></output><input id="masterVolume" type="range" min="0" max="1" step="0.05"></label><label for="sfxVolume">Effects volume <output id="sfxVolume-out"></output><input id="sfxVolume" type="range" min="0" max="1" step="0.05"></label><label for="fov">Field of view <output id="fov-out"></output><input id="fov" type="range" min="70" max="110" step="1"></label><label for="crosshairSize">Crosshair size <output id="crosshairSize-out"></output><input id="crosshairSize" type="range" min="0.5" max="2" step="0.1"></label><label class="inline">Graphics quality<select id="quality"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label><label class="inline">Head bob<input id="headBob" type="checkbox"></label><p class="settings-note">Saved automatically on this device.</p></div></section>
- <section id="controls-panel" class="overlay" hidden><div class="dialog"><div class="panel-heading"><h2>Controls</h2><button id="close-controls" class="icon-button" aria-label="Close controls">✕</button></div><dl class="controls-list"><dt>Move</dt><dd>W A S D</dd><dt>Look</dt><dd>MOUSE</dd><dt>Fire / Aim</dt><dd>LMB / RMB</dd><dt>Sprint / Jump</dt><dd>SHIFT / SPACE</dd><dt>Crouch</dt><dd>CTRL / C</dd><dt>Reload</dt><dd>R</dd><dt>Switch weapon</dt><dd>1 / 2 / 3 / WHEEL</dd><dt>무기 상점</dt><dd>B · 웨이브 사이</dd><dt>장치 작동</dt><dd>E 길게 누르기</dd><dt>Pause</dt><dd>ESC</dd></dl><p class="settings-note">경량 돌격형: 빠른 접근 · 방패 방어형: 방패 파괴 또는 측면 공격 · 수리팩 지원형: 주변 적 수리</p><p class="settings-note">게임 시작을 누르면 마우스가 게임에 고정돼.<br>ESC를 누르면 일시정지·나가기 메뉴가 열려.</p></div></section>
- <div id="hud" hidden><div id="boss-panel" hidden><span>COMMAND UNIT · SECTOR GUARDIAN</span><b id="boss-state">지휘 로봇 · 공격을 대비해</b><div class="boss-track"><i id="boss-fill"></i></div></div><div class="mission-stack"><div class="objective"><span id="wave-label">WAVE 01 / 05</span><b id="objective">HOLD THE RELAY</b><div class="wave-bars"><i></i><i></i><i></i><i></i><i></i></div><small id="enemies">3 SENTINELS REMAINING</small></div><div id="mission-status" hidden><span id="mission-arrow">↑</span><div><b id="mission-hint"></b><small id="mission-distance"></small><div class="mission-track"><i id="mission-fill"></i></div></div></div></div><div class="score"><span>SCORE</span><b id="score">00000</b><small id="coins">0 COINS · B 상점</small></div><div id="ads-reticle" hidden aria-hidden="true">${sightMarkup()}</div><div id="crosshair"><i></i><i></i><i></i><i></i><b></b></div><div id="hitmarker">╳</div><div id="damage-arrow">▲</div><div id="damage-flash"></div><div id="toast"></div><div id="kill-feedback"></div><div class="health"><div class="hud-label">+ &nbsp; INTEGRITY</div><div class="health-value"><b id="health">100</b><span>/ 100</span></div><div class="health-track"><i id="health-fill"></i></div></div><div class="weapon-hud"><div id="weapon-name" class="hud-label">AR-7 VANGUARD</div><div class="ammo"><b id="ammo">30</b><span>/ <span id="reserve">180</span></span></div><div class="weapon-slots"><span id="slot1">1 &nbsp; ASSAULT RIFLE</span><span id="slot2">2 &nbsp; SIDEARM</span><span id="slot3">3 &nbsp; 충격봉</span></div></div><div class="bottom-hint"><span id="reload-label">R &nbsp; RELOAD</span><span>ESC &nbsp; 일시정지 / 나가기</span></div><div id="reload-bar"><i></i></div></div><pre id="debug" hidden></pre><div id="error" role="status" hidden></div><footer id="menu-footer"><span>RELAY ZERO <b>01.0</b></span><span>STAY MOVING. MAKE EVERY SHOT COUNT.</span><span id="graphics-status">WEBGL / READY</span></footer>`;
+ <section id="controls-panel" class="overlay" hidden><div class="dialog"><div class="panel-heading"><h2>Controls</h2><button id="close-controls" class="icon-button" aria-label="Close controls">✕</button></div><dl class="controls-list"><dt>Move</dt><dd>W A S D</dd><dt>Look</dt><dd>MOUSE</dd><dt>Fire / Aim</dt><dd>LMB / RMB</dd><dt>Sprint / Jump</dt><dd>SHIFT / SPACE</dd><dt>대시</dt><dd>ALT · 쿨타임 3.5초</dd><dt>EMP 수류탄</dt><dd>G · 로봇 정지 / B에서 보충</dd><dt>전장 장치</dt><dd>E · 차단문 / 엄폐물</dd><dt>Crouch</dt><dd>CTRL / C</dd><dt>Reload</dt><dd>R</dd><dt>Switch weapon</dt><dd>1 / 2 / 3 / WHEEL</dd><dt>무기 상점</dt><dd>B · 웨이브 사이</dd><dt>장치 작동</dt><dd>E 길게 누르기</dd><dt>Pause</dt><dd>ESC</dd></dl><p class="settings-note">경량 돌격형: 빠른 접근 · 방패 방어형: 방패 파괴 또는 측면 공격 · 수리팩 지원형: 주변 적 수리 · 저격형: 레이저를 보고 이동 · 자폭형: 경고 원 밖으로 회피. 황색 전력통은 사격 시 폭발하며 자신도 피해를 받아.</p><p class="settings-note">게임 시작을 누르면 마우스가 게임에 고정돼.<br>ESC를 누르면 일시정지·나가기 메뉴가 열려.</p></div></section>
+ <div id="hud" hidden><div id="boss-panel" hidden><span>COMMAND UNIT · SECTOR GUARDIAN</span><b id="boss-state">지휘 로봇 · 공격을 대비해</b><div class="boss-track"><i id="boss-fill"></i></div></div><div class="mission-stack"><div class="objective"><span id="wave-label">WAVE 01 / 05</span><b id="objective">HOLD THE RELAY</b><div class="wave-bars"><i></i><i></i><i></i><i></i><i></i></div><small id="enemies">3 SENTINELS REMAINING</small></div><div id="mission-status" hidden><span id="mission-arrow">↑</span><div><b id="mission-hint"></b><small id="mission-distance"></small><div class="mission-track"><i id="mission-fill"></i></div></div></div></div><div class="score"><span>SCORE</span><b id="score">00000</b><small id="coins">0 COINS · B 상점</small></div><div id="ads-reticle" hidden aria-hidden="true">${sightMarkup()}</div><div id="crosshair"><i></i><i></i><i></i><i></i><b></b></div><div id="hitmarker">╳</div><div id="damage-arrow">▲</div><div id="damage-flash"></div><div id="toast"></div><div id="kill-feedback"></div><div class="health"><div class="hud-label">+ &nbsp; INTEGRITY</div><div class="health-value"><b id="health">100</b><span>/ 100</span></div><div class="health-track"><i id="health-fill"></i></div></div><div class="weapon-hud"><div id="weapon-name" class="hud-label">AR-7 VANGUARD</div><div class="ammo"><b id="ammo">30</b><span>/ <span id="reserve">180</span></span></div><div class="weapon-slots"><span id="slot1">1 &nbsp; ASSAULT RIFLE</span><span id="slot2">2 &nbsp; SIDEARM</span><span id="slot3">3 &nbsp; 충격봉</span></div></div><div id="tactical-hud"><b id="dash-status">ALT · 대시 준비</b><span id="emp-status">G · EMP ×2</span><small id="device-hint"></small></div><div class="bottom-hint"><span id="reload-label">R &nbsp; RELOAD</span><span>ESC &nbsp; 일시정지 / 나가기</span></div><div id="reload-bar"><i></i></div></div><pre id="debug" hidden></pre><div id="error" role="status" hidden></div><footer id="menu-footer"><span>RELAY ZERO <b>02.0</b></span><span>STAY MOVING. MAKE EVERY SHOT COUNT.</span><span id="graphics-status">WEBGL / READY</span></footer>`;
     const starter = this.el("starter-pistol") as HTMLSelectElement;
     for (const p of starters) {
       const option = document.createElement("option");
@@ -49,6 +55,7 @@ export class HUD {
     starter.onchange = () => {
       this.selectedPistol = starter.value;
     };
+    this.el("endless").onclick = () => this.onEndless();
     this.el("open-shop").onclick = () => this.onShop();
     const mapSelect = this.el("map-choice") as HTMLSelectElement;
     mapSelect.value = this.selectedMap;
@@ -133,11 +140,19 @@ export class HUD {
     this.syncSettings();
     this.refreshRecord();
   }
-  shop(wallet: Wallet, equipped: string): void {
+  shop(
+    wallet: Wallet,
+    equipped: string,
+    equipment?: Equipment,
+    sidearm = "p12",
+  ): void {
     this.show("shop");
     this.set("overlay-label", `${wallet.coins} COINS / ARMORY`);
-    this.set("overlay-title", "다음 무기를 골라.");
-    this.set("overlay-detail", "보유 무기는 무료 교체 · 상점에서는 시간 정지");
+    this.set("overlay-title", "무장하고 다시 진입해.");
+    this.set(
+      "overlay-detail",
+      "보유 무기는 무료 교체 · 총마다 부착물 최대 2개 · 상점에서는 시간 정지",
+    );
     const root = this.el("shop-items");
     root.replaceChildren();
     for (const item of catalog) {
@@ -154,12 +169,49 @@ export class HUD {
       button.onclick = () => this.onBuy(item.data.id);
       root.append(button);
     }
+    if (equipment) {
+      const button = document.createElement("button");
+      button.className = "shop-card equipment-card";
+      button.textContent = `EMP 수류탄 +1 · 100 코인 · ${equipment.ammo}/3 보유`;
+      button.disabled = equipment.ammo >= 3 || wallet.coins < 100;
+      button.onclick = () => this.onEMPBuy();
+      root.append(button);
+    }
+    for (const weapon of [
+      starters.find((w) => w.id === sidearm)!,
+      ...catalog.filter((i) => wallet.owned.has(i.data.id)).map((i) => i.data),
+    ]) {
+      const owned = wallet.upgrades.get(weapon.id);
+      const heading = document.createElement("p");
+      heading.className = "attachment-heading";
+      heading.textContent = `${weapon.name} · 부착물 ${owned?.size ?? 0}/2`;
+      root.append(heading);
+      for (const item of attachments) {
+        const button = document.createElement("button");
+        button.className = "shop-card attachment-card";
+        const name = document.createElement("b"),
+          detail = document.createElement("span");
+        name.textContent = `${item.name} · ${owned?.has(item.id) ? "장착됨" : item.price + " 코인"}`;
+        detail.textContent = item.description;
+        button.append(name, detail);
+        button.disabled =
+          owned?.has(item.id) ||
+          (owned?.size ?? 0) >= 2 ||
+          wallet.coins < item.price;
+        button.onclick = () => this.onAttachment(weapon.id, item.id);
+        root.append(button);
+      }
+    }
   }
   refreshRecord(): void {
     const best = new Records().get(this.selectedMap, this.selectedDifficulty);
+    const endless = new EndlessRecords().get(
+      this.selectedMap,
+      this.selectedDifficulty,
+    );
     this.set(
       "personal-best",
-      `목표전 최고 ${best.score.toLocaleString()}점 · 최단 클리어 ${best.clearTime === null ? "—" : clock(best.clearTime)}`,
+      `목표전 최고 ${best.score.toLocaleString()}점 · 최단 클리어 ${best.clearTime === null ? "—" : clock(best.clearTime)} · 무한 최고 ${endless.score.toLocaleString()}점 / ${endless.wave || "—"}웨이브`,
     );
   }
   results(
@@ -229,6 +281,7 @@ export class HUD {
   }
   show(screen: Screen, score = 0, kills = 0, time = 0): void {
     this.screen = screen;
+    this.el("endless").hidden = screen !== "victory";
     this.el("menu").hidden = screen !== "start";
     this.el("menu-footer").hidden = screen !== "start";
     this.el("hud").hidden = screen === "start";
@@ -258,7 +311,7 @@ export class HUD {
       this.set(
         "overlay-detail",
         screen === "victory"
-          ? "모든 웨이브를 완료했어."
+          ? "5개 웨이브 완료! 무장을 유지하고 무한 웨이브에 도전할 수 있어. 무한 점수와 시간은 새로 시작해."
           : "Regroup. Reload. Run it back.",
       );
       this.el("results").textContent =
@@ -266,7 +319,7 @@ export class HUD {
     }
   }
   hit(head: boolean, kill: boolean): void {
-    this.hitTime = kill ? .24 : head ? .21 : .14;
+    this.hitTime = kill ? 0.24 : head ? 0.21 : 0.14;
     this.el("hitmarker").classList.toggle("critical", head);
     this.el("hitmarker").classList.toggle("confirmed", kill);
     this.el("hitmarker").style.color = kill

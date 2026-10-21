@@ -123,7 +123,13 @@ export class Level {
         [6, 20],
       ].map(([x, z]) => new Vector3(x, 0, z));
       buildAdditionalMap(this, mapId, { dark, accent: orange, trim, light });
-      this.sign(theme.title, new Vector3(0, 5.7, 21.4), 15, 2.1, gameTheme.colors.ivory);
+      this.sign(
+        theme.title,
+        new Vector3(0, 5.7, 21.4),
+        15,
+        2.1,
+        gameTheme.colors.ivory,
+      );
       for (const x of [-3, 3])
         this.box(
           "spawn marking",
@@ -252,7 +258,13 @@ export class Level {
         false,
       );
     }
-    this.sign("SECTOR 07", new Vector3(0, 5.7, 21.43), 14, 2.4, gameTheme.colors.ivory);
+    this.sign(
+      "SECTOR 07",
+      new Vector3(0, 5.7, 21.43),
+      14,
+      2.4,
+      gameTheme.colors.ivory,
+    );
     this.sign(
       "RELAY / CONTROL",
       new Vector3(-12, 2.8, 0.43),
@@ -319,7 +331,11 @@ export class Level {
     m.metadata = { world: solid };
     if (solid) {
       this.solids.push(m);
-      if (/^(relay core|relay foundation|nexus core|nexus plinth|gallery|cover|cargo container|lab chamber|crane leg|server column|deck|loading deck)$/.test(name))
+      if (
+        /^(relay core|relay foundation|nexus core|nexus plinth|gallery|cover|cargo container|lab chamber|crane leg|server column|deck|loading deck)$/.test(
+          name,
+        )
+      )
         this.shadows.addShadowCaster(m);
     }
     return m;
@@ -384,7 +400,7 @@ export class Level {
     if (l < 0.01) return true;
     const hit = this.scene.pickWithRay(
       new Ray(a, d.scale(1 / l), l),
-      (m) => m.metadata?.world === true,
+      (m) => m.isEnabled() && m.metadata?.world === true,
     );
     return !hit?.hit || hit.distance > l - 0.15;
   }

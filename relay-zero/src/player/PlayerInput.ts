@@ -29,6 +29,8 @@ export class PlayerInput {
           [
             "Space",
             "Tab",
+            "AltLeft",
+            "AltRight",
             "ControlLeft",
             "KeyW",
             "KeyA",

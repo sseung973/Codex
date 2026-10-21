@@ -76,3 +76,46 @@ export class Records {
 }
 export const clock = (time: number): string =>
   `${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, "0")}`;
+
+export class EndlessRecords {
+  constructor(private storage: () => StoragePort = () => localStorage) {}
+  key(map: MapId, difficulty: DifficultyId): string {
+    return `relay-endless-v1:${map}:${difficulty}`;
+  }
+  get(map: MapId, difficulty: DifficultyId): { score: number; wave: number } {
+    try {
+      const v = JSON.parse(
+        this.storage().getItem(this.key(map, difficulty)) || "null",
+      );
+      if (
+        v &&
+        Number.isFinite(v.score) &&
+        v.score >= 0 &&
+        Number.isInteger(v.wave) &&
+        v.wave >= 6
+      )
+        return { score: v.score, wave: v.wave };
+    } catch {
+      /* Optional browser storage. */
+    }
+    return { score: 0, wave: 0 };
+  }
+  save(
+    map: MapId,
+    difficulty: DifficultyId,
+    score: number,
+    wave: number,
+  ): { best: { score: number; wave: number }; saved: boolean } {
+    const old = this.get(map, difficulty);
+    const best = {
+      score: Math.max(old.score, score),
+      wave: Math.max(old.wave, wave, 6),
+    };
+    try {
+      this.storage().setItem(this.key(map, difficulty), JSON.stringify(best));
+      return { best, saved: true };
+    } catch {
+      return { best, saved: false };
+    }
+  }
+}

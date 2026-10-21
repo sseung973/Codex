@@ -1,3 +1,8 @@
+import {
+  attachments,
+  type AttachmentId,
+  type AttachmentInventory,
+} from "./Attachments";
 import { rifle, pistol, WeaponData } from "./WeaponData";
 export const heavyPistol: WeaponData = {
   ...pistol,
@@ -60,10 +65,31 @@ export const catalog = [
 ];
 export class Wallet {
   coins = 0;
+  upgrades: AttachmentInventory = new Map();
   owned = new Set<string>();
   reset(): void {
     this.coins = 0;
+    this.upgrades.clear();
     this.owned.clear();
+  }
+  buyAttachment(weaponId: string, id: AttachmentId): boolean {
+    const item = attachments.find((a) => a.id === id);
+    if (
+      !item ||
+      ![...starters, ...catalog.map((i) => i.data)].some(
+        (w) => w.id === weaponId,
+      )
+    )
+      return false;
+    if (!this.owned.has(weaponId) && !starters.some((w) => w.id === weaponId))
+      return false;
+    const equipped = this.upgrades.get(weaponId) ?? new Set<AttachmentId>();
+    if (equipped.has(id) || equipped.size >= 2 || this.coins < item.price)
+      return false;
+    this.coins -= item.price;
+    equipped.add(id);
+    this.upgrades.set(weaponId, equipped);
+    return true;
   }
   reward(elite: boolean, head: boolean): number {
     const amount = (elite ? 150 : 100) + (head ? 25 : 0);

@@ -1,5 +1,6 @@
 import { WeaponMotion } from "./WeaponMotion";
-import { starters } from "./Arsenal";
+import { withAttachments, type AttachmentInventory } from "./Attachments";
+import { starters, catalog } from "./Arsenal";
 import type { WeaponData } from "./WeaponData";
 import { recoilImpulse } from "./Recoil";
 import { WeaponModels } from "./WeaponModels";
@@ -26,6 +27,7 @@ export class Weapon {
   slot = 0;
   primaryOwned = true;
   inventory = new Map<string, Magazine>();
+  upgrades: AttachmentInventory = new Map();
   root: TransformNode;
   muzzle: Mesh;
   flash: Mesh;
@@ -99,7 +101,10 @@ export class Weapon {
   }
   get aiming(): boolean {
     return (
-      !this.melee && this.player.input.ads && this.mag.reloadRemaining <= 0
+      !this.melee &&
+      this.player.state !== "Dashing" &&
+      this.player.input.ads &&
+      this.mag.reloadRemaining <= 0
     );
   }
   get reloading(): boolean {
@@ -174,7 +179,8 @@ export class Weapon {
       (!this.held || this.data.automatic) &&
       this.cooldown === 0 &&
       !this.reloading &&
-      this.player.state !== "Sprinting"
+      this.player.state !== "Sprinting" &&
+      this.player.state !== "Dashing"
     )
       this.fire();
     this.held = this.player.input.fire;
@@ -185,7 +191,7 @@ export class Weapon {
       : 0;
     const wall = this.scene.pickWithRay(
       this.player.camera.getForwardRay(1.05),
-      (m) => m.metadata?.world === true,
+      (m) => m.isEnabled() && m.metadata?.world === true,
     );
     this.nearWall = damp(
       this.nearWall,
@@ -297,7 +303,7 @@ export class Weapon {
     const toMuzzle = muzzle.subtract(camera.position);
     const block = this.scene.pickWithRay(
       new Ray(camera.position, toMuzzle.normalizeToNew(), toMuzzle.length()),
-      (m) => m.metadata?.world === true,
+      (m) => m.isEnabled() && m.metadata?.world === true,
     );
     if (block?.hit) {
       hit = block;
@@ -306,7 +312,7 @@ export class Weapon {
       const path = target.subtract(muzzle);
       const obstruction = this.scene.pickWithRay(
         new Ray(muzzle, path.normalizeToNew(), path.length()),
-        (m) => m.metadata?.world === true,
+        (m) => m.isEnabled() && m.metadata?.world === true,
       );
       if (obstruction?.hit && obstruction.distance < path.length() - 0.08) {
         hit = obstruction;
@@ -360,6 +366,7 @@ export class Weapon {
   startLoadout(id: string, practice = false): void {
     this.reset();
     this.inventory.clear();
+    this.upgrades = new Map();
     this.primaryOwned = practice;
     this.magazines = [
       new Magazine(rifle),
@@ -370,10 +377,23 @@ export class Weapon {
     this.models.configure(1, this.magazines[1].data);
     if (!practice) this.switchTo(1);
   }
+  applyAttachments(upgrades: AttachmentInventory): void {
+    this.upgrades = upgrades;
+    for (const m of new Set([...this.magazines, ...this.inventory.values()])) {
+      const base = [...starters, ...catalog.map((item) => item.data)].find(
+        (w) => w.id === m.data.id,
+      );
+      if (!base) continue;
+      m.data = withAttachments(base, upgrades.get(base.id));
+      m.reloadRemaining = 0;
+    }
+  }
   equipPrimary(data: WeaponData): void {
     if (this.primaryOwned)
       this.inventory.set(this.magazines[0].data.id, this.magazines[0]);
-    this.magazines[0] = this.inventory.get(data.id) ?? new Magazine(data);
+    this.magazines[0] =
+      this.inventory.get(data.id) ??
+      new Magazine(withAttachments(data, this.upgrades.get(data.id)));
     this.inventory.set(data.id, this.magazines[0]);
     this.primaryOwned = true;
     this.models.configure(0, data);

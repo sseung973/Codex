@@ -6,12 +6,18 @@ import {
   Mesh,
   Ray,
 } from "@babylonjs/core";
+import { Dash } from "./Dash";
 import { PlayerInput } from "./PlayerInput";
 import { movement, damp, Settings } from "../core/Settings";
 import { Health } from "../combat/Damage";
 export type MovementState =
-  "Idle" | "Walking" | "Sprinting" | "Crouching" | "Airborne";
+  "Idle" | "Walking" | "Sprinting" | "Crouching" | "Airborne" | "Dashing";
 export class Player extends Health {
+  dash = new Dash();
+  onDash: () => void = () => {};
+  get dashing(): boolean {
+    return this.dash.remaining > 0;
+  }
   camera: UniversalCamera;
   body: Mesh;
   velocity = Vector3.Zero();
@@ -61,6 +67,7 @@ export class Player extends Health {
   }
   resetAt(pos: Vector3): void {
     this.reset();
+    this.dash.reset();
     this.body.ellipsoid.y = 0.85;
     this.body.position.copyFrom(pos).y += 0.85;
     this.velocity.setAll(0);
@@ -86,7 +93,7 @@ export class Player extends Health {
     const feet = this.feet;
     const ground = this.scene.pickWithRay(
       new Ray(feet.add(new Vector3(0, 0.35, 0)), Vector3.Down(), 0.48),
-      (m) => m.metadata?.world === true,
+      (m) => m.isEnabled() && m.metadata?.world === true,
     );
     const normal = ground?.getNormal(true);
     this.grounded = !!(
@@ -97,7 +104,7 @@ export class Player extends Health {
     const crouch = this.input.down("ControlLeft") || this.input.down("KeyC");
     const ceiling = this.scene.pickWithRay(
       new Ray(feet.add(new Vector3(0, 0.3, 0)), Vector3.Up(), 1.5),
-      (m) => m.metadata?.world === true,
+      (m) => m.isEnabled() && m.metadata?.world === true,
     );
     const short = crouch || !!ceiling?.hit;
     const radius = short ? 0.53 : 0.85;
@@ -128,6 +135,18 @@ export class Player extends Health {
       0,
       z * Math.cos(this.yaw) - x * Math.sin(this.yaw),
     );
+    const dashPressed =
+      this.input.consume("AltLeft") || this.input.consume("AltRight");
+    if (
+      dashPressed &&
+      this.grounded &&
+      !short &&
+      this.dash.start(
+        moving ? wish : new Vector3(Math.sin(this.yaw), 0, Math.cos(this.yaw)),
+      )
+    )
+      this.onDash();
+    const dashTime = this.dash.update(dt);
     if (moving) wish.normalize().scaleInPlace(speed * (ads ? 0.66 : 1));
     if (this.grounded) {
       // Direct ground control: release and direction changes have no inertia.
@@ -154,7 +173,35 @@ export class Player extends Health {
     } else this.velocity.y -= movement.gravity * dt;
     const beforeY = this.body.position.y;
     const vertical = this.velocity.y;
-    this.body.moveWithCollisions(this.velocity.scale(dt));
+    if (dashTime > 0) {
+      this.state = "Dashing";
+      // Short collision steps prevent tunnelling through thin doors and cover.
+      let distance = Dash.speed * dashTime;
+      const side = new Vector3(
+        this.dash.direction.z,
+        0,
+        -this.dash.direction.x,
+      );
+      // Explicit leading-edge sweeps also guard collision coordinators that defer updates.
+      for (const lateral of [-0.27, 0, 0.27])
+        for (const height of [-0.35, 0.2, 0.55]) {
+          const origin = this.body.position
+            .add(side.scale(lateral))
+            .add(new Vector3(0, height, 0));
+          const hit = this.scene.pickWithRay(
+            new Ray(origin, this.dash.direction, distance + 0.41),
+            (m) => m.isEnabled() && m.metadata?.world === true,
+          );
+          if (hit?.hit)
+            distance = Math.min(distance, Math.max(0, hit.distance - 0.41));
+        }
+      if (distance < Dash.speed * dashTime - 0.001) this.dash.remaining = 0;
+      const step = this.dash.direction.scale(distance / 8);
+      step.y = (this.velocity.y * dashTime) / 8;
+      for (let i = 0; i < 8; i++) this.body.moveWithCollisions(step);
+      if (dt > dashTime)
+        this.body.moveWithCollisions(this.velocity.scale(dt - dashTime));
+    } else this.body.moveWithCollisions(this.velocity.scale(dt));
     if (vertical > 0 && this.body.position.y - beforeY < vertical * dt * 0.3)
       this.velocity.y = 0;
     if (

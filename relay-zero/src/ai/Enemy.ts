@@ -15,11 +15,18 @@ import { Player } from "../player/Player";
 import { Navigation } from "./Navigation";
 import { Difficulty, difficulties } from "../core/Difficulty";
 import type { ObjectiveKind } from "../core/Objectives";
-export type EnemyRole = "assault" | "defender" | "support";
+export type EnemyRole =
+  "assault" | "defender" | "support" | "sniper" | "bomber";
 // Armor/visor change per robot, while small joint and inset surfaces never do.
 // Sharing these two materials prevents late waves from compiling duplicate shaders.
-const sharedSurfaces = new WeakMap<Scene, { joint: StandardMaterial; inset: StandardMaterial }>();
-function robotSurfaces(scene: Scene): { joint: StandardMaterial; inset: StandardMaterial } {
+const sharedSurfaces = new WeakMap<
+  Scene,
+  { joint: StandardMaterial; inset: StandardMaterial }
+>();
+function robotSurfaces(scene: Scene): {
+  joint: StandardMaterial;
+  inset: StandardMaterial;
+} {
   const cached = sharedSurfaces.get(scene);
   if (cached) return cached;
   const joint = new StandardMaterial("robot shared joints", scene);
@@ -34,6 +41,11 @@ function robotSurfaces(scene: Scene): { joint: StandardMaterial; inset: Standard
 }
 export const roleForSpawn = (index: number): EnemyRole =>
   (["assault", "defender", "support", "assault"] as const)[index % 4];
+export function combatRole(index: number, wave: number): EnemyRole {
+  if (wave >= 2 && index % 7 === 3) return "bomber";
+  if (wave >= 3 && index % 7 === 4) return "sniper";
+  return roleForSpawn(index);
+}
 export type EnemyState =
   "Idle" | "Patrol" | "Investigate" | "Chase" | "Attack" | "Search" | "Dead";
 export interface EnemyConfig {
@@ -55,9 +67,17 @@ export function enemyConfig(
   difficulty: Difficulty = difficulties.easy,
   role: EnemyRole = "assault",
 ): EnemyConfig {
+  const pressure = 1 + Math.max(0, wave - 5) * 0.025;
+  wave = Math.min(wave, 30);
   return {
-    health: Math.round((elite ? 155 : 78 + wave * 7) * difficulty.health),
-    damage: (elite ? 10 : 5 + wave * 0.65) * difficulty.damage,
+    health: Math.round(
+      (elite ? 155 : 78 + wave * 7) * difficulty.health * pressure,
+    ),
+    damage:
+      (elite ? 10 : 5 + wave * 0.65) *
+      difficulty.damage *
+      pressure *
+      (role === "sniper" ? 3 : 1),
     accuracy: Math.min(
       0.82,
       (elite ? 0.48 : 0.24 + wave * 0.025) * difficulty.accuracy,
@@ -69,13 +89,33 @@ export function enemyConfig(
     moveSpeed:
       (elite ? 3.9 : 2.8 + wave * 0.15) *
       difficulty.speed *
-      (role === "assault" ? 1.3 : role === "defender" ? 0.75 : 0.95),
+      (role === "bomber"
+        ? 1.6
+        : role === "sniper"
+          ? 0.65
+          : role === "assault"
+            ? 1.3
+            : role === "defender"
+              ? 0.75
+              : 0.95),
     fireRate: (elite ? 3.5 : 2.3) * difficulty.fireRate,
     detectionRange: 30,
     visionAngle: Math.PI * 0.72,
-    range: role === "assault" ? 9 : role === "defender" ? 17 : 22,
-    burstCount: (elite ? 4 : 3) + difficulty.extraBurst,
-    burstPause: difficulty.burstPause,
+    range:
+      role === "bomber"
+        ? 3
+        : role === "sniper"
+          ? 28
+          : role === "assault"
+            ? 9
+            : role === "defender"
+              ? 17
+              : 22,
+    burstCount:
+      role === "sniper" || role === "bomber"
+        ? 1
+        : (elite ? 4 : 3) + difficulty.extraBurst,
+    burstPause: role === "sniper" ? 3 : difficulty.burstPause,
   };
 }
 export class Enemy extends Health {
@@ -101,6 +141,16 @@ export class Enemy extends Health {
   private statusLight: StandardMaterial;
   private statusKey = "";
   stagger = 0;
+  stunRemaining = 0;
+  stun(seconds: number): void {
+    if (this.health <= 0) return;
+    this.stunRemaining = Math.max(this.stunRemaining, seconds);
+    this.attackCue = 0;
+    this.attackReady = false;
+    this.burst = 0;
+    this.reaction = Math.max(this.reaction, 0.4);
+    this.fireClock = Math.max(this.fireClock, 0.4);
+  }
   attackCue = 0;
   private attackReady = false;
   objectiveTarget?: Vector3;
@@ -174,10 +224,19 @@ export class Enemy extends Health {
       new Vector3(0, 1.29, 0.23),
       new Vector3(0.49, 0.25, 0.12),
     );
-    part("chest inset", new Vector3(0, 1.29, 0.301), new Vector3(0.31, 0.14, 0.035), inset);
+    part(
+      "chest inset",
+      new Vector3(0, 1.29, 0.301),
+      new Vector3(0.31, 0.14, 0.035),
+      inset,
+    );
     for (const x of [-0.2, 0.2])
-      part("chest fastener", new Vector3(x, 1.3, 0.304),
-        new Vector3(0.045, 0.12, 0.045), joint);
+      part(
+        "chest fastener",
+        new Vector3(x, 1.3, 0.304),
+        new Vector3(0.045, 0.12, 0.045),
+        joint,
+      );
     part("waist", new Vector3(0, 0.71, 0), new Vector3(0.4, 0.19, 0.3), joint);
     part(
       "head",
@@ -193,12 +252,29 @@ export class Enemy extends Health {
       visor,
       true,
     );
-    part("helmet brow", new Vector3(0, 1.91, 0.2), new Vector3(.42, .07, .12), inset, true);
-    part("helmet jaw", new Vector3(0, 1.64, 0.17), new Vector3(.27, .08, .14), joint, true);
+    part(
+      "helmet brow",
+      new Vector3(0, 1.91, 0.2),
+      new Vector3(0.42, 0.07, 0.12),
+      inset,
+      true,
+    );
+    part(
+      "helmet jaw",
+      new Vector3(0, 1.64, 0.17),
+      new Vector3(0.27, 0.08, 0.14),
+      joint,
+      true,
+    );
     for (const x of [-0.23, 0.23]) {
       part("leg", new Vector3(x, 0.39, 0), new Vector3(0.2, 0.65, 0.23), joint);
       part("shin", new Vector3(x, 0.26, 0.04), new Vector3(0.23, 0.3, 0.25));
-      part("knee guard", new Vector3(x, .43, .155), new Vector3(.24, .13, .08), inset);
+      part(
+        "knee guard",
+        new Vector3(x, 0.43, 0.155),
+        new Vector3(0.24, 0.13, 0.08),
+        inset,
+      );
       part(
         "foot",
         new Vector3(x, 0.065, 0.07),
@@ -208,8 +284,12 @@ export class Enemy extends Health {
     }
     for (const x of [-0.44, 0.44]) {
       part("shoulder", new Vector3(x, 1.34, 0), new Vector3(0.22, 0.28, 0.32));
-      part("shoulder cap", new Vector3(x * 1.15, 1.47, .02),
-        new Vector3(.13, .08, .31), inset);
+      part(
+        "shoulder cap",
+        new Vector3(x * 1.15, 1.47, 0.02),
+        new Vector3(0.13, 0.08, 0.31),
+        inset,
+      );
       part(
         "arm",
         new Vector3(x, 1.05, 0.1),
@@ -241,11 +321,20 @@ export class Enemy extends Health {
       );
       this.shield.metadata.shield = true;
       for (const m of [
-        part("shield upper rim", new Vector3(-.1, 1.69, .665),
-          new Vector3(1.2, .09, .08), joint),
-        part("shield viewport", new Vector3(-.1, 1.4, .668),
-          new Vector3(.6, .13, .07), inset),
-      ]) m.isPickable = false;
+        part(
+          "shield upper rim",
+          new Vector3(-0.1, 1.69, 0.665),
+          new Vector3(1.2, 0.09, 0.08),
+          joint,
+        ),
+        part(
+          "shield viewport",
+          new Vector3(-0.1, 1.4, 0.668),
+          new Vector3(0.6, 0.13, 0.07),
+          inset,
+        ),
+      ])
+        m.isPickable = false;
     }
     if (role === "support") {
       part(
@@ -254,14 +343,47 @@ export class Enemy extends Health {
         new Vector3(0.55, 0.65, 0.3),
         joint,
       );
-      for (const x of [-.19, .19])
-        part("repair pack rail", new Vector3(x, 1.2, -.49),
-          new Vector3(.08, .53, .06), inset);
+      for (const x of [-0.19, 0.19])
+        part(
+          "repair pack rail",
+          new Vector3(x, 1.2, -0.49),
+          new Vector3(0.08, 0.53, 0.06),
+          inset,
+        );
       part(
         "repair beacon",
         new Vector3(0, 2.04, 0),
         new Vector3(0.2, 0.14, 0.2),
         visor,
+      );
+    }
+    if (role === "sniper") {
+      part(
+        "long precision barrel",
+        new Vector3(0.43, 1.14, 0.8),
+        new Vector3(0.1, 0.1, 1.1),
+        joint,
+      );
+      part(
+        "rangefinder",
+        new Vector3(0.27, 1.93, 0.22),
+        new Vector3(0.18, 0.16, 0.35),
+        visor,
+        true,
+      );
+    }
+    if (role === "bomber") {
+      part(
+        "volatile power core",
+        new Vector3(0, 1.15, 0.32),
+        new Vector3(0.48, 0.5, 0.25),
+        visor,
+      );
+      part(
+        "blast pack",
+        new Vector3(0, 1.2, -0.3),
+        new Vector3(0.65, 0.7, 0.35),
+        inset,
       );
     }
     this.shutdown = new RobotShutdown(this.root, this.parts);
@@ -274,14 +396,22 @@ export class Enemy extends Health {
     return this.position.add(new Vector3(0, 1.65, 0));
   }
   setObjectiveTarget(point: Vector3 | undefined, kind: ObjectiveKind): void {
-    if (this.objectiveKind === kind &&
-        (!point && !this.objectiveTarget || point && this.objectiveTarget &&
-          Vector3.DistanceSquared(point, this.objectiveTarget) < .01)) return;
+    if (
+      this.objectiveKind === kind &&
+      ((!point && !this.objectiveTarget) ||
+        (point &&
+          this.objectiveTarget &&
+          Vector3.DistanceSquared(point, this.objectiveTarget) < 0.01))
+    )
+      return;
     this.objectiveKind = kind;
     this.objectiveTarget = point?.clone();
     this.pathClock = 0;
-    if (point && this.state !== "Dead" &&
-        (this.state === "Idle" || this.state === "Patrol")) {
+    if (
+      point &&
+      this.state !== "Dead" &&
+      (this.state === "Idle" || this.state === "Patrol")
+    ) {
       this.lastKnown.copyFrom(point);
       this.state = "Investigate";
     }
@@ -306,13 +436,14 @@ export class Enemy extends Health {
       this.shield.setEnabled(this.shieldHealth > 0);
       if (this.shieldHealth === 0)
         for (const p of this.parts)
-          if (p.name === "shield upper rim" || p.name === "shield viewport") p.setEnabled(false);
+          if (p.name === "shield upper rim" || p.name === "shield viewport")
+            p.setEnabled(false);
       this.state = "Chase";
       return false;
     }
     const dead = super.receiveDamage(info);
     this.flash = 0.12;
-    this.mat.emissiveColor.set(.7, .32, .1);
+    this.mat.emissiveColor.set(0.7, 0.32, 0.1);
     this.stagger = 0.12;
     this.attackCue = 0;
     this.attackReady = false;
@@ -334,9 +465,13 @@ export class Enemy extends Health {
           Vector3.DistanceSquared(this.position, e.position) <= 64 &&
           this.level.lineClear(this.eye, e.eye),
       )
-      .sort((a, b) =>
-        a.health / a.maxHealth - (this.objectiveTarget && a.role === "defender" ? .16 : 0) -
-        b.health / b.maxHealth + (this.objectiveTarget && b.role === "defender" ? .16 : 0))[0];
+      .sort(
+        (a, b) =>
+          a.health / a.maxHealth -
+          (this.objectiveTarget && a.role === "defender" ? 0.16 : 0) -
+          b.health / b.maxHealth +
+          (this.objectiveTarget && b.role === "defender" ? 0.16 : 0),
+      )[0];
     if (!target) return;
     target.health = Math.min(target.maxHealth, target.health + 12);
     target.repairFlash = 0.35;
@@ -344,6 +479,11 @@ export class Enemy extends Health {
     this.onRepair(target);
   }
   update(dt: number, player: Player, others: Enemy[]): void {
+    if (this.health > 0 && this.stunRemaining > 0) {
+      this.stunRemaining = Math.max(0, this.stunRemaining - dt);
+      this.mat.emissiveColor.set(0.05, 0.25, 0.45);
+      return;
+    }
     this.animation += dt;
     this.repairFlash = Math.max(0, this.repairFlash - dt);
     this.flash = Math.max(0, this.flash - dt);
@@ -363,16 +503,18 @@ export class Enemy extends Health {
       this.attackReady && this.attackCue > 0
         ? gameTheme.colors.amber
         : this.repairFlash > 0
-        ? gameTheme.colors.blue
-        : this.elite
-          ? gameTheme.colors.amber
-          : gameTheme.colors.danger;
+          ? gameTheme.colors.blue
+          : this.elite
+            ? gameTheme.colors.amber
+            : gameTheme.colors.danger;
     const statusKey = glow + alert + (this.attackReady && this.attackCue > 0);
     if (statusKey !== this.statusKey) {
       this.statusKey = statusKey;
       this.statusLight.emissiveColor
         .copyFrom(Color3.FromHexString(glow))
-        .scaleInPlace(this.attackReady && this.attackCue > 0 ? 1.5 : alert ? 1 : 0.45);
+        .scaleInPlace(
+          this.attackReady && this.attackCue > 0 ? 1.5 : alert ? 1 : 0.45,
+        );
     }
     this.repairClock -= dt;
     if (this.repairClock <= 0) {
@@ -407,9 +549,13 @@ export class Enemy extends Health {
         this.lost = 0;
         this.state = distance < this.config.range ? "Attack" : "Chase";
         // Guards contest the active objective; supporters follow to keep them repaired.
-        if (this.objectiveTarget && this.role !== "assault" &&
-            Vector3.DistanceSquared(this.position, this.objectiveTarget) >
-              (this.role === "defender" ? 9 : 22)) this.state = "Chase";
+        if (
+          this.objectiveTarget &&
+          (this.role === "defender" || this.role === "support") &&
+          Vector3.DistanceSquared(this.position, this.objectiveTarget) >
+            (this.role === "defender" ? 9 : 22)
+        )
+          this.state = "Chase";
       } else {
         this.lost += 0.12;
         if (this.state === "Attack") this.state = "Chase";
@@ -432,22 +578,33 @@ export class Enemy extends Health {
       ) {
         if (this.burst === 0 && !this.attackReady) {
           this.attackReady = true;
-          this.attackCue = Math.max(.4, Math.min(.65, this.config.reactionTime * .7));
+          this.attackCue =
+            this.role === "sniper"
+              ? 1.2
+              : this.role === "bomber"
+                ? 1
+                : Math.max(0.4, Math.min(0.65, this.config.reactionTime * 0.7));
           this.onTelegraph(this);
         } else if (this.attackCue <= 0) {
           this.onAttack(this);
           this.attackReady = false;
           this.burst++;
-          this.fireClock = this.burst >= this.config.burstCount
-            ? this.config.burstPause : 1 / this.config.fireRate;
+          this.fireClock =
+            this.burst >= this.config.burstCount
+              ? this.config.burstPause
+              : 1 / this.config.fireRate;
           if (this.burst >= this.config.burstCount) this.burst = 0;
         }
       }
     }
     let goal = this.lastKnown;
-    if (this.objectiveTarget && this.role !== "assault" &&
-        Vector3.DistanceSquared(this.position, this.objectiveTarget) >
-          (this.role === "defender" ? 9 : 22)) goal = this.objectiveTarget;
+    if (
+      this.objectiveTarget &&
+      (this.role === "defender" || this.role === "support") &&
+      Vector3.DistanceSquared(this.position, this.objectiveTarget) >
+        (this.role === "defender" ? 9 : 22)
+    )
+      goal = this.objectiveTarget;
     if (this.state === "Patrol") {
       goal = this.home.add(
         new Vector3(
