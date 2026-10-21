@@ -8,6 +8,7 @@ import {
   Color3,
   Vector3,
   TransformNode,
+  Matrix,
 } from "@babylonjs/core";
 import { Health, DamageInfo } from "../combat/Damage";
 import { Level } from "../world/Level";
@@ -180,6 +181,7 @@ export class Enemy extends Health {
     this.body.ellipsoid = new Vector3(0.4, 0.85, 0.4);
     this.body.isVisible = false;
     this.body.isPickable = false;
+    this.body.surroundingMeshes = level.solids;
     this.root = new TransformNode("sentinel " + id, scene);
     this.root.position.copyFrom(pos);
     this.root.rotation.y = Math.atan2(-pos.x, -17 - pos.z);
@@ -386,8 +388,70 @@ export class Enemy extends Health {
         inset,
       );
     }
+    this.batchParts();
     this.shutdown = new RobotShutdown(this.root, this.parts);
     this.think = Math.random() * 0.15;
+  }
+  private batchParts(): void {
+    const groups = new Map<
+      string,
+      { meshes: Mesh[]; name: string; pivot: Vector3 }
+    >();
+    const kept: Mesh[] = [];
+    for (const m of this.parts) {
+      if (/shield/.test(m.name)) {
+        kept.push(m);
+        continue;
+      }
+      const head = m.metadata?.head === true;
+      const arm =
+        /^(arm|shoulder|shoulder cap|blaster|long precision barrel)$/.test(
+          m.name,
+        );
+      const leg = /^(leg|shin|foot|knee guard)$/.test(m.name);
+      const sign = m.position.x < 0 ? -1 : 1;
+      const name = head ? "head" : arm ? "arm" : leg ? "leg" : "torso";
+      const pivot = head
+        ? new Vector3(0, 1.77, 0)
+        : arm
+          ? new Vector3(sign * 0.44, 1.1, 0.1)
+          : leg
+            ? new Vector3(sign * 0.23, 0.39, 0)
+            : new Vector3(0, 1.1, 0);
+      const key = `${name}:${arm || leg ? sign : 0}:${m.material?.uniqueId}`;
+      const group = groups.get(key) ?? { meshes: [], name, pivot };
+      group.meshes.push(m);
+      groups.set(key, group);
+    }
+    for (const { meshes, name, pivot } of groups.values()) {
+      const material = meshes[0].material;
+      const metadata = meshes[0].metadata;
+      for (const m of meshes) {
+        this.level.shadows.removeShadowCaster(m);
+        m.parent = null;
+        m.computeWorldMatrix(true);
+      }
+      const batch = Mesh.MergeMeshes(
+        meshes,
+        true,
+        true,
+        undefined,
+        false,
+        false,
+      )!;
+      batch.bakeTransformIntoVertices(
+        Matrix.Translation(-pivot.x, -pivot.y, -pivot.z),
+      );
+      batch.name = name;
+      batch.parent = this.root;
+      batch.position.copyFrom(pivot);
+      batch.material = material;
+      batch.metadata = metadata;
+      if ((name === "torso" || name === "head") && material === this.mat)
+        this.level.shadows.addShadowCaster(batch);
+      kept.push(batch);
+    }
+    this.parts.splice(0, this.parts.length, ...kept);
   }
   get position(): Vector3 {
     return this.root.position;

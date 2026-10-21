@@ -137,13 +137,21 @@ export class RobotShutdown {
       )
       .map((material) => ({ material, color: material.emissiveColor.clone() }));
     for (const mesh of this.root.getScene().meshes) {
-      if (mesh.metadata?.world !== true) continue;
+      if (mesh.metadata?.world !== true || !mesh.isEnabled()) continue;
       mesh.computeWorldMatrix(true);
       const box = mesh.getBoundingInfo().boundingBox;
-      this.bounds.push({
-        min: box.minimumWorld.clone(),
-        max: box.maximumWorld.clone(),
-      });
+      const min = box.minimumWorld,
+        max = box.maximumWorld,
+        origin = this.root.position;
+      // A collapsed robot cannot reach the opposite side of the arena in 2.5 seconds.
+      if (
+        origin.x < min.x - 6 ||
+        origin.x > max.x + 6 ||
+        origin.z < min.z - 6 ||
+        origin.z > max.z + 6
+      )
+        continue;
+      this.bounds.push({ min: min.clone(), max: max.clone() });
     }
   }
   private collide(p: Particle): void {

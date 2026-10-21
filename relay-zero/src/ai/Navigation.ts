@@ -1,3 +1,4 @@
+import { pickWorld } from "../world/WorldQuery";
 import { Vector3, Ray } from "@babylonjs/core";
 import { Level } from "../world/Level";
 // Small static 2m grid. Occupancy is sampled once; A* runs only when a route expires.
@@ -15,9 +16,9 @@ export class Navigation {
     for (let z = 0; z < this.size; z++)
       for (let x = 0; x < this.size; x++) {
         const p = this.world(x, z);
-        const hit = level.scene.pickWithRay(
+        const hit = pickWorld(
+          level.scene,
           new Ray(p.add(new Vector3(0, 7, 0)), Vector3.Down(), 6.7),
-          (m) => m.isEnabled() && m.metadata?.world === true,
         );
         if (hit?.hit) this.blocked.add(z * this.size + x);
       }
@@ -30,6 +31,39 @@ export class Navigation {
       Math.max(0, Math.min(20, Math.round(p.x / 2) + 10)),
       Math.max(0, Math.min(20, Math.round(p.z / 2) + 10)),
     ];
+  }
+  reachable(start: Vector3): Set<number> {
+    const [sx, sz] = this.cellOf(start),
+      source = sz * this.size + sx;
+    const seen = new Set([source]),
+      queue = [source];
+    for (let head = 0; head < queue.length; head++) {
+      const current = queue[head],
+        x = current % this.size,
+        z = Math.floor(current / this.size);
+      for (const [dx, dz] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+      ]) {
+        const nx = x + dx,
+          nz = z + dz,
+          key = nz * this.size + nx;
+        if (
+          nx < 0 ||
+          nz < 0 ||
+          nx >= this.size ||
+          nz >= this.size ||
+          this.blocked.has(key) ||
+          seen.has(key)
+        )
+          continue;
+        seen.add(key);
+        queue.push(key);
+      }
+    }
+    return seen;
   }
   route(start: Vector3, goal: Vector3): Vector3[] {
     const [sx, sz] = this.cellOf(start),

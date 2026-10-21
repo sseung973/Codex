@@ -5,6 +5,7 @@ import {
   MeshBuilder,
   StandardMaterial,
   Vector3,
+  VertexBuffer,
 } from "@babylonjs/core";
 import { Enemy } from "./Enemy";
 import type { Player } from "../player/Player";
@@ -13,6 +14,7 @@ import type { Player } from "../player/Player";
 export class Sniper extends Enemy {
   aimPoint = Vector3.Zero();
   private laser?: LinesMesh;
+  private laserPositions = new Float32Array(6);
   lockAim(point: Vector3): void {
     this.aimPoint.copyFrom(point);
   }
@@ -29,11 +31,23 @@ export class Sniper extends Enemy {
         );
         this.laser.color = Color3.FromHexString("#e56561");
         this.laser.isPickable = false;
-      } else
-        MeshBuilder.CreateLines("sniper targeting laser", {
-          points: [this.eye, this.aimPoint],
-          instance: this.laser,
-        });
+      } else {
+        const eye = this.eye,
+          point = this.aimPoint,
+          positions = this.laserPositions;
+        positions[0] = eye.x;
+        positions[1] = eye.y;
+        positions[2] = eye.z;
+        positions[3] = point.x;
+        positions[4] = point.y;
+        positions[5] = point.z;
+        this.laser.updateVerticesData(
+          VertexBuffer.PositionKind,
+          positions,
+          true,
+          false,
+        );
+      }
     }
     this.laser?.setEnabled(aiming);
   }

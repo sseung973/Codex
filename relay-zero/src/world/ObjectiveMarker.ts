@@ -17,6 +17,7 @@ export function objectivePoints(nav: Navigation, level: Level): Vector3[] {
         ? [new Vector3(12, 0, -4), new Vector3(-12, 0, 10)]
         : [new Vector3(-10, 0, 0), new Vector3(10, 0, 12)];
   const selected: Vector3[] = [];
+  const reachable = nav.reachable(level.spawn);
   for (const target of preferred) {
     const candidates: Vector3[] = [];
     for (let z = 1; z < nav.size - 1; z++)
@@ -25,7 +26,7 @@ export function objectivePoints(nav: Navigation, level: Level): Vector3[] {
         const p = nav.world(x, z);
         if (selected.some((other) => Vector3.DistanceSquared(other, p) < 64))
           continue;
-        if (nav.route(level.spawn, p).length) candidates.push(p);
+        if (reachable.has(z * nav.size + x)) candidates.push(p);
       }
     candidates.sort(
       (a, b) =>

@@ -1,3 +1,4 @@
+import { pickWorld } from "../world/WorldQuery";
 import {
   Color3,
   Mesh,
@@ -112,9 +113,9 @@ export class Equipment {
           length = delta.length();
         const hit =
           length > 0
-            ? this.scene.pickWithRay(
+            ? pickWorld(
+                this.scene,
                 new Ray(p.mesh.position, delta.scale(1 / length), length + 0.1),
-                (m) => m.isEnabled() && m.metadata?.world === true,
               )
             : null;
         if (hit?.hit && hit.pickedPoint) {

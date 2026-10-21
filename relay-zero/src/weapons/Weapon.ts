@@ -1,3 +1,4 @@
+import { pickWorld } from "../world/WorldQuery";
 import { WeaponMotion } from "./WeaponMotion";
 import { withAttachments, type AttachmentInventory } from "./Attachments";
 import { starters, catalog } from "./Arsenal";
@@ -87,7 +88,7 @@ export class Weapon {
     this.muzzleLight.includedOnlyMeshes = this.models.views.flatMap((v) =>
       v.root.getChildMeshes(),
     );
-    this.muzzleLight.setEnabled(false);
+    this.muzzleLight.intensity = 0;
     scene.setRenderingAutoClearDepthStencil(1, true, true, true);
   }
   get mag(): Magazine {
@@ -130,7 +131,7 @@ export class Weapon {
     this.swingTime = 0;
     this.flashTime = 0;
     this.flash.setEnabled(false);
-    this.muzzleLight.setEnabled(false);
+    this.muzzleLight.intensity = 0;
     this.models.select(slot);
     this.muzzle = this.models.views[slot].muzzle;
     this.flash.parent = this.muzzle;
@@ -189,10 +190,7 @@ export class Weapon {
           (1 - this.mag.reloadRemaining / this.mag.reloadDuration) * Math.PI,
         )
       : 0;
-    const wall = this.scene.pickWithRay(
-      this.player.camera.getForwardRay(1.05),
-      (m) => m.isEnabled() && m.metadata?.world === true,
-    );
+    const wall = pickWorld(this.scene, this.player.camera.getForwardRay(1.05));
     this.nearWall = damp(
       this.nearWall,
       wall?.hit ? Math.max(0, 1 - wall.distance / 1.05) : 0,
@@ -225,10 +223,9 @@ export class Weapon {
     this.flash.setEnabled(visibleFlash);
     this.muzzle.computeWorldMatrix(true);
     this.muzzleLight.position.copyFrom(this.muzzle.getAbsolutePosition());
-    this.muzzleLight.intensity = 1.4 * Math.min(1, this.flashTime / 0.024);
-    this.muzzleLight.setEnabled(
-      visibleFlash && this.player.settings.quality === "high",
-    );
+    this.muzzleLight.intensity = visibleFlash
+      ? 1.4 * Math.min(1, this.flashTime / 0.024)
+      : 0;
   }
   strike(): void {
     const ray = this.player.camera.getForwardRay(this.data.range);
@@ -301,18 +298,18 @@ export class Weapon {
       hit?.pickedPoint || ray.origin.add(ray.direction.scale(this.data.range));
     // Camera-to-muzzle and muzzle-to-target obstruction tests prevent wall penetration.
     const toMuzzle = muzzle.subtract(camera.position);
-    const block = this.scene.pickWithRay(
+    const block = pickWorld(
+      this.scene,
       new Ray(camera.position, toMuzzle.normalizeToNew(), toMuzzle.length()),
-      (m) => m.isEnabled() && m.metadata?.world === true,
     );
     if (block?.hit) {
       hit = block;
       target = block.pickedPoint!;
     } else {
       const path = target.subtract(muzzle);
-      const obstruction = this.scene.pickWithRay(
+      const obstruction = pickWorld(
+        this.scene,
         new Ray(muzzle, path.normalizeToNew(), path.length()),
-        (m) => m.isEnabled() && m.metadata?.world === true,
       );
       if (obstruction?.hit && obstruction.distance < path.length() - 0.08) {
         hit = obstruction;
@@ -419,6 +416,6 @@ export class Weapon {
     this.held = false;
     this.ads = 0;
     this.flash.setEnabled(false);
-    this.muzzleLight.setEnabled(false);
+    this.muzzleLight.intensity = 0;
   }
 }

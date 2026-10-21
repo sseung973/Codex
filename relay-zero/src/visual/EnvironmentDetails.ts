@@ -39,52 +39,88 @@ export function buildEnvironmentDetails(level: Level): void {
   const paint = level.material("structural painted metal", c.paint);
   for (const x of [-9.5, 9.5]) {
     for (const z of [-12, -6, 0, 12, 18]) {
-      box("floor lane module", x, .014, z, 3.3, .012, 5.25, paint);
+      box("floor lane module", x, 0.006, z, 3.3, 0.008, 5.25, paint);
       for (const edge of [-1, 1])
         // Clear the transverse floor seam: near-coplanar strips flickered at their crossings.
-        box("lane boundary", x + edge * 1.72, .041, z, .024, .013, 5.5, white);
+        box(
+          "lane boundary",
+          x + edge * 1.72,
+          0.041,
+          z,
+          0.024,
+          0.013,
+          5.5,
+          white,
+        );
     }
   }
   // Preparation zone remains clear; markings sit directly on the floor.
   for (const x of [-5, 5]) {
-    box("spawn boundary", x, .039, -16, .07, .012, 9, blue);
-    box("forward route", x, .039, -9.8, .075, .012, 1.9, amber);
+    box("spawn boundary", x, 0.039, -16, 0.07, 0.012, 9, blue);
+    box("forward route", x, 0.039, -9.8, 0.075, 0.012, 1.9, amber);
   }
   for (const x of [-13.5, 13.5]) {
-    box("side corridor outer edge", x, .018, 7, .055, .02, 25, white);
+    box("side corridor outer edge", x, 0.018, 7, 0.055, 0.02, 25, white);
     for (const z of [-2, 3, 8, 13])
-      box("side route chevron", x, .044, z, .65, .012, .055, amber);
+      box("side route chevron", x, 0.044, z, 0.65, 0.012, 0.055, amber);
   }
   // Recessed panel rhythm stays attached to the enclosing walls.
   for (const x of [-21.43, 21.43]) {
     for (const z of [-17, -7, 3, 13]) {
-      box("wall concrete panel", x, 2.25, z, .04, 3.8, 7.7, concrete);
-      box("wall base skirting", x, .25, z, .08, .32, 8, dark);
+      box("wall concrete panel", x, 2.25, z, 0.04, 3.8, 7.7, concrete);
+      box("wall base skirting", x, 0.25, z, 0.08, 0.32, 8, dark);
       for (const dz of [-4.1, 4.1])
-        box("blue structural upright", x, 4.4, z + dz, .13, 8.4, .32, paint);
+        box("blue structural upright", x, 4.4, z + dz, 0.13, 8.4, 0.32, paint);
     }
   }
   for (const x of [-16, -8, 0, 8, 16]) {
-    box("rear concrete panel", x, 3.2, 21.44, 7.55, 5.6, .035, concrete);
-    box("upper service fascia", x, 7.45, 21.38, 7.55, .7, .06, paint);
+    box("rear concrete panel", x, 3.2, 21.44, 7.55, 5.6, 0.035, concrete);
+    box("upper service fascia", x, 7.45, 21.38, 7.55, 0.7, 0.06, paint);
   }
   // Light ceiling cassettes: open central slots retain directional illumination.
   for (const x of [-16, -8, 8, 16])
     for (const z of [-15, -3, 9, 19])
-      box("ceiling cassette", x, 10.6, z, 6.8, .16, 8.3, concrete);
+      box("ceiling cassette", x, 10.6, z, 6.8, 0.16, 8.3, concrete);
   // Existing cores get a recessed vertical amber panel rather than a new obstruction.
-  const core = level.solids.find(m => /^(relay core|nexus core)$/.test(m.name));
+  const core = level.solids.find((m) =>
+    /^(relay core|nexus core)$/.test(m.name),
+  );
   if (core) {
     const b = core.getBoundingInfo().boundingBox.extendSize;
     const p = core.position;
     for (const side of [-1, 1]) {
-      const z = p.z + side * (b.z + .045);
-      box("core recessed channel", p.x, p.y, z, b.x * 1.1, b.y * 1.65, .06, dark);
-      for (const dx of [-.2, .2])
-        box("core amber filament", p.x + dx, p.y + .25, z + side * .04,
-          .075, b.y * 1.2, .035, red);
-      box("core identification plate", p.x, p.y - b.y * .65, z + side * .045,
-        b.x * .7, .32, .045, white);
+      const z = p.z + side * (b.z + 0.045);
+      box(
+        "core recessed channel",
+        p.x,
+        p.y,
+        z,
+        b.x * 1.1,
+        b.y * 1.65,
+        0.06,
+        dark,
+      );
+      for (const dx of [-0.2, 0.2])
+        box(
+          "core amber filament",
+          p.x + dx,
+          p.y + 0.25,
+          z + side * 0.04,
+          0.075,
+          b.y * 1.2,
+          0.035,
+          red,
+        );
+      box(
+        "core identification plate",
+        p.x,
+        p.y - b.y * 0.65,
+        z + side * 0.045,
+        b.x * 0.7,
+        0.32,
+        0.045,
+        white,
+      );
     }
   }
   // Wall-mounted systems sit inside the existing perimeter, above playable head height.
@@ -194,36 +230,83 @@ export function buildEnvironmentDetails(level: Level): void {
     // Loading bay: stacked portal frames echo the existing crane and containers.
     for (const z of [-8, 4, 16]) {
       for (const x of [-18.5, 18.5]) {
-        box("loading portal upright", x, 6.4, z, .34, 4.6, .5, steel);
-        box("loading portal lamp", x + (x < 0 ? .2 : -.2), 6.7, z, .04, .1, .35, amber);
+        box("loading portal upright", x, 6.4, z, 0.34, 4.6, 0.5, steel);
+        box(
+          "loading portal lamp",
+          x + (x < 0 ? 0.2 : -0.2),
+          6.7,
+          z,
+          0.04,
+          0.1,
+          0.35,
+          amber,
+        );
       }
-      box("loading portal crossmember", 0, 8.7, z, 37.3, .3, .5, dark);
+      box("loading portal crossmember", 0, 8.7, z, 37.3, 0.3, 0.5, dark);
     }
     for (const x of [-12, 12]) {
-      box("loading dock fascia", x, 5.4, 20.9, 8.2, .7, .12, paint);
-      box("loading dock identifier", x, 5.35, 20.8, 2.8, .09, .04, white);
+      box("loading dock fascia", x, 5.4, 20.9, 8.2, 0.7, 0.12, paint);
+      box("loading dock identifier", x, 5.35, 20.8, 2.8, 0.09, 0.04, white);
     }
   } else if (level.mapId === "nexus") {
     // Lab: four observation bays and cool repeated instrument strips.
-    for (const x of [-11, 11]) for (const z of [-4, 9]) {
-      const front = z - 2.6;
-      box("lab observation window", x, 2.2, front, 3, .85, .045, dark);
-      box("lab observation glass", x, 2.2, front - .03, 2.72, .63, .018, steel);
-      box("lab observation header", x, 2.68, front - .02, 3.2, .08, .04, blue);
-      for (const side of [-1, 1])
-        box("lab window bracket", x + side * 1.55, 2.2, front - .025, .09, 1.06, .055, white);
-    }
+    for (const x of [-11, 11])
+      for (const z of [-4, 9]) {
+        const front = z - 2.6;
+        box("lab observation window", x, 2.2, front, 3, 0.85, 0.045, dark);
+        box(
+          "lab observation glass",
+          x,
+          2.2,
+          front - 0.03,
+          2.72,
+          0.63,
+          0.018,
+          steel,
+        );
+        box(
+          "lab observation header",
+          x,
+          2.68,
+          front - 0.02,
+          3.2,
+          0.08,
+          0.04,
+          blue,
+        );
+        for (const side of [-1, 1])
+          box(
+            "lab window bracket",
+            x + side * 1.55,
+            2.2,
+            front - 0.025,
+            0.09,
+            1.06,
+            0.055,
+            white,
+          );
+      }
     for (const x of [-16, 0, 16])
-      box("lab ceiling index", x, 8.83, 18, 3.5, .075, .26, blue);
+      box("lab ceiling index", x, 8.83, 18, 3.5, 0.075, 0.26, blue);
   } else {
     // Foundry: upper gallery heat baffles and amber service guides.
-    for (const x of [-12, 12]) for (const z of [3.3, 7.4, 11.5]) {
-      const face = x + (x < 0 ? 3.65 : -3.65);
-      box("foundry baffle", face, 2.6, z, .09, 2.4, 1.55, dark);
-      box("foundry heat slot", face + (x < 0 ? .055 : -.055), 2.25, z, .02, .09, 1.05, amber);
-    }
+    for (const x of [-12, 12])
+      for (const z of [3.3, 7.4, 11.5]) {
+        const face = x + (x < 0 ? 3.65 : -3.65);
+        box("foundry baffle", face, 2.6, z, 0.09, 2.4, 1.55, dark);
+        box(
+          "foundry heat slot",
+          face + (x < 0 ? 0.055 : -0.055),
+          2.25,
+          z,
+          0.02,
+          0.09,
+          1.05,
+          amber,
+        );
+      }
     for (const x of [-14.5, 14.5])
-      box("foundry gallery label", x, 5.32, 8, .18, .08, 10.5, white);
+      box("foundry gallery label", x, 5.32, 8, 0.18, 0.08, 10.5, white);
   }
   level.sign(
     "RELAY / TRAINING SYSTEMS",

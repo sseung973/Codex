@@ -4,6 +4,7 @@ export interface Settings {
   sfxVolume: number;
   fov: number;
   quality: "low" | "medium" | "high";
+  autoGraphics: boolean;
   headBob: boolean;
   crosshairSize: number;
 }
@@ -12,7 +13,8 @@ export const defaults: Settings = {
   masterVolume: 0.65,
   sfxVolume: 0.8,
   fov: 90,
-  quality: "high",
+  quality: "medium",
+  autoGraphics: true,
   headBob: true,
   crosshairSize: 1,
 };
@@ -34,6 +36,7 @@ export function loadSettings(): Settings {
     out.sfxVolume = Math.max(0, Math.min(1, out.sfxVolume));
     out.crosshairSize = Math.max(0.5, Math.min(2, out.crosshairSize));
     if (["low", "medium", "high"].includes(s.quality)) out.quality = s.quality;
+    if (typeof s.autoGraphics === "boolean") out.autoGraphics = s.autoGraphics;
     if (typeof s.headBob === "boolean") out.headBob = s.headBob;
     return out;
   } catch {

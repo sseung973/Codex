@@ -1,3 +1,4 @@
+import { PerformanceBudget } from "./PerformanceBudget";
 import { Equipment } from "../weapons/Equipment";
 import { ArenaDevices, PowerCell } from "../world/ArenaDevices";
 import { Sniper, Bomber } from "../ai/Specialists";
@@ -76,6 +77,9 @@ export class Game {
   time = 0;
   hudTime = 0;
   debug = false;
+  private graphics = new PerformanceBudget();
+  private graphicsRequest = "";
+  private lastRender = 0;
   private frameMs = 0;
   private framePeakMs = 0;
   private renderCpuMs = 0;
@@ -84,12 +88,17 @@ export class Game {
   private enemyCueCooldown = 0;
   constructor(canvas: HTMLCanvasElement, hud: HUD) {
     this.settings = hud.settings;
-    this.engine = new Engine(canvas, true, {
+    this.engine = new Engine(canvas, false, {
+      powerPreference: "high-performance",
       preserveDrawingBuffer: false,
-      stencil: true,
+      stencil: false,
       adaptToDeviceRatio: false,
     });
     this.scene = new Scene(this.engine);
+    // Pointer lock input is handled by PlayerInput; Babylon pointer picking is unused.
+    this.scene.skipPointerMovePicking = true;
+    this.scene.skipPointerDownPicking = true;
+    this.scene.skipPointerUpPicking = true;
     this.level = new Level(this.scene, hud.selectedMap);
     this.navigation = new Navigation(this.level);
     this.missionPoints = objectivePoints(this.navigation, this.level);
@@ -103,6 +112,8 @@ export class Game {
       this.hud.toast(`EMP 방출 · ${count}기 정지`, 1.5);
     };
     this.devices = this.buildDevices();
+    this.level.optimize();
+    this.player.body.surroundingMeshes = this.level.solids;
     this.marker = new ObjectiveMarker(this.scene);
     this.weapon = new Weapon(this.scene, this.player, this.audio, this.effects);
     this.hud = hud;
@@ -273,11 +284,16 @@ export class Game {
       this.audio.play("ui");
     };
     this.waves.onVictory = () => this.finish(true);
-    window.addEventListener("resize", () => this.engine.resize());
+    window.addEventListener("resize", () => this.applyGraphics());
     this.engine.onContextLostObservable.add(() => {
       this.running = false;
       if (this.input.locked) document.exitPointerLock();
-      this.hud.error("Graphics connection lost. Reload the page to restart.");
+      this.hud.error("그래픽 연결이 끊겼어. 복구를 기다리는 중이야.");
+    });
+    this.engine.onContextRestoredObservable.add(() => {
+      this.applyGraphics();
+      this.hud.el("error").hidden = true;
+      this.hud.toast("그래픽 복구 완료 · 게임으로 돌아가기를 눌러줘", 4);
     });
     this.engine.runRenderLoop(() => this.frame());
   }
@@ -472,6 +488,8 @@ export class Game {
     this.navigation = new Navigation(this.level);
     this.missionPoints = objectivePoints(this.navigation, this.level);
     this.devices = this.buildDevices();
+    this.level.optimize();
+    this.player.body.surroundingMeshes = this.level.solids;
     this.equipment.level = this.level;
     this.player.resetAt(this.level.spawn);
     this.player.camera.position.set(10, 5.4, -15);
@@ -480,20 +498,37 @@ export class Game {
   }
   applySettings(): void {
     this.audio.apply();
+    const request = `${this.settings.quality}:${this.settings.autoGraphics}`;
+    if (request !== this.graphicsRequest) {
+      this.graphicsRequest = request;
+      this.graphics.configure(
+        this.settings.quality,
+        this.settings.autoGraphics,
+      );
+    }
+    this.applyGraphics();
+  }
+  private applyGraphics(): void {
+    const quality = this.graphics.quality;
     this.engine.setHardwareScalingLevel(
-      this.settings.quality === "low"
-        ? 1.6
-        : this.settings.quality === "medium"
-          ? 1.2
-          : 1,
+      this.graphics.scaling(window.innerWidth, window.innerHeight),
     );
-    this.scene.shadowsEnabled = this.settings.quality !== "low";
+    this.scene.shadowsEnabled = quality === "high";
     for (const light of this.level.lights.slice(2))
-      light.setEnabled(this.settings.quality !== "low");
-    this.pipeline.fxaaEnabled = true;
-    this.pipeline.bloomEnabled = this.settings.quality === "high";
+      light.setEnabled(quality === "high");
+    // Keep the flash light registered between shots: toggling lights invalidates shaders.
+    this.weapon.muzzleLight.setEnabled(quality === "high");
+    this.pipeline.imageProcessingEnabled = quality !== "low";
+    this.pipeline.fxaaEnabled = quality !== "low";
+    this.pipeline.bloomEnabled = quality === "high";
     this.pipeline.samples = 1;
+    for (const material of this.scene.materials)
+      if (material.isFrozen) material.unfreeze();
     this.engine.resize();
+    this.hud.set(
+      "graphics-detail",
+      `현재 적용: ${{ low: "낮음", medium: "중간", high: "높음" }[quality]} · ${this.settings.autoGraphics ? "자동 성능 조절 켜짐" : "수동 설정"}`,
+    );
   }
   start(practice: boolean): void {
     this.started = true;
@@ -831,7 +866,24 @@ export class Game {
     this.audio.play(victory ? "headshot" : "land");
   }
   frame(): void {
-    const dt = Math.min(this.engine.getDeltaTime() / 1000, 0.05);
+    if (document.hidden) {
+      this.graphics.resetWindow();
+      return;
+    }
+    const now = performance.now();
+    const interval = now - this.lastRender;
+    if (!this.running && interval < 1000 / 15) {
+      this.input.endFrame();
+      return;
+    }
+    this.lastRender = now;
+    const rawMilliseconds = this.engine.getDeltaTime();
+    const dt = Math.min(
+      (this.running ? rawMilliseconds : interval) / 1000,
+      0.05,
+    );
+    if (this.running && this.graphics.sample(rawMilliseconds))
+      this.applyGraphics();
     if (this.debug) {
       const ms = this.engine.getDeltaTime();
       this.frameMs = this.frameMs ? this.frameMs * 0.9 + ms * 0.1 : ms;

@@ -177,3 +177,25 @@ WeaponMotion owns separate pose, sway, bob and recoil transform nodes. Visual re
 - **Endless continuation.** Complete all five campaign waves, then select **무한 웨이브 도전** on the victory screen. Keep weapons, attachments and coins; endless score, statistics and time start from zero. Continue at wave six with normal intermission resupply, fresh arena devices and two EMPs. Total enemies grow by three per wave up to 60, with at most 12 active and six per reinforcement group. Health and damage continue scaling, elites appear more often, objectives cycle every five waves and a commander returns every fifth wave. Endless best score and highest wave reached use separate map/difficulty browser storage; campaign records are preserved. New Game/Restart returns to the five-wave campaign.
 
 Validation uses executable Node tests and Babylon NullEngine integration checks. `npm test` uses a shared test process so TypeScript test cases are individually executed and reported. GPU rendering, actual pointer-lock combat, audio perception and frame rate require a hardware-accelerated desktop browser; no connected browser was available in this session.
+
+
+## Performance and graphics fixes — 2.1
+
+- Static arena meshes are batched by material and shadow role. Original invisible colliders retain exact triangle picking, slopes and collision, while temporary barriers and controls remain independent. Weapon details and robot parts are batched in local coordinates; muzzles, weapon variants, head hits, shields and ragdoll joints retain their transforms.
+- World-only rays use a cached collider list with AABB rejection and exact triangle intersections. The cache notices additions synchronously, even though Babylon mesh-added notifications are deferred. Disabled barriers are ignored. Actor collisions use the arena's collider list instead of every robot, gun and particle. Selecting objective positions uses one reachable-cell flood fill.
+- Default graphics is Medium with **자동 성능 조절** enabled. Existing sensitivity and quality preferences remain saved; automatic mode starts at Medium even for an old High preference. Slow foreground frames first reduce effects, then render scale; recovery requires sustained healthy frame times. Effective Low/Medium/High pixel budgets are 960×540, 1280×720 and 1920×1080. These are render pixel budgets; the canvas and HUD still fill the viewport. Disable automatic control to force High. Settings shows the effective quality.
+- High retains shadows, bloom and auxiliary lighting; Medium omits those effects and retains FXAA, while Low also omits post-processing. Canvas MSAA is disabled so it does not duplicate FXAA. The engine requests a high-performance GPU where available. Inactive menus/pause/results render at 15 Hz; hidden tabs skip work.
+- Muzzle lighting now changes intensity instead of registering/removing a light every shot. Frozen materials are released when graphics configuration changes, preventing stale light/shadow variants. Context restoration reapplies settings and leaves the run paused for explicit resume.
+- Sniper lasers reuse their vertex buffer. Ragdolls exclude disabled barriers and distant collision boxes. Small sign textures use one quarter of their previous texel count. Floor lane fills sit below seams with a larger depth gap to reduce crossing flicker.
+
+### Reproducible verification
+
+`npm test` passes 64 checks, including optimized map geometry/navigation/disposal, exact rotated-world picking, newly added/disabled colliders, weapon-local muzzles and variants, head hits, shutdown geometry and automatic/manual quality behavior. `npm run build` includes strict TypeScript validation. `npm run benchmark` runs a deterministic 240-frame-per-scene Babylon NullEngine CPU/geometry check, omitting text textures.
+
+| Same benchmark scene | Previous peak active meshes | Optimized peak active meshes |
+| --- | ---: | ---: |
+| No robots | 134 | 30 |
+| 4 robots | 245 | 113 |
+| 12 robots | 467 | 279 |
+
+These counts measure scene/render work in the benchmark, **not GPU FPS**. No browser-control tool was connected, so physical GPU frame rate, visual appearance, context-loss recovery and full pointer-lock gameplay still need a desktop browser check. The existing large Babylon JavaScript bundle remains a startup/download limitation; this patch primarily reduces continuous frame cost.

@@ -1,3 +1,4 @@
+import { pickWorld } from "./WorldQuery";
 import { gameTheme, surface } from "../visual/GameTheme";
 import { buildEnvironmentDetails } from "../visual/EnvironmentDetails";
 import { maps, MapId } from "./MapData";
@@ -301,6 +302,59 @@ export class Level {
     }
     buildEnvironmentDetails(this);
   }
+  optimize(): void {
+    const casters = new Set(this.shadows.getShadowMap()?.renderList ?? []);
+    const groups = new Map<string, Mesh[]>();
+    for (const abstract of this.root.getChildMeshes()) {
+      if (!(abstract instanceof Mesh)) continue;
+      const m = abstract;
+      if (
+        m.metadata?.renderBatch ||
+        m.metadata?.colliderOnly ||
+        m.metadata?.dynamic ||
+        m.metadata?.entity ||
+        m.name === "sign" ||
+        !m.isEnabled() ||
+        !m.material
+      )
+        continue;
+      const key = `${m.material.uniqueId}:${casters.has(m)}`;
+      const list = groups.get(key) ?? [];
+      list.push(m);
+      groups.set(key, list);
+    }
+    for (const meshes of groups.values()) {
+      const material = meshes[0].material;
+      const casts = casters.has(meshes[0]);
+      for (const m of meshes) m.computeWorldMatrix(true);
+      const batch = Mesh.MergeMeshes(
+        meshes,
+        false,
+        true,
+        undefined,
+        false,
+        false,
+      );
+      if (!batch) continue;
+      batch.name = "static facility batch";
+      batch.parent = this.root;
+      batch.material = material;
+      batch.isPickable = batch.checkCollisions = false;
+      batch.receiveShadows = true;
+      batch.metadata = { renderBatch: true, visualOnly: true };
+      batch.freezeWorldMatrix();
+      if (casts) this.shadows.addShadowCaster(batch);
+      for (const m of meshes) {
+        this.shadows.removeShadowCaster(m);
+        if (m.metadata?.world) {
+          m.isVisible = false;
+          m.metadata.colliderOnly = true;
+          m.freezeWorldMatrix();
+        } else m.dispose();
+      }
+    }
+    for (const m of this.root.getChildMeshes()) m.freezeWorldMatrix();
+  }
   material(name: string, hex: string, emission?: string): PBRMaterial {
     const key = `${name}:${hex}:${emission ?? ""}`;
     const cached = this.surfaces.get(key);
@@ -351,17 +405,17 @@ export class Level {
   ): void {
     const tex = new DynamicTexture(
       "sign " + text,
-      { width: 1024, height: 256 },
+      { width: 512, height: 128 },
       this.scene,
       false,
     );
     const ctx = tex.getContext();
-    ctx.clearRect(0, 0, 1024, 256);
+    ctx.clearRect(0, 0, 512, 128);
     tex.drawText(
       text,
       null,
-      170,
-      "bold 104px sans-serif",
+      85,
+      "bold 52px sans-serif",
       color,
       "transparent",
       true,
@@ -398,10 +452,7 @@ export class Level {
     const d = b.subtract(a),
       l = d.length();
     if (l < 0.01) return true;
-    const hit = this.scene.pickWithRay(
-      new Ray(a, d.scale(1 / l), l),
-      (m) => m.isEnabled() && m.metadata?.world === true,
-    );
+    const hit = pickWorld(this.scene, new Ray(a, d.scale(1 / l), l));
     return !hit?.hit || hit.distance > l - 0.15;
   }
 }

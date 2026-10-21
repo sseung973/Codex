@@ -264,6 +264,40 @@ export class WeaponModels {
         rail.metadata = { onlyWeapon: "s24" };
         rail.setEnabled(false);
       }
+      const groups = new Map<PBRMaterial, Mesh[]>();
+      for (const abstract of root.getChildMeshes()) {
+        const m = abstract as Mesh;
+        if (
+          m === muzzle ||
+          m.metadata?.onlyWeapon ||
+          /sight|optic/.test(m.name)
+        )
+          continue;
+        const mat = m.material as PBRMaterial;
+        const list = groups.get(mat) ?? [];
+        list.push(m);
+        groups.set(mat, list);
+      }
+      for (const [mat, meshes] of groups) {
+        // Parent space is the moving camera rig; world-baking it would offset the gun.
+        for (const m of meshes) {
+          m.parent = null;
+          m.computeWorldMatrix(true);
+        }
+        const batch = Mesh.MergeMeshes(
+          meshes,
+          true,
+          true,
+          undefined,
+          false,
+          false,
+        )!;
+        batch.name = `weapon surface ${slot} ${mat.name}`;
+        batch.parent = root;
+        batch.material = mat;
+        batch.isPickable = false;
+        batch.renderingGroupId = 1;
+      }
       this.views.push({ root, muzzle });
       root.setEnabled(slot === 0);
     }

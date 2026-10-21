@@ -114,6 +114,7 @@ export class ArenaDevices {
         new Vector3(3.2, i === 0 ? 3 : 1.3, 0.4),
         level.material("tactical barrier", "#435c70"),
       );
+      mesh.metadata.dynamic = true;
       mesh.setEnabled(false);
       const control = level.box(
         "barrier control",
@@ -122,6 +123,7 @@ export class ArenaDevices {
         level.material("barrier switch", "#435c70", "#8fc3df"),
         false,
       );
+      control.metadata.dynamic = true;
       level.sign(
         i === 0 ? "E / SECURITY DOOR" : "E / DEPLOY COVER",
         control.position.add(new Vector3(0, 1.1, -0.2)),

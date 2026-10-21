@@ -1,3 +1,4 @@
+import { pickWorld } from "../world/WorldQuery";
 import {
   Scene,
   UniversalCamera,
@@ -91,9 +92,9 @@ export class Player extends Health {
   update(dt: number, ads: boolean): void {
     this.look(ads);
     const feet = this.feet;
-    const ground = this.scene.pickWithRay(
+    const ground = pickWorld(
+      this.scene,
       new Ray(feet.add(new Vector3(0, 0.35, 0)), Vector3.Down(), 0.48),
-      (m) => m.isEnabled() && m.metadata?.world === true,
     );
     const normal = ground?.getNormal(true);
     this.grounded = !!(
@@ -102,9 +103,9 @@ export class Player extends Health {
       (!normal || normal.y > Math.cos(movement.maxSlope))
     );
     const crouch = this.input.down("ControlLeft") || this.input.down("KeyC");
-    const ceiling = this.scene.pickWithRay(
+    const ceiling = pickWorld(
+      this.scene,
       new Ray(feet.add(new Vector3(0, 0.3, 0)), Vector3.Up(), 1.5),
-      (m) => m.isEnabled() && m.metadata?.world === true,
     );
     const short = crouch || !!ceiling?.hit;
     const radius = short ? 0.53 : 0.85;
@@ -188,9 +189,9 @@ export class Player extends Health {
           const origin = this.body.position
             .add(side.scale(lateral))
             .add(new Vector3(0, height, 0));
-          const hit = this.scene.pickWithRay(
+          const hit = pickWorld(
+            this.scene,
             new Ray(origin, this.dash.direction, distance + 0.41),
-            (m) => m.isEnabled() && m.metadata?.world === true,
           );
           if (hit?.hit)
             distance = Math.min(distance, Math.max(0, hit.distance - 0.41));
