@@ -15,7 +15,6 @@ import { Wallet, smg, sniper } from "../src/weapons/Arsenal";
 import { Weapon } from "../src/weapons/Weapon";
 import { Effects } from "../src/effects/Effects";
 import type { Audio } from "../src/audio/Audio";
-import { ArenaDevices, PowerCell } from "../src/world/ArenaDevices";
 import { objectivePoints } from "../src/world/ObjectiveMarker";
 import type { MapId } from "../src/world/MapData";
 import { Waves } from "../src/core/Waves";
@@ -293,52 +292,14 @@ test("attachments enforce ownership, two slots and one charge, preserve ammo and
 });
 
 for (const map of ["foundry", "cargo", "nexus"] as const)
-  test(`${map}: all devices spawn, routes stay reachable, barriers refuse occupied space and reopen`, () => {
+  test(`${map}: enemy entries and mission anchors remain reachable`, () => {
     const f = fixture(map),
-      mission = objectivePoints(f.nav, f.level),
-      devices = new ArenaDevices(f.level, f.nav, mission);
-    assert.equal(devices.cells.length, 3);
-    assert.equal(devices.barriers.length, 2);
+      mission = objectivePoints(f.nav, f.level);
     for (const point of [...f.level.enemySpawns, ...mission])
       assert.ok(
         f.nav.route(f.level.spawn, point).length > 0,
         `route lost at ${point}`,
       );
-    for (const barrier of devices.barriers) {
-      const camera = barrier.control.position.add(new Vector3(0, 0.8, 0));
-      assert.equal(devices.interact(camera, [barrier.mesh.position]), false);
-      assert.equal(devices.interact(camera, []), true);
-      assert.equal(barrier.mesh.isEnabled(), true);
-      assert.equal(devices.interact(camera, []), false);
-      const [x, z] = f.nav.cellOf(barrier.mesh.position);
-      assert.equal(f.nav.blocked.has(z * f.nav.size + x), true);
-      devices.update(6.1);
-      assert.equal(barrier.mesh.isEnabled(), false);
-      assert.equal(f.nav.blocked.has(z * f.nav.size + x), false);
-      assert.equal(devices.interact(camera, []), false);
-      devices.update(8.1);
-      assert.equal(devices.interact(camera, []), true);
-    }
-    let explosions = 0;
-    const cell = devices.cells[0];
-    cell.onExplode = () => explosions++;
-    const damage = {
-      damage: 100,
-      source: "player",
-      target: cell.id,
-      hitPoint: cell.mesh.position,
-      hitNormal: Vector3.Up(),
-      isHeadshot: false,
-      damageType: "hitscan" as const,
-    };
-    cell.receiveDamage(damage);
-    cell.receiveDamage(damage);
-    assert.equal(explosions, 1);
-    assert.equal(cell.mesh.isEnabled(), false);
-    devices.reset();
-    assert.equal(cell.health, 45);
-    assert.equal(cell.mesh.isEnabled(), true);
-    assert.ok(devices.barriers.every((b) => !b.mesh.isEnabled()));
     f.dispose();
   });
 
@@ -413,7 +374,6 @@ test("blast chains credit each robot once; self-destruction has no coin reward a
     player: f.player,
     level: f.level,
     enemies: [bomber, ally],
-    devices: { cells: [] },
     equipment: new Equipment(f.scene, f.level),
     effects: f.effects,
     audio: f.audio,

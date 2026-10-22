@@ -8,7 +8,6 @@ import { OnlineArena } from "../src/multiplayer/OnlineArena";
 import { defaults } from "../src/core/Settings";
 import { Level } from "../src/world/Level";
 import { Navigation } from "../src/ai/Navigation";
-import { ArenaDevices } from "../src/world/ArenaDevices";
 import { objectivePoints } from "../src/world/ObjectiveMarker";
 import { Player } from "../src/player/Player";
 import { Weapon } from "../src/weapons/Weapon";
@@ -97,7 +96,6 @@ test("tactical HUD uses actual health, ammo, elapsed time, mode scores and avail
       objectives,
       level,
       equipment: { ammo: 2 },
-      devices: { hint: () => "" },
       enemies: [],
       targets: [],
       wallet: new Wallet(),
@@ -174,7 +172,7 @@ test("tactical HUD uses actual health, ammo, elapsed time, mode scores and avail
     f.close();
   }
 });
-test("minimap bakes distinct real map footprints, updates doors and markers, and throttles updates", () => {
+test("minimap bakes distinct real map footprints, updates markers, and throttles updates", () => {
   const f = domFixture(),
     engine = new NullEngine(),
     shapes: string[] = [];
@@ -184,8 +182,7 @@ test("minimap bakes distinct real map footprints, updates doors and markers, and
     for (const map of ["foundry", "cargo", "nexus"] as const) {
       const scene = new Scene(engine),
         level = new GeometryLevel(scene, map),
-        nav = new Navigation(level),
-        devices = new ArenaDevices(level, nav, objectivePoints(nav, level));
+        nav = new Navigation(level);
       level.optimize();
       f.hud.configureArena(level);
       const walls = f.hud.el("minimap-walls");
@@ -215,17 +212,7 @@ test("minimap bakes distinct real map footprints, updates doors and markers, and
       const first = f.hud.el("minimap-player").getAttribute("transform");
       f.hud.tacticalMap.update({ ...state, yaw: 0 }, 1050);
       assert.equal(f.hud.el("minimap-player").getAttribute("transform"), first);
-      const barrier = devices.barriers[0];
-      if (barrier) {
-        barrier.mesh.setEnabled(true);
-        f.hud.tacticalMap.update({ ...state, yaw: 0 }, 1100);
-        assert.equal(
-          f.hud
-            .el("minimap-devices")
-            .firstElementChild!.getAttribute("visibility"),
-          "visible",
-        );
-      }
+      f.hud.tacticalMap.update({ ...state, yaw: 0 }, 1100);
       const observer = new (window as any).MutationObserver(() => {});
       observer.observe(f.hud.el("minimap"), {
         subtree: true,

@@ -10,7 +10,6 @@ import {
 } from "@babylonjs/core";
 import { Level } from "../src/world/Level";
 import { pickWorld, worldMeshes } from "../src/world/WorldQuery";
-import { ArenaDevices } from "../src/world/ArenaDevices";
 import { Navigation } from "../src/ai/Navigation";
 import { objectivePoints } from "../src/world/ObjectiveMarker";
 class GeometryLevel extends Level {
@@ -38,8 +37,7 @@ for (const map of ["foundry", "cargo", "nexus"] as const)
     const engine = new NullEngine(),
       scene = new Scene(engine),
       level = new GeometryLevel(scene, map),
-      nav = new Navigation(level),
-      devices = new ArenaDevices(level, nav, objectivePoints(nav, level));
+      nav = new Navigation(level);
     level.optimize();
     let seed = 567;
     const random = () => {
@@ -91,9 +89,6 @@ for (const map of ["foundry", "cargo", "nexus"] as const)
       }
     };
     try {
-      compare();
-      for (const cell of devices.cells) cell.mesh.setEnabled(false);
-      for (const b of devices.barriers) b.mesh.setEnabled(true);
       compare();
       const moving = MeshBuilder.CreateBox(
         "moving collider",

@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { NullEngine, Scene, MeshBuilder, Vector3, Ray } from "@babylonjs/core";
 import { Level } from "../src/world/Level";
 import { Navigation } from "../src/ai/Navigation";
-import { ArenaDevices } from "../src/world/ArenaDevices";
 import { objectivePoints } from "../src/world/ObjectiveMarker";
 import { pickWorld, worldMeshes } from "../src/world/WorldQuery";
 import { PerformanceBudget } from "../src/core/PerformanceBudget";
@@ -19,13 +18,12 @@ class GeometryLevel extends Level {
 }
 
 for (const map of ["foundry", "cargo", "nexus"] as const)
-  test(`${map}: batching reduces render objects while preserving colliders, navigation, devices and disposal`, () => {
+  test(`${map}: batching reduces render objects while preserving colliders, navigation and disposal`, () => {
     const engine = new NullEngine(),
       scene = new Scene(engine),
       level = new GeometryLevel(scene, map),
       nav = new Navigation(level);
-    const mission = objectivePoints(nav, level),
-      devices = new ArenaDevices(level, nav, mission);
+    const mission = objectivePoints(nav, level);
     const before = scene.meshes.filter(
       (m) => m.isEnabled() && m.isVisible,
     ).length;
@@ -64,15 +62,6 @@ for (const map of ["foundry", "cargo", "nexus"] as const)
     assert.ok(actor.grounded);
     assert.ok(actor.feet.y > -0.1);
     for (const p of mission) assert.ok(nav.route(level.spawn, p).length > 0);
-    for (const barrier of devices.barriers) {
-      assert.equal(barrier.mesh.metadata?.dynamic, true);
-      const position = barrier.control.position.add(new Vector3(0, 1, 0));
-      assert.equal(devices.interact(position, []), true);
-      assert.equal(barrier.mesh.isVisible, true);
-      assert.equal(barrier.mesh.isEnabled(), true);
-      devices.update(7);
-      assert.equal(barrier.mesh.isEnabled(), false);
-    }
     const count = scene.meshes.length;
     level.optimize();
     assert.equal(scene.meshes.length, count, "batching must be idempotent");

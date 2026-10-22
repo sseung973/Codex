@@ -1,7 +1,6 @@
 import { OnlineArena } from "../multiplayer/OnlineArena";
 import { PerformanceBudget } from "./PerformanceBudget";
 import { Equipment } from "../weapons/Equipment";
-import { ArenaDevices, PowerCell } from "../world/ArenaDevices";
 import { Sniper, Bomber } from "../ai/Specialists";
 import { EndlessRecords } from "./RunStats";
 import { gameTheme } from "../visual/GameTheme";
@@ -57,7 +56,6 @@ export class Game {
   finished = false;
   practice = false;
   equipment: Equipment;
-  devices: ArenaDevices;
   endlessRecords = new EndlessRecords();
   private accounted = new Set<string>();
   private pendingDeaths = 0;
@@ -113,7 +111,6 @@ export class Game {
       this.audio.play("alert", 0.35);
       this.hud.toast(`EMP 방출 · ${count}기 정지`, 1.5);
     };
-    this.devices = this.buildDevices();
     this.level.optimize();
     this.player.body.surroundingMeshes = this.level.solids;
     this.marker = new ObjectiveMarker(this.scene);
@@ -218,7 +215,6 @@ export class Game {
         this.input.request();
     });
     this.weapon.onHit = (head, kill, target) => {
-      if (target instanceof PowerCell) return;
       this.hud.hit(head, kill);
       if (target instanceof Enemy) target.lastKnown.copyFrom(this.player.feet);
       if (head) this.headshots++;
@@ -331,25 +327,6 @@ export class Game {
     );
     this.updateHUD();
   }
-  private buildDevices(): ArenaDevices {
-    const devices = new ArenaDevices(
-      this.level,
-      this.navigation,
-      this.missionPoints,
-    );
-    devices.onBlast = (point) =>
-      this.blasts.push({
-        point,
-        radius: 5,
-        damage: 120,
-        playerDamage: 35,
-        credited: true,
-      });
-    devices.onChange = () => {
-      for (const e of this.enemies) e.pathClock = 0;
-    };
-    return devices;
-  }
   private eliminate(enemy: Enemy, head: boolean, credited: boolean): void {
     if (this.accounted.has(enemy.id)) return;
     this.accounted.add(enemy.id);
@@ -412,28 +389,6 @@ export class Game {
         )
           this.eliminate(enemy, false, blast.credited);
       }
-      for (const cell of this.devices.cells) {
-        if (
-          cell.health > 0 &&
-          Vector3.DistanceSquared(cell.mesh.position, blast.point) <=
-            blast.radius ** 2 &&
-          this.level.lineClear(
-            blast.point,
-            cell.mesh.position.add(
-              blast.point.subtract(cell.mesh.position).normalize().scale(0.65),
-            ),
-          )
-        )
-          cell.receiveDamage({
-            damage: blast.damage,
-            source: "blast",
-            target: cell.id,
-            hitPoint: cell.mesh.position,
-            hitNormal: Vector3.Up(),
-            isHeadshot: false,
-            damageType: "explosion",
-          });
-      }
     }
     this.resolvingBlast = false;
     if (this.player.health <= 0 && !this.finished) this.finish(false);
@@ -476,7 +431,6 @@ export class Game {
     this.stats = new RunStats();
     this.blasts = [];
     this.equipment.reset();
-    this.devices.reset();
     this.waves.continueEndless();
     this.hud.set(
       "run-difficulty",
@@ -499,7 +453,6 @@ export class Game {
     this.level = new Level(this.scene, id);
     this.navigation = new Navigation(this.level);
     this.missionPoints = objectivePoints(this.navigation, this.level);
-    this.devices = this.buildDevices();
     this.level.optimize();
     this.hud.configureArena(this.level);
     this.player.body.surroundingMeshes = this.level.solids;
@@ -561,7 +514,6 @@ export class Game {
     this.pendingDeaths = 0;
     this.blasts = [];
     this.equipment.reset();
-    this.devices.reset();
     this.shopping = false;
     this.objectives.reset();
     this.marker.show(undefined, 3, false);
@@ -622,7 +574,6 @@ export class Game {
     this.pendingDeaths = 0;
     this.blasts = [];
     this.equipment.reset();
-    this.devices.reset();
     this.objectives.reset();
     this.marker.show(undefined, 3, false);
     this.input.clear();
@@ -941,23 +892,6 @@ export class Game {
             1,
           );
       }
-      this.devices.update(dt);
-      const usingObjective =
-        !this.objectives.done &&
-        this.objectives.kind === "activate" &&
-        this.objectives.point &&
-        Vector3.DistanceSquared(this.player.feet, this.objectives.point) < 16;
-      if (!usingObjective && this.input.consume("KeyE")) {
-        const hint = this.devices.hint(this.player.camera.position);
-        if (
-          hint &&
-          !this.devices.interact(
-            this.player.camera.position,
-            this.enemies.filter((e) => e.health > 0).map((e) => e.position),
-          )
-        )
-          this.hud.toast("장치 대기 중 · 차단 위치를 비워줘", 1);
-      }
       this.weapon.update(dt);
       this.resolveBlasts();
       this.equipment.update(dt, this.enemies);
@@ -1041,9 +975,7 @@ export class Game {
   updateHUD(online = false): void {
     const h = this.hud,
       w = this.weapon;
-    const deviceHint = online
-      ? ""
-      : this.devices.hint(this.player.camera.position);
+    const deviceHint = "";
     if (!online) {
       const boss = this.enemies.find(
         (e): e is Commander => e instanceof Commander && e.health > 0,
@@ -1189,12 +1121,11 @@ export class Game {
         dash: this.player.dash.cooldown,
         emp: this.equipment.ammo,
         online: false,
-        interact:
-          !!(
-            active &&
-            this.objectives.point &&
-            Vector3.DistanceSquared(feet, this.objectives.point) < 16
-          ) || deviceHint.startsWith("E"),
+        interact: !!(
+          active &&
+          this.objectives.point &&
+          Vector3.DistanceSquared(feet, this.objectives.point) < 16
+        ),
         melee: w.melee,
       });
     }

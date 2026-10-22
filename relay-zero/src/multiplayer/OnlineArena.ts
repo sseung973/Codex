@@ -259,7 +259,6 @@ export class OnlineArena {
     const choice = g.hud.el("map-choice") as HTMLSelectElement;
     choice.value = map;
     choice.dispatchEvent?.(new Event("change"));
-    g.devices?.setOnline(true);
     this.mode = mode;
     this.active = true;
     g.hud.root.classList.add("online-game");
@@ -545,7 +544,6 @@ export class OnlineArena {
   }
   leave(): void {
     this.client.close();
-    this.game.devices?.setOnline(false);
     this.active = this.begun = this.ended = false;
     this.game.weapon.networkAttack = undefined;
     this.avatar?.dispose();

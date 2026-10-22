@@ -30,7 +30,7 @@ export class Equipment {
     this.empMaterial.emissiveColor = Color3.FromHexString("#8fc3df");
     this.empMaterial.disableLighting = true;
     this.empMaterial.wireframe = true;
-    this.blastMaterial = new StandardMaterial("power cell blast", scene);
+    this.blastMaterial = new StandardMaterial("combat blast", scene);
     this.blastMaterial.emissiveColor = Color3.FromHexString("#edac58");
     this.blastMaterial.disableLighting = true;
     this.blastMaterial.wireframe = true;
