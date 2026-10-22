@@ -48,6 +48,12 @@ export class HUD {
     if (value <= 0) this.damageFeedback.amount = 0;
   }
   private cache = new Map<string, string>();
+  waveBars: HTMLElement[] = [];
+  private nodes = new Map<string, HTMLElement>();
+  private styles = new Map<string, string>();
+  private hitActive = false;
+  private killActive = false;
+  private toastActive = false;
   constructor(public settings: Settings) {
     this.root.innerHTML = `
  <div class="vignette"></div><header class="topbar"><a class="wordmark" href="#" aria-label="Relay Zero home"><span class="brand-symbol">R/</span> RELAY ZERO<span class="edition">ARENA</span></a><div class="top-right"><span id="sector-tag" class="sector-tag">SECTOR 07</span><button id="fullscreen" class="icon-button" aria-label="Toggle fullscreen">⛶</button><button id="sound" class="icon-button" aria-label="Toggle sound">♪</button></div></header>
@@ -64,7 +70,10 @@ export class HUD {
  <section id="overlay" class="overlay" hidden><div class="dialog"><p class="eyebrow" id="overlay-label">SESSION PAUSED</p><h2 id="overlay-title">Take a breath.</h2><p id="overlay-detail">Your run is right where you left it.</p><p id="run-difficulty"></p><div id="results"></div><div id="shop-items" hidden></div><button id="endless" class="primary" hidden>무한 웨이브 도전 <span>∞</span></button><button id="open-shop" class="secondary">B · 무기 상점 (웨이브 사이)</button><button id="resume" class="primary">게임으로 돌아가기 <span>↗</span></button><button id="restart" class="secondary">다시 시작</button><button id="exit" class="secondary">메인 화면으로 나가기</button><button id="pause-settings" class="text-button">SETTINGS</button></div></section>
  <section id="settings-panel" class="overlay" hidden><div class="dialog settings-dialog"><div class="panel-heading"><h2>Settings</h2><button id="close-settings" class="icon-button" aria-label="Close settings">✕</button></div><label for="sensitivity">Mouse sensitivity <output id="sensitivity-out"></output><input id="sensitivity" type="range" min="0.15" max="3" step="0.05"></label><label for="masterVolume">Master volume <output id="masterVolume-out"></output><input id="masterVolume" type="range" min="0" max="1" step="0.05"></label><label for="sfxVolume">Effects volume <output id="sfxVolume-out"></output><input id="sfxVolume" type="range" min="0" max="1" step="0.05"></label><label for="fov">Field of view <output id="fov-out"></output><input id="fov" type="range" min="70" max="110" step="1"></label><label for="crosshairSize">Crosshair size <output id="crosshairSize-out"></output><input id="crosshairSize" type="range" min="0.5" max="2" step="0.1"></label><label class="inline">Graphics quality<select id="quality"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label><label class="inline">자동 성능 조절<input id="autoGraphics" type="checkbox"></label><p id="graphics-detail" class="settings-note">해상도를 유지하면서 그림자·조명 효과를 조절해 끊김을 줄여줘.</p><label class="inline">Head bob<input id="headBob" type="checkbox"></label><p class="settings-note">Saved automatically on this device.</p></div></section>
  <section id="controls-panel" class="overlay" hidden><div class="dialog"><div class="panel-heading"><h2>Controls</h2><button id="close-controls" class="icon-button" aria-label="Close controls">✕</button></div><dl class="controls-list"><dt>Move</dt><dd>W A S D</dd><dt>Look</dt><dd>MOUSE</dd><dt>Fire / Aim</dt><dd>LMB / RMB</dd><dt>Sprint / Jump</dt><dd>SHIFT / SPACE</dd><dt>대시</dt><dd>ALT · 쿨타임 3.5초</dd><dt>EMP 수류탄</dt><dd>G · 로봇 정지 / B에서 보충</dd><dt>전장 장치</dt><dd>E · 차단문 / 엄폐물</dd><dt>Crouch</dt><dd>CTRL / C</dd><dt>Reload</dt><dd>R</dd><dt>Switch weapon</dt><dd>1 / 2 / 3 / WHEEL</dd><dt>무기 상점</dt><dd>B · 웨이브 사이</dd><dt>장치 작동</dt><dd>E 길게 누르기</dd><dt>Pause</dt><dd>ESC</dd></dl><p class="settings-note">경량 돌격형: 빠른 접근 · 방패 방어형: 방패 파괴 또는 측면 공격 · 수리팩 지원형: 주변 적 수리 · 저격형: 레이저를 보고 이동 · 자폭형: 경고 원 밖으로 회피. 황색 전력통은 사격 시 폭발하며 자신도 피해를 받아.</p><p class="settings-note">게임 시작을 누르면 마우스가 게임에 고정돼.<br>ESC를 누르면 일시정지·나가기 메뉴가 열려.</p></div></section>
- <div id="hud" hidden><div id="boss-panel" hidden><span>COMMAND UNIT · SECTOR GUARDIAN</span><b id="boss-state">지휘 로봇 · 공격을 대비해</b><div class="boss-track"><i id="boss-fill"></i></div></div><div class="mission-stack"><div class="objective"><span id="wave-label">WAVE 01 / 05</span><b id="objective">HOLD THE RELAY</b><div class="wave-bars"><i></i><i></i><i></i><i></i><i></i></div><small id="enemies">3 SENTINELS REMAINING</small></div><div id="mission-status" hidden><span id="mission-arrow">↑</span><div><b id="mission-hint"></b><small id="mission-distance"></small><div class="mission-track"><i id="mission-fill"></i></div></div></div></div><div class="score"><span>SCORE</span><b id="score">00000</b><small id="coins">0 COINS · B 상점</small></div><div id="ads-reticle" hidden aria-hidden="true">${sightMarkup()}</div><div id="crosshair"><i></i><i></i><i></i><i></i><b></b></div><div id="hitmarker">╳</div><div id="damage-arrow" aria-hidden="true">▲</div><div id="damage-flash" aria-hidden="true"></div><div id="damage-label" aria-live="off"></div><div id="toast"></div><div id="kill-feedback"></div><div class="health"><div class="hud-label">+ &nbsp; INTEGRITY</div><div class="health-value"><b id="health">100</b><span>/ 100</span></div><div class="health-track"><i id="health-fill"></i></div></div><div class="weapon-hud"><div id="weapon-name" class="hud-label">AR-7 VANGUARD</div><div class="ammo"><b id="ammo">30</b><span>/ <span id="reserve">180</span></span></div><div class="weapon-slots"><span id="slot1">1 &nbsp; ASSAULT RIFLE</span><span id="slot2">2 &nbsp; SIDEARM</span><span id="slot3">3 &nbsp; 충격봉</span></div></div><div id="tactical-hud"><b id="dash-status">ALT · 대시 준비</b><span id="emp-status">G · EMP ×2</span><small id="device-hint"></small></div><div class="bottom-hint"><span id="reload-label">R &nbsp; RELOAD</span><span>ESC &nbsp; 일시정지 / 나가기</span></div><div id="reload-bar"><i></i></div></div><pre id="debug" hidden></pre><div id="error" role="status" hidden></div><footer id="menu-footer"><span>RELAY ZERO <b>03.0</b></span><span>STAY MOVING. MAKE EVERY SHOT COUNT.</span><span id="graphics-status">WEBGL / READY</span></footer>`;
+ <div id="hud" hidden><div id="boss-panel" hidden><span>COMMAND UNIT · SECTOR GUARDIAN</span><b id="boss-state">지휘 로봇 · 공격을 대비해</b><div class="boss-track"><i id="boss-fill"></i></div></div><div class="mission-stack"><div class="objective"><span id="wave-label">WAVE 01 / 05</span><b id="objective">HOLD THE RELAY</b><div class="wave-bars"><i></i><i></i><i></i><i></i><i></i></div><small id="enemies">3 SENTINELS REMAINING</small></div><div id="mission-status" hidden><span id="mission-arrow">↑</span><div><b id="mission-hint"></b><small id="mission-distance"></small><div class="mission-track"><i id="mission-fill"></i></div></div></div></div><div class="score"><span>SCORE</span><b id="score">00000</b><small id="coins">0 COINS · B 상점</small></div><div id="ads-reticle" hidden aria-hidden="true">${sightMarkup()}</div><div id="crosshair"><i></i><i></i><i></i><i></i><b></b></div><div id="hitmarker">╳</div><div id="damage-arrow" aria-hidden="true">▲</div><div id="damage-flash" aria-hidden="true"></div><div id="damage-label" aria-live="off"></div><div id="toast"></div><div id="kill-feedback"></div><div class="health"><div class="hud-label">+ &nbsp; INTEGRITY</div><div class="health-value"><b id="health">100</b><span>/ 100</span></div><div class="health-track"><i id="health-fill"></i></div></div><div class="weapon-hud"><div id="weapon-name" class="hud-label">AR-7 VANGUARD</div><div class="ammo"><b id="ammo">30</b><span>/ <span id="reserve">180</span></span></div><div class="weapon-slots"><span id="slot1">1 &nbsp; ASSAULT RIFLE</span><span id="slot2">2 &nbsp; SIDEARM</span><span id="slot3">3 &nbsp; 충격봉</span></div></div><div id="tactical-hud"><b id="dash-status">ALT · 대시 준비</b><span id="emp-status">G · EMP ×2</span><small id="device-hint"></small></div><div class="bottom-hint"><span id="reload-label">R &nbsp; RELOAD</span><span>ESC &nbsp; 일시정지 / 나가기</span></div><div id="reload-bar"><i id="reload-fill"></i></div></div><pre id="debug" hidden></pre><div id="error" role="status" hidden></div><footer id="menu-footer"><span>RELAY ZERO <b>03.1</b></span><span>STAY MOVING. MAKE EVERY SHOT COUNT.</span><span id="graphics-status">WEBGL / READY</span></footer>`;
+    this.waveBars = [
+      ...this.root.querySelectorAll<HTMLElement>(".wave-bars i"),
+    ];
     const starter = this.el("starter-pistol") as HTMLSelectElement;
     for (const p of starters) {
       const option = document.createElement("option");
@@ -319,13 +328,24 @@ export class HUD {
     this.refreshRecord();
   }
   el(id: string): HTMLElement {
-    return document.getElementById(id)!;
+    let node = this.nodes.get(id);
+    if (!node) {
+      node = document.getElementById(id)!;
+      this.nodes.set(id, node);
+    }
+    return node;
   }
   set(id: string, value: string): void {
     if (this.cache.get(id) !== value) {
       this.el(id).textContent = value;
       this.cache.set(id, value);
     }
+  }
+  style(id: string, property: string, value: string): void {
+    const key = id + ":" + property;
+    if (this.styles.get(key) === value) return;
+    this.el(id).style.setProperty(property, value);
+    this.styles.set(key, value);
   }
   syncSettings(): void {
     for (const key of [
@@ -384,6 +404,7 @@ export class HUD {
     }
   }
   hit(head: boolean, kill: boolean): void {
+    this.hitActive = true;
     this.hitTime = kill ? 0.24 : head ? 0.21 : 0.14;
     this.el("hitmarker").classList.toggle("critical", head);
     this.el("hitmarker").classList.toggle("confirmed", kill);
@@ -395,11 +416,13 @@ export class HUD {
     this.el("hitmarker").style.opacity = "1";
   }
   elimination(message: string): void {
+    this.killActive = true;
     this.set("kill-feedback", message);
     this.killTime = 0.85;
     this.el("kill-feedback").style.opacity = "1";
   }
   toast(message: string, duration = 2): void {
+    this.toastActive = true;
     this.set("toast", message);
     this.toastTime = duration;
     this.el("toast").style.opacity = "1";
@@ -422,13 +445,22 @@ export class HUD {
   }
   tick(dt: number): void {
     this.killTime -= dt;
-    if (this.killTime <= 0) this.el("kill-feedback").style.opacity = "0";
+    if (this.killTime <= 0 && this.killActive) {
+      this.el("kill-feedback").style.opacity = "0";
+      this.killActive = false;
+    }
     this.hitTime -= dt;
     this.toastTime -= dt;
     this.damageFeedback.update(dt);
     this.paintDamage();
-    if (this.hitTime <= 0) this.el("hitmarker").style.opacity = "0";
-    if (this.toastTime <= 0) this.el("toast").style.opacity = "0";
+    if (this.hitTime <= 0 && this.hitActive) {
+      this.el("hitmarker").style.opacity = "0";
+      this.hitActive = false;
+    }
+    if (this.toastTime <= 0 && this.toastActive) {
+      this.el("toast").style.opacity = "0";
+      this.toastActive = false;
+    }
   }
   error(message: string): void {
     this.el("error").hidden = false;

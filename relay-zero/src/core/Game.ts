@@ -1036,32 +1036,40 @@ export class Game {
         : ms;
     }
   }
-  updateHUD(): void {
+  updateHUD(online = false): void {
     const h = this.hud,
       w = this.weapon;
-    const boss = this.enemies.find(
-      (e): e is Commander => e instanceof Commander && e.health > 0,
-    );
-    h.el("boss-panel").hidden = !boss;
-    if (boss) {
-      h.el("boss-fill").style.width =
-        `${(100 * boss.health) / boss.maxHealth}%`;
-      h.set(
-        "boss-state",
-        boss.windupRemaining > 0
-          ? "표시 구역을 피해!"
-          : boss.weakWindow > 0
-            ? "약점 노출 · 지금 공격해"
-            : "지휘 로봇 · 공격을 대비해",
+    if (!online) {
+      const boss = this.enemies.find(
+        (e): e is Commander => e instanceof Commander && e.health > 0,
       );
+      h.el("boss-panel").hidden = !boss;
+      if (boss) {
+        h.style(
+          "boss-fill",
+          "width",
+          `${(100 * boss.health) / boss.maxHealth}%`,
+        );
+        h.set(
+          "boss-state",
+          boss.windupRemaining > 0
+            ? "표시 구역을 피해!"
+            : boss.weakWindow > 0
+              ? "약점 노출 · 지금 공격해"
+              : "지휘 로봇 · 공격을 대비해",
+        );
+      }
     }
     h.set("health", String(Math.ceil(this.player.health)));
-    h.el("health-fill").style.width = `${this.player.health}%`;
-    h.el("health-fill").style.background =
-      this.player.health < 30 ? gameTheme.colors.danger : gameTheme.colors.blue;
+    h.style("health-fill", "width", `${this.player.health}%`);
+    h.style(
+      "health-fill",
+      "background",
+      this.player.health < 30 ? gameTheme.colors.danger : gameTheme.colors.blue,
+    );
     h.set("ammo", w.melee ? "∞" : String(w.mag.ammo).padStart(2, "0"));
     h.set("reserve", w.melee ? "근접" : String(w.mag.reserve));
-    h.set("score", String(this.score).padStart(5, "0"));
+    if (!online) h.set("score", String(this.score).padStart(5, "0"));
     h.set("weapon-name", w.data.name);
     h.set(
       "dash-status",
@@ -1073,66 +1081,70 @@ export class Game {
       "cooling",
       this.player.dash.cooldown > 0,
     );
-    h.set("emp-status", `G · EMP ×${this.equipment.ammo}`);
-    h.set("device-hint", this.devices.hint(this.player.camera.position));
-    h.set("coins", `${this.wallet.coins} COINS · B 상점`);
+    if (!online) {
+      h.set("emp-status", `G · EMP ×${this.equipment.ammo}`);
+      h.set("device-hint", this.devices.hint(this.player.camera.position));
+      h.set("coins", `${this.wallet.coins} COINS · B 상점`);
+    }
     h.set(
       "slot1",
       w.primaryOwned ? `1 · ${w.magazines[0].data.name}` : "1 · 주무기 미구매",
     );
     h.set("slot2", `2 · ${w.magazines[1].data.name}`);
-    h.set(
-      "wave-label",
-      this.practice
-        ? "FIRING RANGE"
-        : `${this.difficulty.label} · WAVE ${String(Math.max(1, this.waves.index)).padStart(2, "0")}${this.waves.endless ? " / ∞" : " / 05"}`,
-    );
-    h.set(
-      "objective",
-      this.practice
-        ? "CALIBRATE YOUR AIM"
-        : this.waves.intermission > 0
-          ? "PERIMETER CLEAR"
-          : objectiveNames[this.objectives.kind],
-    );
-    h.set(
-      "enemies",
-      this.practice
-        ? "TARGETS RESET AUTOMATICALLY"
-        : this.waves.intermission > 0
-          ? `NEXT CONTACT IN ${Math.ceil(this.waves.intermission)}s`
-          : `${this.waves.remaining} SENTINELS REMAINING${this.waves.pending ? ` · 증원 ${this.waves.pending}` : ""}`,
-    );
-    const point = this.objectives.point;
-    const active =
-      !this.practice &&
-      this.waves.intermission <= 0 &&
-      !this.objectives.done &&
-      !!point;
-    h.el("mission-status").hidden = !active;
-    if (active && point) {
-      const delta = point.subtract(this.player.feet);
-      h.set("mission-hint", this.objectives.hint);
+    if (!online) {
       h.set(
-        "mission-distance",
-        `${Math.round(delta.length())}m · ${Math.floor((this.objectives.progress / this.objectives.duration) * 100)}%`,
+        "wave-label",
+        this.practice
+          ? "FIRING RANGE"
+          : `${this.difficulty.label} · WAVE ${String(Math.max(1, this.waves.index)).padStart(2, "0")}${this.waves.endless ? " / ∞" : " / 05"}`,
       );
-      h.el("mission-fill").style.width =
-        `${(this.objectives.progress / this.objectives.duration) * 100}%`;
-      h.el("mission-arrow").style.transform =
-        `rotate(${Math.atan2(delta.x, delta.z) - this.player.yaw}rad)`;
+      h.set(
+        "objective",
+        this.practice
+          ? "CALIBRATE YOUR AIM"
+          : this.waves.intermission > 0
+            ? "PERIMETER CLEAR"
+            : objectiveNames[this.objectives.kind],
+      );
+      h.set(
+        "enemies",
+        this.practice
+          ? "TARGETS RESET AUTOMATICALLY"
+          : this.waves.intermission > 0
+            ? `NEXT CONTACT IN ${Math.ceil(this.waves.intermission)}s`
+            : `${this.waves.remaining} SENTINELS REMAINING${this.waves.pending ? ` · 증원 ${this.waves.pending}` : ""}`,
+      );
+      const point = this.objectives.point;
+      const active =
+        !this.practice &&
+        this.waves.intermission <= 0 &&
+        !this.objectives.done &&
+        !!point;
+      h.el("mission-status").hidden = !active;
+      if (active && point) {
+        const delta = point.subtract(this.player.feet);
+        h.set("mission-hint", this.objectives.hint);
+        h.set(
+          "mission-distance",
+          `${Math.round(delta.length())}m · ${Math.floor((this.objectives.progress / this.objectives.duration) * 100)}%`,
+        );
+        h.style(
+          "mission-fill",
+          "width",
+          `${(this.objectives.progress / this.objectives.duration) * 100}%`,
+        );
+        h.style(
+          "mission-arrow",
+          "transform",
+          `rotate(${Math.atan2(delta.x, delta.z) - this.player.yaw}rad)`,
+        );
+      }
     }
-    h.el("crosshair").style.setProperty(
-      "--gap",
-      `${w.aiming ? 2 : 4 + w.spread * 650}px`,
-    );
-    h.el("crosshair").style.setProperty(
-      "--scale",
-      String(this.settings.crosshairSize),
-    );
+    h.style("crosshair", "--gap", `${w.aiming ? 2 : 4 + w.spread * 650}px`);
+    h.style("crosshair", "--scale", String(this.settings.crosshairSize));
     h.el("ammo").classList.toggle("empty-feedback", w.dryTime > 0);
     h.el("ammo").classList.toggle("reloading", w.reloading);
-    h.el("crosshair").style.opacity = String(1 - w.ads);
+    h.style("crosshair", "opacity", String(1 - w.ads));
     h.el("ads-reticle").hidden = !w.aiming;
     h.el("ads-reticle").classList.toggle("smg", w.data.weaponType === "smg");
     h.el("ads-reticle").classList.toggle("heavy", w.data.id === "r20");
@@ -1140,10 +1152,11 @@ export class Game {
       "sniper",
       w.data.weaponType === "sniper",
     );
-    h.el("reload-bar").style.opacity = w.reloading ? "1" : "0";
-    h.el("reload-bar").firstElementChild!.setAttribute(
-      "style",
-      `width:${(1 - w.mag.reloadRemaining / w.mag.reloadDuration) * 100}%`,
+    h.style("reload-bar", "opacity", w.reloading ? "1" : "0");
+    h.style(
+      "reload-fill",
+      "width",
+      `${(1 - w.mag.reloadRemaining / w.mag.reloadDuration) * 100}%`,
     );
     h.set(
       "reload-label",
@@ -1158,10 +1171,9 @@ export class Game {
     h.el("slot1").classList.toggle("active", w.slot === 0);
     h.el("slot2").classList.toggle("active", w.slot === 1);
     h.el("slot3").classList.toggle("active", w.slot === 2);
-    for (const [i, bar] of [
-      ...document.querySelectorAll(".wave-bars i"),
-    ].entries())
-      bar.classList.toggle("active", i < this.waves.index && !this.practice);
+    if (!online)
+      for (const [i, bar] of this.hud.waveBars.entries())
+        bar.classList.toggle("active", i < this.waves.index && !this.practice);
     if (this.debug) {
       const p = this.player.feet,
         v = this.player.velocity;

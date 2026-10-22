@@ -1,4 +1,4 @@
-import { pickWorld } from "./WorldQuery";
+import { pickWorld, invalidateWorld } from "./WorldQuery";
 import { gameTheme, surface } from "../visual/GameTheme";
 import { buildEnvironmentDetails } from "../visual/EnvironmentDetails";
 import { maps, MapId } from "./MapData";
@@ -365,7 +365,12 @@ export class Level {
         } else m.dispose();
       }
     }
-    for (const m of this.root.getChildMeshes()) m.freezeWorldMatrix();
+    for (const m of this.root.getChildMeshes()) {
+      m.freezeWorldMatrix();
+      if (m.metadata?.world && !m.metadata?.dynamic)
+        m.metadata.staticWorld = true;
+    }
+    invalidateWorld(this.scene);
   }
   material(name: string, hex: string, emission?: string): PBRMaterial {
     const key = `${name}:${hex}:${emission ?? ""}`;

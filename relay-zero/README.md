@@ -1,5 +1,13 @@
 # RELAY ZERO — Sector 07
 
+## 3.1 — Performance
+
+Rendering resolution, graphics presets, map art and weapon hit precision are retained. World rays traverse a four-meter XZ grid of baked static colliders, then use the original triangle intersections; moving colliders use the exact fallback path and disabled devices remain excluded. Each co-op bot refreshes target selection at most every 120 ms, while actual attacks still test current line of sight. Dead robots no longer perform target visibility tests. Spawn search reuses reachable cells and actor lists, and remote AI input vectors are reused.
+
+HUD nodes and styles are cached, expired feedback stops writing to the DOM, and online HUD updates skip campaign-only queries and text rewrites. Player poses are sent at the existing 15 Hz while changing, with one-second heartbeats when idle. Enemy snapshot positions are rounded to a millimeter, orientations to 0.0001 radians, and animation time to a millisecond; shot rays and authoritative damage retain their precision. Snapshot target vectors are reused on the guest.
+
+Use `npm run benchmark:online` for a seeded NullEngine benchmark and `npm run benchmark` for solo CPU samples. These are CPU measurements, not browser GPU frame rates. In the initial six-bot co-op comparison, target/attack line-of-sight calls decreased from about 783/s to 135–141/s, and AABB broad-phase tests decreased from about 38,745/s to 437–486/s. In a representative six-bot snapshot, position/orientation compaction reduced the serialized state from about 1,153–1,179 to 917–918 bytes. Timings vary with runtime warmup and GC; do not interpret these operation counts as an FPS multiplier. Randomized integration tests compare the spatial query against brute-force exact hits on all three maps, including ramps, boundary rays, enabled/disabled devices and moving colliders.
+
 ## 3.0 — Solo, Duel, Co-op
 
 Three distinct arenas: warm foundry furnaces and side galleries; an open-sky cargo yard with colored container lanes; a pale ceramic Nexus lab with asymmetric islands and a mint-lit core. The operation screen provides keyboard-accessible mode and map cards. Small CSS diagrams are map illustrations, not gameplay screenshots. Static decoration remains batched by material, and all graphics settings preserve native viewport resolution. Directional damage feedback remains visible in every mode.

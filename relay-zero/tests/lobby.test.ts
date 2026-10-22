@@ -99,6 +99,29 @@ test("mode/map cards, room invitations and ready controls work through the DOM",
     assert.equal(mode, "coop");
     document.querySelector<HTMLButtonElement>('[data-mode="solo"]')!.click();
     assert.equal(hud.el("solo-options").hidden, false);
+    const observer = new dom.window.MutationObserver(() => {});
+    observer.observe(hud.root, {
+      attributes: true,
+      childList: true,
+      subtree: true,
+    });
+    hud.hit(false, false);
+    hud.toast("test");
+    hud.elimination("test");
+    hud.damage(0, 10);
+    hud.tick(5);
+    hud.style("health-fill", "width", "100%");
+    observer.takeRecords();
+    for (let frame = 0; frame < 120; frame++) {
+      hud.tick(1 / 60);
+      hud.style("health-fill", "width", "100%");
+    }
+    assert.equal(
+      observer.takeRecords().length,
+      0,
+      "idle HUD must not rewrite expired feedback each frame",
+    );
+    observer.disconnect();
     const allIds = [...document.querySelectorAll("[id]")].map((e) => e.id);
     assert.equal(new Set(allIds).size, allIds.length);
   } finally {

@@ -6,10 +6,13 @@ import { rifle, pistol, baton, type WeaponData } from "../weapons/WeaponData";
 import { pickWorld } from "../world/WorldQuery";
 import { maps, type MapId } from "../world/MapData";
 import { RoomClient, type OnlineMode } from "./RoomClient";
+import { PoseBudget } from "./NetworkBudget";
 import { Avatar } from "./Avatar";
 import { finiteVector, rayBox, ShotGate, type Vec } from "./Combat";
 const tuple = (v: Vector3): Vec => [v.x, v.y, v.z];
 const vec = (v: Vec) => new Vector3(...v);
+const round = (n: number, factor = 1000) => Math.round(n * factor) / factor;
+const position = (v: Vector3): Vec => [round(v.x), round(v.y), round(v.z)];
 type BotState = {
   id: string;
   p: Vec;
@@ -70,7 +73,14 @@ export class OnlineArena {
   private ready = false;
   private enemies = new Map<string, Enemy>();
   private replicaTargets = new Map<string, Vector3>();
+  private poseBudget = new PoseBudget();
   private serial = 0;
+  private targetCache = new WeakMap<Enemy, { index: number; until: number }>();
+  private spawnCells = new Set<number>();
+  private remotePlayer = {
+    feet: Vector3.Zero(),
+    camera: { position: Vector3.Zero() },
+  };
   constructor(public game: Game) {
     const root = document.createElement("section");
     root.id = "online-lobby";
@@ -252,6 +262,7 @@ export class OnlineArena {
     g.devices?.setOnline(true);
     this.mode = mode;
     this.active = true;
+    g.hud.root.classList.add("online-game");
     this.begun = false;
     this.ended = false;
     this.lobby.hidden = true;
@@ -266,6 +277,13 @@ export class OnlineArena {
     this.wait = 3;
     this.revive = 0;
     this.serial = 0;
+    this.poseBudget = new PoseBudget();
+    this.targetCache = new WeakMap();
+    this.spawnCells = g.navigation.reachable(g.level.spawn);
+    this.remotePlayer = {
+      feet: Vector3.Zero(),
+      camera: { position: Vector3.Zero() },
+    };
     this.seq = 0;
     this.localEpoch = 0;
     this.gates = [new ShotGate(), new ShotGate()];
@@ -571,17 +589,21 @@ export class OnlineArena {
   }
   private spawnBot(): void {
     const g = this.game;
-    let pos =
-      g.level.enemySpawns[this.serial % g.level.enemySpawns.length].clone();
+    const preferred =
+      g.level.enemySpawns[this.serial % g.level.enemySpawns.length];
+    let pos = preferred.clone();
+    const localFeet = g.player.feet,
+      remoteFeet = vec(this.remote.p);
+    const alive = [...this.enemies.values()].filter((e) => e.health > 0);
     let best = -Infinity;
-    const candidates = g.navigation.reachable(g.level.spawn);
+    const candidates = this.spawnCells;
     for (const key of candidates) {
       const p = g.navigation.world(key % 21, Math.floor(key / 21));
       const separation = Math.min(
-        Vector3.DistanceSquared(p, g.player.feet),
-        Vector3.DistanceSquared(p, vec(this.remote.p)),
+        Vector3.DistanceSquared(p, localFeet),
+        Vector3.DistanceSquared(p, remoteFeet),
       );
-      const crowd = [...this.enemies.values()].some(
+      const crowd = alive.some(
         (e) => e.health > 0 && Vector3.DistanceSquared(e.position, p) < 9,
       );
       const score = separation - Vector3.DistanceSquared(p, pos) * 0.4;
@@ -639,15 +661,25 @@ export class OnlineArena {
   private target(enemy: Enemy): number {
     if (this.hp[0] <= 0) return 1;
     if (this.hp[1] <= 0) return 0;
+    const cached = this.targetCache.get(enemy);
+    if (cached && cached.until > this.clock && this.hp[cached.index] > 0)
+      return cached.index;
     const g = this.game,
-      remote = vec(this.remote.p).add(new Vector3(0, 1.65, 0));
+      eye = enemy.eye;
+    const remote = this.remotePlayer.camera.position;
+    Vector3.FromArrayToRef(this.remote.p, 0, this.remotePlayer.feet);
+    remote.copyFrom(this.remotePlayer.feet).y += this.remote.crouch
+      ? 1.15
+      : 1.65;
     const a =
-      Vector3.DistanceSquared(enemy.eye, g.player.camera.position) +
-      (g.level.lineClear(enemy.eye, g.player.camera.position) ? 0 : 1000);
+      Vector3.DistanceSquared(eye, g.player.camera.position) +
+      (g.level.lineClear(eye, g.player.camera.position) ? 0 : 1000);
     const b =
-      Vector3.DistanceSquared(enemy.eye, remote) +
-      (g.level.lineClear(enemy.eye, remote) ? 0 : 1000);
-    return a <= b ? 0 : 1;
+      Vector3.DistanceSquared(eye, remote) +
+      (g.level.lineClear(eye, remote) ? 0 : 1000);
+    const index = a <= b ? 0 : 1;
+    this.targetCache.set(enemy, { index, until: this.clock + 0.12 });
+    return index;
   }
   private hostUpdate(dt: number): void {
     for (let i = 0; i < 2; i++) {
@@ -658,27 +690,29 @@ export class OnlineArena {
       }
     }
     if (this.mode === "duel") return;
-    const g = this.game,
-      alive = [...this.enemies.values()].filter((e) => e.health > 0);
+    const g = this.game;
+    let alive = 0;
+    for (const e of this.enemies.values()) if (e.health > 0) alive++;
     if (this.wait > 0) {
       this.wait = Math.max(0, this.wait - dt);
       if (this.wait === 0) this.nextWave();
       return;
     }
-    if (this.pending > 0 && alive.length < 6) this.spawnBot();
-    for (const e of this.enemies.values()) {
-      const index = this.target(e);
-      const remotePlayer = {
-        feet: vec(this.remote.p),
-        camera: {
-          position: vec(this.remote.p).add(
-            new Vector3(0, this.remote.crouch ? 1.15 : 1.65, 0),
-          ),
-        },
-      };
-      e.update(dt, index === 0 ? g.player : (remotePlayer as typeof g.player), [
-        ...this.enemies.values(),
-      ]);
+    if (this.pending > 0 && alive < 6) this.spawnBot();
+    const bots = [...this.enemies.values()];
+    Vector3.FromArrayToRef(this.remote.p, 0, this.remotePlayer.feet);
+    this.remotePlayer.camera.position.copyFrom(this.remotePlayer.feet).y += this
+      .remote.crouch
+      ? 1.15
+      : 1.65;
+    for (const e of bots) {
+      if (this.ended) break;
+      const index = e.health > 0 ? this.target(e) : 0;
+      e.update(
+        dt,
+        index === 0 ? g.player : (this.remotePlayer as typeof g.player),
+        bots,
+      );
     }
     const down = this.hp.findIndex((h) => h <= 0);
     if (down >= 0) {
@@ -727,14 +761,14 @@ export class OnlineArena {
       time: this.clock,
       enemies: [...this.enemies.values()].map((e) => ({
         id: e.id,
-        p: tuple(e.position),
-        y: e.root.rotation.y,
+        p: position(e.position),
+        y: round(e.root.rotation.y, 10000),
         hp: e.health,
         max: e.maxHealth,
         role: e.role,
         elite: e.elite,
         shield: e.shieldHealth,
-        animation: e.animation,
+        animation: round(e.animation),
       })),
     };
   }
@@ -800,7 +834,9 @@ export class OnlineArena {
       enemy.health = b.hp;
       enemy.shieldHealth = b.shield;
       if (enemy.shield) enemy.shield.setEnabled(b.shield > 0 && b.hp > 0);
-      this.replicaTargets.set(b.id, vec(b.p));
+      const target = this.replicaTargets.get(b.id);
+      if (target) Vector3.FromArrayToRef(b.p, 0, target);
+      else this.replicaTargets.set(b.id, vec(b.p));
       enemy.root.rotation.y = b.y;
     }
     for (const [id, e] of this.enemies)
@@ -866,14 +902,15 @@ export class OnlineArena {
     this.netClock += dt;
     if (this.netClock >= 1 / 15 && !this.ended) {
       this.netClock = 0;
-      this.client.send({
-        type: "pose",
-        p: tuple(g.player.feet),
-        y: g.player.yaw,
-        pitch: g.player.pitch,
+      const pose = {
+        p: position(g.player.feet),
+        y: round(g.player.yaw, 10000),
+        pitch: round(g.player.pitch, 10000),
         crouch: g.player.crouched,
         revive: g.input.locked && g.input.down("KeyE") && !g.input.fire,
-      });
+      };
+      if (this.poseBudget.accept(pose, now / 1000))
+        this.client.send({ type: "pose", ...pose });
       if (this.client.role === "host" && this.begun)
         this.client.send({ type: "state", state: this.state() });
     }
@@ -890,15 +927,14 @@ export class OnlineArena {
   private paintHUD(): void {
     const g = this.game,
       h = g.hud;
-    g.updateHUD();
-    h.root.classList.add("online-game");
+    g.player.health = this.hp[this.self];
+    g.updateHUD(true);
     const local = this.self,
       other = 1 - local,
       remaining =
         [...this.enemies.values()].filter((e) => e.health > 0).length +
         this.pending;
-    h.set("health", String(Math.ceil(this.hp[local])));
-    h.el("health-fill").style.width = `${this.hp[local]}%`;
+
     h.set(
       "score",
       this.mode === "duel"

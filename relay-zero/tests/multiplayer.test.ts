@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { NullEngine, Scene, Vector3 } from "@babylonjs/core";
+import { PoseBudget } from "../src/multiplayer/NetworkBudget";
 import { OnlineArena } from "../src/multiplayer/OnlineArena";
 import { rayBox, ShotGate, finiteVector } from "../src/multiplayer/Combat";
 import { Level } from "../src/world/Level";
@@ -232,5 +233,67 @@ test("guest applies authoritative AI snapshots, shared scores and respawn epochs
   } finally {
     host.dispose();
     guest.dispose();
+  }
+});
+
+test("idle network poses keep a heartbeat while movement and revive changes send immediately", () => {
+  const budget = new PoseBudget(),
+    pose = {
+      p: [0, 0, 0] as [number, number, number],
+      y: 0,
+      pitch: 0,
+      crouch: false,
+      revive: false,
+    };
+  assert.equal(budget.accept(pose, 0), true);
+  for (let frame = 1; frame < 15; frame++)
+    assert.equal(budget.accept(pose, frame / 15), false);
+  assert.equal(budget.accept(pose, 1), true);
+  pose.p[0] = 0.001;
+  assert.equal(budget.accept(pose, 1.05), true);
+  pose.revive = true;
+  assert.equal(budget.accept(pose, 1.1), true);
+  pose.revive = false;
+  assert.equal(budget.accept(pose, 1.15), true);
+});
+test("cached co-op targets invalidate immediately when a player goes down and dead robots skip sight tests", () => {
+  const f = fixture("coop");
+  try {
+    f.arena.nextWave();
+    f.arena.spawnBot();
+    const bot = [...f.arena.enemies.values()][0] as any;
+    let checks = 0;
+    const clear = f.game.level.lineClear.bind(f.game.level);
+    f.game.level.lineClear = (...args: any[]) => {
+      checks++;
+      return clear(...args);
+    };
+    f.arena.clock = 1;
+    const first = f.arena.target(bot);
+    assert.equal(checks, 2);
+    f.arena.clock = 1.05;
+    assert.equal(f.arena.target(bot), first);
+    assert.equal(checks, 2);
+    f.arena.hp[first] = 0;
+    assert.equal(f.arena.target(bot), 1 - first);
+    f.arena.hp = [100, 100];
+    f.arena.clock = 1.3;
+    f.arena.target(bot);
+    assert.equal(checks, 4);
+    bot.receiveDamage({
+      damage: 99999,
+      source: "player",
+      target: bot.id,
+      hitPoint: bot.eye,
+      hitNormal: Vector3.Up(),
+      isHeadshot: false,
+      damageType: "hitscan",
+    });
+    checks = 0;
+    f.arena.pending = 0;
+    f.arena.hostUpdate(1 / 60);
+    assert.equal(checks, 0);
+  } finally {
+    f.dispose();
   }
 });

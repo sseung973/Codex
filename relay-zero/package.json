@@ -1,6 +1,6 @@
 {
   "name": "relay-zero",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,8 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --import tsx --test --test-isolation=none tests/*.test.ts",
     "benchmark": "node --import tsx scripts/benchmark.ts --baked",
-    "test:server": "node --test --test-isolation=none server/rooms.test.mjs"
+    "test:server": "node --test --test-isolation=none server/rooms.test.mjs",
+    "benchmark:online": "node --import tsx scripts/benchmark-online.ts"
   },
   "dependencies": {
     "@babylonjs/core": "9.26.0",
