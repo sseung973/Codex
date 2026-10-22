@@ -1,0 +1,1120 @@
+/* Tactical match HUD. SVG geometry is static; only values and marker transforms update. */
+#hud {
+  --hud-white: #f3f6ed;
+  --hud-muted: #d3ddd0a8;
+  --hud-mint: #b8e7d0;
+  --hud-red: #e9988a;
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  color: var(--hud-white);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.in-game .topbar {
+  display: none;
+}
+.in-game .vignette {
+  opacity: 0.12;
+}
+#hud::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 135px;
+  z-index: -1;
+  background: linear-gradient(transparent, #0c192847);
+  pointer-events: none;
+}
+#hud .tactical-radar {
+  position: absolute;
+  left: 22px;
+  top: 16px;
+  width: clamp(155px, 17vw, 225px);
+  text-align: center;
+  color: #e0e7db;
+}
+.radar-disc {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid #d8e8db38;
+  border-radius: 50%;
+  background: #24374a30;
+}
+#minimap {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.radar-wall {
+  fill: #bbc8bd88;
+  stroke: #e8f1dba1;
+  stroke-width: 0.65;
+}
+.radar-door {
+  fill: #e9be6377;
+  stroke: #ffe5a1;
+  stroke-width: 1;
+}
+#minimap-objective.radar-contested circle {
+  stroke: #ff8c7c;
+  fill: #ff684c35;
+}
+#minimap-ally.ally-down path {
+  fill: #ee9184;
+  stroke: #481d1d;
+}
+.radar-north {
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  font:
+    600 9px "Barlow",
+    sans-serif;
+  color: #e1e9d2;
+}
+#radar-map {
+  display: block;
+  margin-top: 8px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-shadow: 0 1px 4px #0b1c27;
+}
+.tactical-radar small {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  margin-top: 5px;
+  font-size: 7px;
+  letter-spacing: 0.15em;
+  color: #d3ddd0aa;
+}
+.tactical-radar small i {
+  width: 4px;
+  height: 4px;
+  background: #f3f9ed;
+  transform: rotate(45deg);
+  margin-right: 9px;
+}
+#hud .match-strip {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: 1fr 146px 1fr;
+  align-items: start;
+  width: min(700px, 60vw);
+  min-height: 84px;
+}
+.team-wing {
+  height: 45px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border-top: 1px solid #d2e7d03b;
+}
+.friendly-wing {
+  justify-content: flex-end;
+  padding-right: 14px;
+  background: linear-gradient(270deg, #83c4a339, #a2d5af0a);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 16px 100%);
+}
+.hostile-wing {
+  padding-left: 14px;
+  background: linear-gradient(90deg, #d481762e, #d481760a);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%);
+}
+.team-tally {
+  min-width: 35px;
+  text-align: center;
+  line-height: 1;
+}
+.team-tally b {
+  display: block;
+  font:
+    600 29px/0.95 "Barlow Condensed",
+    sans-serif;
+  text-shadow: 0 1px 4px #0c1e27;
+}
+.team-tally small {
+  font-size: 6px;
+  letter-spacing: 0.12em;
+  color: #e1e9d2aa;
+  white-space: nowrap;
+}
+.friendly-wing .team-tally {
+  margin-right: auto;
+  margin-left: 21px;
+}
+.hostile-wing .team-tally {
+  margin-left: auto;
+  margin-right: 21px;
+}
+.team-portrait {
+  position: relative;
+  align-self: stretch;
+  width: 35px;
+  min-width: 28px;
+  overflow: hidden;
+}
+.team-portrait > svg {
+  height: 52px;
+  width: 44px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -4px;
+}
+.team-portrait > i {
+  display: block;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: #b8e7d0;
+}
+.team-portrait > span {
+  position: absolute;
+  right: 1px;
+  bottom: 5px;
+  font-size: 7px;
+  color: #dfffe8;
+  text-shadow: 0 1px 2px #111;
+}
+.team-portrait.down {
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+.rival-portrait {
+  filter: sepia(0.35);
+}
+#hud .wave-bars {
+  gap: 3px;
+  align-self: center;
+  max-width: 56px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+#hud .wave-bars i {
+  width: 5px;
+  height: 5px;
+  background: #d3ddcd29;
+  transform: rotate(45deg);
+}
+#hud .wave-bars i.active {
+  background: #d9efca;
+}
+.enemy-roster {
+  display: flex;
+  height: 43px;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+.enemy-portrait {
+  height: 36px;
+  width: 30px;
+  color: #e6ac8c;
+}
+.enemy-portrait svg {
+  width: 100%;
+  height: 100%;
+}
+.enemy-portrait[data-role="support"] {
+  color: #b2e2c5;
+}
+.enemy-portrait[data-role="defender"] {
+  color: #b9d2e6;
+}
+.enemy-portrait[data-role="sniper"] {
+  color: #e8c59f;
+}
+.enemy-portrait[data-role="bomber"] {
+  color: #ed8f83;
+}
+#enemy-overflow {
+  font-size: 9px;
+  color: #e8c4b8;
+}
+.match-core {
+  text-align: center;
+  background: linear-gradient(#14273366, #14273300);
+  padding: 0 6px 8px;
+}
+#hud #wave-label {
+  display: block;
+  margin-top: 1px;
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  color: #e4e7dbbb;
+}
+#match-time {
+  display: block;
+  font:
+    600 36px/1.03 "Barlow Condensed",
+    sans-serif;
+  letter-spacing: 0.01em;
+  margin-top: 3px;
+  text-shadow: 0 1px 8px #08182388;
+}
+#match-time.countdown {
+  color: #f2d5a8;
+}
+#hud #objective {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 3px -40px 0;
+  letter-spacing: 0.055em;
+  color: #eef4e6;
+}
+#hud .mission-stack {
+  top: 101px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: min(395px, calc(100vw - 530px));
+  gap: 10px;
+  text-align: center;
+}
+#hud #enemies {
+  font-size: 9px;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  color: #e0e4d4b5;
+  text-shadow: 0 1px 4px #162634;
+}
+#hud #mission-status {
+  justify-content: center;
+  align-items: center;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  padding: 0;
+  gap: 9px;
+  color: #f4dfa9;
+  text-align: left;
+}
+#hud #mission-hint {
+  font-size: 10px;
+  line-height: 1.4;
+}
+#hud #mission-distance {
+  font-size: 9px;
+  color: #e0e7d0ab;
+}
+#hud #mission-arrow {
+  font-size: 21px;
+}
+#hud .mission-track {
+  height: 2px;
+  background: #e5edce28;
+  margin-top: 5px;
+}
+#hud #mission-fill {
+  background: #ead49d;
+}
+#hud .score {
+  top: 79px;
+  right: 26px;
+  border: 0;
+  padding: 0;
+  text-align: right;
+  background: none;
+}
+#hud .score > span {
+  font-size: 7px;
+  letter-spacing: 0.14em;
+  color: #dee5d1a3;
+}
+#hud .score > b {
+  font:
+    500 22px/1.1 "Barlow Condensed",
+    sans-serif;
+  color: #e4ebdb;
+  letter-spacing: 0.08em;
+}
+#hud .score > small {
+  display: block;
+  font-size: 9px;
+  margin-top: 5px;
+  color: #e0d6baab;
+}
+#hud #boss-panel {
+  top: 175px;
+  left: 50%;
+  bottom: auto;
+  width: 300px;
+  padding: 6px 12px;
+  background: linear-gradient(90deg, transparent, #18263188, transparent);
+  border: 0;
+}
+#hud #boss-panel > span {
+  font-size: 7px;
+  letter-spacing: 0.18em;
+  color: #edd6c0a1;
+}
+#hud #boss-panel > b {
+  font-size: 10px;
+  padding: 4px 0 7px;
+}
+#hud .boss-track {
+  height: 3px;
+  background: #f0b7a82b;
+}
+#hud #boss-fill {
+  background: #efa592;
+}
+#hud .health {
+  left: 25px;
+  bottom: 27px;
+  width: 300px;
+  min-height: 105px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  text-align: left;
+}
+.operator-badge {
+  position: relative;
+  flex: 0 0 92px;
+  height: 111px;
+  clip-path: polygon(1% 10%, 80% 1%, 100% 92%, 16% 100%);
+  background: #243f58;
+  border-left: 4px solid #abc9da;
+  transform: rotate(-7deg);
+}
+.operator-badge::after {
+  content: "";
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #e5bf86;
+  transform: rotate(-10deg);
+}
+.operator-badge > svg {
+  height: 109px;
+  width: 94px;
+  transform: rotate(7deg);
+}
+.operator-badge > span {
+  position: absolute;
+  bottom: 14px;
+  left: 13px;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #dbf0df;
+  transform: rotate(7deg);
+}
+.vitals {
+  padding-bottom: 9px;
+  flex: 1;
+  min-width: 0;
+}
+#hud .health .hud-label {
+  font-size: 7px;
+  letter-spacing: 0.14em;
+  color: #e2e8d3ab;
+}
+#hud .health-value {
+  gap: 5px;
+  align-items: baseline;
+  margin: 0 0 8px;
+}
+#hud .health-value b {
+  font:
+    600 36px/1 "Barlow Condensed",
+    sans-serif;
+  color: #f6faed;
+}
+#hud .health-value span {
+  font:
+    500 17px "Barlow Condensed",
+    sans-serif;
+  color: #d2d9c1a6;
+}
+#hud .health-track {
+  position: relative;
+  height: 8px;
+  max-width: 182px;
+  background: #e2ebce24;
+  transform: skewX(-12deg);
+}
+#hud .health-track::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 calc(20% - 1px),
+    #1b2a35b3 calc(20% - 1px) 20%
+  );
+}
+#hud .health-track i {
+  background: #e9f0df;
+  transition: width 0.12s;
+}
+.vital-ticks {
+  display: block;
+  margin-top: 5px;
+  color: #d3dfc09c;
+  font-size: 6px;
+  word-spacing: 18px;
+  line-height: 1;
+}
+#hud .health-value #health.recent-damage {
+  color: #ff9a8e;
+}
+#hud .weapon-hud {
+  left: 50%;
+  right: auto;
+  bottom: 32px;
+  transform: translateX(-50%);
+  width: 215px;
+  text-align: center;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+#hud #weapon-name {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: #e9eddfb3;
+  line-height: 1.4;
+}
+#hud .ammo {
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin: 2px 0 0;
+}
+#hud .ammo > b {
+  font:
+    600 48px/0.95 "Barlow Condensed",
+    sans-serif;
+  letter-spacing: -0.02em;
+  color: #fafcf2;
+}
+#hud .ammo > span:last-child {
+  font:
+    600 25px/1 "Barlow Condensed",
+    sans-serif;
+  color: #d4dac4a3;
+}
+#hud .ammo-marks {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  margin-left: 1px;
+  margin-right: 3px;
+}
+.ammo-marks i {
+  display: block;
+  height: 17px;
+  width: 3px;
+  border-radius: 2px 2px 0 0;
+  background: #e2e8d1a3;
+}
+#hud #reload-label {
+  display: block;
+  margin-top: 8px;
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  color: #e4e9d1a3;
+}
+#hud #reload-bar {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  max-width: 126px;
+  width: 70%;
+  height: 2px;
+  margin: 8px auto 0;
+}
+#hud #reload-fill {
+  background: #dfecd3;
+}
+#hud .weapon-rail {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  bottom: 194px;
+  right: 27px;
+  width: 158px;
+  font-size: 8px;
+  text-align: right;
+  letter-spacing: 0.04em;
+}
+.loadout-row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-height: 48px;
+  padding: 3px 24px 4px 10px;
+  border-top: 1px solid #e3ebda2e;
+  opacity: 0.38;
+  color: #f2f6e5;
+}
+.loadout-row:has(.active) {
+  opacity: 1;
+  border-color: #e1edd4b8;
+}
+.loadout-row.unowned {
+  opacity: 0.16;
+}
+.loadout-row > kbd {
+  position: absolute;
+  right: 3px;
+  top: 10px;
+  font-size: 9px;
+  font-family: inherit;
+}
+.rail-icon {
+  display: block;
+  height: 25px;
+  width: 74px;
+}
+.rail-icon svg {
+  width: 100%;
+  height: 100%;
+}
+.loadout-row > span[id] {
+  display: block;
+  font-size: 7px;
+  white-space: nowrap;
+  max-width: 127px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #ebefdda8;
+}
+.loadout-row[data-slot="2"] {
+  order: -1;
+}
+.loadout-row[data-slot="2"] .rail-icon {
+  transform: rotate(-37deg);
+  height: 26px;
+  width: 67px;
+}
+#hud #tactical-hud {
+  left: auto;
+  right: 26px;
+  bottom: 36px;
+  transform: none;
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  gap: 16px;
+  width: auto;
+  max-width: 340px;
+  min-height: 83px;
+  color: #f0f5e5;
+}
+#hud .ability {
+  --charge: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  min-width: 47px;
+  width: 47px;
+  padding-bottom: 3px;
+  text-align: center;
+  line-height: 1;
+}
+.ability-icon {
+  height: 33px;
+  width: 31px;
+  margin-bottom: 8px;
+  color: #f6f9e9;
+}
+.ability-icon svg {
+  width: 100%;
+  height: 100%;
+}
+#hud .ability-value {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+#hud .ability-name {
+  font-size: 7px;
+  letter-spacing: 0.055em;
+  color: #dee7d1a6;
+  margin: 0 0 8px;
+}
+#hud .ability kbd {
+  font:
+    500 9px "Barlow",
+    sans-serif;
+  color: #d8e3cba6;
+}
+.ability-track {
+  display: block;
+  position: absolute;
+  height: 2px;
+  width: var(--charge);
+  left: 0;
+  bottom: -7px;
+  background: #edf6dd;
+  max-width: 100%;
+}
+#hud .ability.cooling .ability-icon,
+#hud .ability.unavailable .ability-icon {
+  opacity: 0.32;
+}
+#hud .ability.cooling .ability-value {
+  color: #f0d1a6;
+}
+#hud .ability.unavailable .ability-track {
+  opacity: 0.15;
+}
+#hud .signature-ability {
+  min-width: 69px;
+  width: 69px;
+  margin-left: 1px;
+}
+.signature-ability::before {
+  content: "";
+  position: absolute;
+  inset: -12px -2px 23px;
+  background: #203b54b3;
+  clip-path: polygon(34% 0, 100% 0, 66% 100%, 0 100%);
+  border: 1px solid #dcead7;
+  z-index: -1;
+}
+.signature-ability.equipped::before {
+  background: #416a748c;
+}
+#hud .signature-ability .ability-icon {
+  width: 28px;
+  height: 37px;
+}
+#hud #device-hint {
+  position: absolute;
+  bottom: calc(100% + 15px);
+  right: 0;
+  white-space: normal;
+  width: 300px;
+  min-height: 0;
+  max-width: 36vw;
+  text-align: right;
+  line-height: 1.5;
+  font-size: 10px;
+  color: #e7e7d2c7;
+}
+#hud .bottom-hint {
+  position: absolute;
+  left: 25px;
+  right: 26px;
+  bottom: 11px;
+  width: auto;
+  transform: none;
+  display: flex;
+  justify-content: space-between;
+  font-size: 7px;
+  letter-spacing: 0.16em;
+  color: #e0e7d27a;
+}
+#hud #toast {
+  top: auto;
+  bottom: 164px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, 50vw);
+  white-space: normal;
+  font-size: 11px;
+  letter-spacing: 0.055em;
+  line-height: 1.5;
+  color: #eadbb8;
+}
+#hud #kill-feedback {
+  top: 57%;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: #d8eed1;
+}
+#hud #damage-label {
+  font-size: 12px;
+}
+.online-game #hud .wave-bars {
+  display: none;
+}
+.online-game #hud .bottom-hint > span:last-child {
+  font-size: 7px;
+}
+.online-game #hud .bottom-hint > span:last-child::after {
+  content: none;
+}
+@media (max-width: 1100px) {
+  #hud .match-strip {
+    width: 62vw;
+    grid-template-columns: 1fr 126px 1fr;
+  }
+  #hud .tactical-radar {
+    width: 170px;
+    left: 16px;
+  }
+  .enemy-portrait {
+    width: 23px;
+  }
+  .team-wing {
+    gap: 4px;
+  }
+  .friendly-wing {
+    padding-right: 8px;
+  }
+  .hostile-wing {
+    padding-left: 8px;
+  }
+  #hud .wave-bars {
+    display: none;
+  }
+  #hud .health {
+    width: 258px;
+    left: 18px;
+    gap: 10px;
+  }
+  #hud #tactical-hud {
+    gap: 9px;
+    right: 18px;
+  }
+  .operator-badge {
+    flex-basis: 79px;
+    height: 99px;
+  }
+  .operator-badge > svg {
+    height: 101px;
+    width: 83px;
+  }
+  #hud .weapon-rail {
+    right: 18px;
+    width: 130px;
+  }
+}
+@media (max-width: 800px) {
+  #hud .tactical-radar {
+    width: 138px;
+    left: 10px;
+    top: 10px;
+  }
+  #hud .match-strip {
+    width: calc(100vw - 310px);
+    left: calc(50% + 20px);
+    grid-template-columns: 1fr 110px 1fr;
+  }
+  #hud .team-wing {
+    background: none;
+    border: 0;
+    clip-path: none;
+  }
+  .team-portrait {
+    width: 29px;
+    min-width: 20px;
+  }
+  .friendly-wing .team-tally {
+    margin-left: 0;
+  }
+  .hostile-wing .team-tally {
+    margin-right: 0;
+  }
+  .team-tally small,
+  .enemy-roster {
+    display: none;
+  }
+  #hud .mission-stack {
+    top: 94px;
+    width: 290px;
+    left: 54%;
+  }
+  #hud #boss-panel {
+    width: 240px;
+    top: 166px;
+  }
+  #hud .score {
+    right: 12px;
+    top: 71px;
+  }
+  #hud .score > span {
+    font-size: 6px;
+  }
+  #hud .score > b {
+    font-size: 18px;
+  }
+  #hud .score > small {
+    font-size: 7px;
+  }
+  #hud .health {
+    width: 202px;
+    left: 13px;
+    gap: 9px;
+    bottom: 25px;
+  }
+  .operator-badge {
+    height: 83px;
+    flex-basis: 65px;
+  }
+  .operator-badge > svg {
+    width: 68px;
+    height: 85px;
+  }
+  #hud .health .hud-label {
+    font-size: 6px;
+  }
+  #hud .health-value b {
+    font-size: 30px;
+  }
+  .vital-ticks {
+    word-spacing: 8px;
+  }
+  #hud .weapon-hud {
+    width: 160px;
+    bottom: 32px;
+  }
+  #hud .ammo > b {
+    font-size: 39px;
+  }
+  #hud .ammo > span:last-child {
+    font-size: 21px;
+  }
+  #hud #tactical-hud {
+    right: 14px;
+    gap: 7px;
+    bottom: 34px;
+  }
+  #hud .ability {
+    width: 36px;
+    min-width: 36px;
+  }
+  #hud .signature-ability {
+    width: 46px;
+    min-width: 46px;
+  }
+  .ability-icon {
+    height: 26px;
+    width: 25px;
+  }
+  #hud .ability-name {
+    font-size: 6px;
+  }
+  #hud .signature-ability .ability-icon {
+    height: 30px;
+    width: 24px;
+  }
+  #hud .weapon-rail {
+    bottom: 172px;
+    right: 14px;
+    width: 112px;
+  }
+  .loadout-row {
+    min-height: 40px;
+  }
+  .rail-icon {
+    height: 22px;
+  }
+  #hud #device-hint {
+    font-size: 8px;
+    max-width: 31vw;
+  }
+  #hud .bottom-hint {
+    left: 13px;
+    right: 14px;
+    font-size: 6px;
+  }
+}
+@media (max-height: 570px) {
+  #hud .tactical-radar {
+    width: 135px;
+  }
+  #hud .weapon-rail {
+    bottom: 147px;
+  }
+  .loadout-row {
+    min-height: 35px;
+  }
+  #hud .health {
+    min-height: 78px;
+  }
+  .operator-badge {
+    height: 80px;
+    flex-basis: 65px;
+  }
+  .operator-badge > svg {
+    height: 82px;
+    width: 67px;
+  }
+  #hud #tactical-hud {
+    bottom: 27px;
+  }
+  #hud .weapon-hud {
+    bottom: 24px;
+  }
+  #hud #toast {
+    bottom: 127px;
+  }
+  #hud .mission-stack {
+    top: 91px;
+  }
+  #hud #boss-panel {
+    top: 155px;
+  }
+}
+@media (max-width: 550px) {
+  #hud .tactical-radar {
+    width: 103px;
+  }
+  .tactical-radar small {
+    display: none;
+  }
+  #radar-map {
+    font-size: 6px;
+  }
+  #hud .match-strip {
+    left: calc(50% + 24px);
+    width: calc(100vw - 155px);
+    grid-template-columns: 1fr 95px 1fr;
+  }
+  .team-tally {
+    min-width: 18px;
+  }
+  .team-tally b {
+    font-size: 22px;
+  }
+  .local-portrait,
+  .rival-portrait {
+    display: none;
+  }
+  #hud .ally-portrait {
+    min-width: 20px;
+    width: 20px;
+  }
+  #match-time {
+    font-size: 30px;
+  }
+  #hud #objective {
+    font-size: 8px;
+    margin-left: -18px;
+    margin-right: -18px;
+  }
+  #hud .mission-stack {
+    width: 240px;
+    left: 59%;
+  }
+  #hud .score {
+    top: 135px;
+  }
+  #hud .score > small {
+    max-width: 110px;
+  }
+  #hud #boss-panel {
+    top: 202px;
+    width: 210px;
+  }
+  #hud .health {
+    width: 150px;
+    gap: 6px;
+  }
+  .operator-badge {
+    flex-basis: 49px;
+    height: 65px;
+  }
+  .operator-badge > svg {
+    height: 67px;
+    width: 52px;
+  }
+  .operator-badge > span {
+    display: none;
+  }
+  #hud .health .hud-label {
+    display: none;
+  }
+  #hud .health-value b {
+    font-size: 25px;
+  }
+  #hud .health-value span {
+    font-size: 12px;
+  }
+  #hud .health-track {
+    height: 5px;
+  }
+  .vital-ticks {
+    display: none;
+  }
+  #hud .weapon-hud {
+    left: 48%;
+    width: 115px;
+    bottom: 30px;
+  }
+  #hud #weapon-name {
+    font-size: 6px;
+  }
+  #hud .ammo > b {
+    font-size: 31px;
+  }
+  #hud .ammo > span:last-child {
+    font-size: 17px;
+  }
+  #hud .ammo-marks {
+    display: none;
+  }
+  #hud .ability-name {
+    display: none;
+  }
+  #hud #tactical-hud {
+    gap: 4px;
+    right: 9px;
+  }
+  #hud .ability {
+    width: 25px;
+    min-width: 25px;
+  }
+  #hud .signature-ability {
+    width: 35px;
+    min-width: 35px;
+  }
+  .ability-icon {
+    width: 20px;
+    height: 23px;
+  }
+  #hud .signature-ability .ability-icon {
+    width: 19px;
+    height: 26px;
+  }
+  #hud .weapon-rail {
+    width: 105px;
+  }
+  #hud #device-hint {
+    max-width: 39vw;
+    font-size: 7px;
+  }
+  #hud #toast {
+    width: 75vw;
+    bottom: 139px;
+  }
+  #hud .bottom-hint {
+    font-size: 5px;
+  }
+}

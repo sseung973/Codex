@@ -931,9 +931,8 @@ export class OnlineArena {
     g.updateHUD(true);
     const local = this.self,
       other = 1 - local,
-      remaining =
-        [...this.enemies.values()].filter((e) => e.health > 0).length +
-        this.pending;
+      alive = [...this.enemies.values()].filter((e) => e.health > 0),
+      remaining = alive.length + this.pending;
 
     h.set(
       "score",
@@ -972,10 +971,6 @@ export class OnlineArena {
             : `${maps[g.level.mapId].name} · ${this.client.ping}ms`,
     );
     h.set(
-      "emp-status",
-      `친구 · ${this.hp[other] <= 0 ? "쓰러짐" : Math.ceil(this.hp[other]) + " HP"} · ${this.client.ping}ms`,
-    );
-    h.set(
       "device-hint",
       this.hp[local] <= 0
         ? this.mode === "duel"
@@ -987,6 +982,34 @@ export class OnlineArena {
             ? "재투입 보호 중 · 잠시 후 사격 가능"
             : "",
     );
+    h.telemetry?.({
+      player: g.player.feet,
+      yaw: g.player.yaw,
+      elapsed: this.clock,
+      rest: this.mode === "coop" ? this.wait : 0,
+      mode: this.mode,
+      friendly:
+        this.mode === "duel"
+          ? this.scores[local]
+          : this.scores[0] + this.scores[1],
+      opposition: this.mode === "duel" ? this.scores[other] : remaining,
+      roles: alive.map((e) => e.role),
+      ally: this.mode === "coop" ? vec(this.remote.p) : undefined,
+      allyDown: this.hp[other] <= 0,
+      allyHealth: this.hp[other],
+    });
+    h.abilities?.({
+      dash: g.player.dash.cooldown,
+      emp: 0,
+      online: true,
+      duel: this.mode === "duel",
+      interact:
+        this.mode === "coop" &&
+        this.hp[other] <= 0 &&
+        Vector3.DistanceSquared(g.player.feet, vec(this.remote.p)) < 9,
+      revive: this.revive,
+      melee: g.weapon.melee,
+    });
     h.el("mission-status").hidden = true;
     h.el("boss-panel").hidden = true;
     h.el("open-shop").hidden = true;

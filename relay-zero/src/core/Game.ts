@@ -119,6 +119,7 @@ export class Game {
     this.marker = new ObjectiveMarker(this.scene);
     this.weapon = new Weapon(this.scene, this.player, this.audio, this.effects);
     this.hud = hud;
+    hud.configureArena(this.level);
     this.player.resetAt(this.level.spawn);
     this.weapon.root.setEnabled(false);
     this.pipeline = new DefaultRenderingPipeline("quality", false, this.scene, [
@@ -500,6 +501,7 @@ export class Game {
     this.missionPoints = objectivePoints(this.navigation, this.level);
     this.devices = this.buildDevices();
     this.level.optimize();
+    this.hud.configureArena(this.level);
     this.player.body.surroundingMeshes = this.level.solids;
     this.equipment.level = this.level;
     this.player.resetAt(this.level.spawn);
@@ -1039,6 +1041,9 @@ export class Game {
   updateHUD(online = false): void {
     const h = this.hud,
       w = this.weapon;
+    const deviceHint = online
+      ? ""
+      : this.devices.hint(this.player.camera.position);
     if (!online) {
       const boss = this.enemies.find(
         (e): e is Commander => e instanceof Commander && e.health > 0,
@@ -1065,32 +1070,19 @@ export class Game {
     h.style(
       "health-fill",
       "background",
-      this.player.health < 30 ? gameTheme.colors.danger : gameTheme.colors.blue,
+      this.player.health < 30 ? gameTheme.colors.danger : "#f1f6ee",
     );
     h.set("ammo", w.melee ? "∞" : String(w.mag.ammo).padStart(2, "0"));
     h.set("reserve", w.melee ? "근접" : String(w.mag.reserve));
     if (!online) h.set("score", String(this.score).padStart(5, "0"));
     h.set("weapon-name", w.data.name);
-    h.set(
-      "dash-status",
-      this.player.dash.cooldown > 0
-        ? `ALT · 대시 ${this.player.dash.cooldown.toFixed(1)}초`
-        : "ALT · 대시 준비",
-    );
-    h.el("dash-status").classList.toggle(
-      "cooling",
-      this.player.dash.cooldown > 0,
-    );
     if (!online) {
-      h.set("emp-status", `G · EMP ×${this.equipment.ammo}`);
-      h.set("device-hint", this.devices.hint(this.player.camera.position));
+      h.set("device-hint", deviceHint);
       h.set("coins", `${this.wallet.coins} COINS · B 상점`);
     }
-    h.set(
-      "slot1",
-      w.primaryOwned ? `1 · ${w.magazines[0].data.name}` : "1 · 주무기 미구매",
-    );
-    h.set("slot2", `2 · ${w.magazines[1].data.name}`);
+    h.set("slot1", w.primaryOwned ? w.magazines[0].data.name : "주무기 미구매");
+    h.set("slot2", w.magazines[1].data.name);
+    h.el("loadout-primary").classList.toggle("unowned", !w.primaryOwned);
     if (!online) {
       h.set(
         "wave-label",
@@ -1174,6 +1166,38 @@ export class Game {
     if (!online)
       for (const [i, bar] of this.hud.waveBars.entries())
         bar.classList.toggle("active", i < this.waves.index && !this.practice);
+    if (!online) {
+      const feet = this.player.feet;
+      const active =
+        !this.practice && this.waves.intermission <= 0 && !this.objectives.done;
+      h.telemetry({
+        player: feet,
+        yaw: this.player.yaw,
+        elapsed: this.time,
+        rest: this.practice ? 0 : this.waves.intermission,
+        mode: this.practice ? "practice" : "solo",
+        friendly: this.kills,
+        opposition: this.practice
+          ? this.targets.filter((t) => t.health > 0).length
+          : this.waves.remaining,
+        roles: this.enemies.filter((e) => e.health > 0).map((e) => e.role),
+        objective: active ? this.objectives.point : undefined,
+        radius: this.objectives.radius,
+        contested: this.objectives.contested,
+      });
+      h.abilities({
+        dash: this.player.dash.cooldown,
+        emp: this.equipment.ammo,
+        online: false,
+        interact:
+          !!(
+            active &&
+            this.objectives.point &&
+            Vector3.DistanceSquared(feet, this.objectives.point) < 16
+          ) || deviceHint.startsWith("E"),
+        melee: w.melee,
+      });
+    }
     if (this.debug) {
       const p = this.player.feet,
         v = this.player.velocity;

@@ -1,5 +1,13 @@
 # RELAY ZERO — Sector 07
 
+## 3.2 — Tactical combat HUD
+
+The in-game interface uses the supplied tactical FPS reference for its layout: a circular map in the upper left, a slim team/phase strip with elapsed or intermission time across the top, an original operator badge and segmented health bar below left, magazine/reserve ammunition below center, a right-side weapon silhouette rail, and white ability icons below right. The portrait and icons are original inline SVG drawings. The main menu and game rules remain unchanged.
+
+All numbers are live. Solo shows eliminations and remaining hostiles; co-op shows team eliminations and ally health/down state; duel shows the two players' kill totals. The timer reports elapsed time, or the real intermission countdown between waves. It does not impose a new round deadline. Enemy portraits summarize the current robot roles rather than inventing a five-player enemy team. Dash, EMP ammo, interaction and melee selection reflect real availability; online modes hide unavailable EMP, and duel hides the interaction/revive tile.
+
+The map is built once per level from actual world collider footprints. Only player, co-op ally, active objective and enabled door markers change; opponent locations are never revealed in duel. Marker updates are limited to 10 Hz and unchanged SVG attributes are cached. The UI adds no new 3D rendering passes, map textures, AI visibility raycasts or external asset requests. Existing scope, hit/damage feedback, settings and performance controls remain available.
+
 ## 3.1 — Performance
 
 Rendering resolution, graphics presets, map art and weapon hit precision are retained. World rays traverse a four-meter XZ grid of baked static colliders, then use the original triangle intersections; moving colliders use the exact fallback path and disabled devices remain excluded. Each co-op bot refreshes target selection at most every 120 ms, while actual attacks still test current line of sight. Dead robots no longer perform target visibility tests. Spawn search reuses reachable cells and actor lists, and remote AI input vectors are reused.

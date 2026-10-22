@@ -5,6 +5,7 @@ import "@fontsource/barlow/latin-700.css";
 import "@fontsource/barlow-condensed/latin-600.css";
 import "@fontsource/barlow-condensed/latin-800.css";
 import "./ui/style.css";
+import "./ui/combat.css";
 import { Game } from "./core/Game";
 import { HUD } from "./ui/HUD";
 import { loadSettings } from "./core/Settings";
