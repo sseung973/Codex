@@ -1,3 +1,4 @@
+import { OnlineArena } from "../multiplayer/OnlineArena";
 import { PerformanceBudget } from "./PerformanceBudget";
 import { Equipment } from "../weapons/Equipment";
 import { ArenaDevices, PowerCell } from "../world/ArenaDevices";
@@ -31,6 +32,7 @@ import { Enemy, enemyConfig, combatRole } from "../ai/Enemy";
 import { Commander } from "../ai/Commander";
 import { Waves } from "./Waves";
 export class Game {
+  online: OnlineArena;
   engine: Engine;
   scene: Scene;
   level: Level;
@@ -181,6 +183,10 @@ export class Game {
     this.hud.onRestart = () => this.start(this.practice);
     this.hud.onExit = () => this.exitToMenu();
     this.input.onLockChange = (locked) => {
+      if (this.online?.active) {
+        this.online.lockChanged(locked);
+        return;
+      }
       this.running = locked && this.started && !this.finished && !this.shopping;
       if (this.shopping) {
         if (locked) document.exitPointerLock();
@@ -295,6 +301,8 @@ export class Game {
       this.hud.el("error").hidden = true;
       this.hud.toast("그래픽 복구 완료 · 게임으로 돌아가기를 눌러줘", 4);
     });
+    this.online = new OnlineArena(this);
+    this.hud.onOnline = (mode) => this.online.open(mode);
     this.engine.runRenderLoop(() => this.frame());
   }
   openShop(): void {
@@ -511,6 +519,9 @@ export class Game {
     }
     this.applyGraphics();
   }
+  sampleGraphics(milliseconds: number): void {
+    if (this.graphics.sample(milliseconds)) this.applyGraphics();
+  }
   private applyGraphics(): void {
     const quality = this.graphics.quality;
     this.engine.setHardwareScalingLevel(
@@ -599,6 +610,7 @@ export class Game {
   }
   exitToMenu(): void {
     // Set state before releasing pointer lock, so its event cannot reopen Pause.
+    if (this.online?.active) this.online.leave();
     this.running = false;
     this.started = false;
     this.finished = false;
@@ -877,6 +889,10 @@ export class Game {
     this.audio.play(victory ? "headshot" : "land");
   }
   frame(): void {
+    if (this.online?.active) {
+      this.online.frame();
+      return;
+    }
     if (document.hidden) {
       this.graphics.resetWindow();
       return;
@@ -893,8 +909,7 @@ export class Game {
       (this.running ? rawMilliseconds : interval) / 1000,
       0.05,
     );
-    if (this.running && this.graphics.sample(rawMilliseconds))
-      this.applyGraphics();
+    if (this.running) this.sampleGraphics(rawMilliseconds);
     if (this.debug) {
       const ms = this.engine.getDeltaTime();
       this.frameMs = this.frameMs ? this.frameMs * 0.9 + ms * 0.1 : ms;

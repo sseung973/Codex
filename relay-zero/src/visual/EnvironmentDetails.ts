@@ -1,10 +1,19 @@
 import { Mesh, Material, Vector3 } from "@babylonjs/core";
 import type { Level } from "../world/Level";
 import { buildFacilityProps } from "./FacilityProps";
+import { maps } from "../world/MapData";
 import { gameTheme } from "./GameTheme";
 /** Visual-only dressing: existing collision meshes, spawn positions and navigation are untouched. */
 export function buildEnvironmentDetails(level: Level): void {
-  const c = gameTheme.colors;
+  const theme = maps[level.mapId];
+  const c = {
+    ...gameTheme.colors,
+    amber: theme.accent,
+    blue: theme.glow,
+    concrete: theme.wall,
+    paint: theme.accent,
+    ivory: level.mapId === "nexus" ? "#e4eeeb" : gameTheme.colors.ivory,
+  };
   const dark = level.material("detail metal", c.metal),
     steel = level.material("detail steel", c.steel),
     amber = level.material("safety paint", c.amber),
@@ -34,7 +43,7 @@ export function buildEnvironmentDetails(level: Level): void {
     groups.set(mat, list);
     return m;
   };
-  buildFacilityProps(level, box);
+  if (level.mapId !== "cargo") buildFacilityProps(level, box);
   const concrete = level.material("wall panel concrete", c.concrete);
   const paint = level.material("structural painted metal", c.paint);
   for (const x of [-9.5, 9.5]) {
@@ -65,7 +74,7 @@ export function buildEnvironmentDetails(level: Level): void {
       box("side route chevron", x, 0.044, z, 0.65, 0.012, 0.055, amber);
   }
   // Recessed panel rhythm stays attached to the enclosing walls.
-  for (const x of [-21.43, 21.43]) {
+  for (const x of level.mapId === "cargo" ? [] : [-21.43, 21.43]) {
     for (const z of [-17, -7, 3, 13]) {
       box("wall concrete panel", x, 2.25, z, 0.04, 3.8, 7.7, concrete);
       box("wall base skirting", x, 0.25, z, 0.08, 0.32, 8, dark);
@@ -73,12 +82,12 @@ export function buildEnvironmentDetails(level: Level): void {
         box("blue structural upright", x, 4.4, z + dz, 0.13, 8.4, 0.32, paint);
     }
   }
-  for (const x of [-16, -8, 0, 8, 16]) {
+  for (const x of level.mapId === "cargo" ? [] : [-16, -8, 0, 8, 16]) {
     box("rear concrete panel", x, 3.2, 21.44, 7.55, 5.6, 0.035, concrete);
     box("upper service fascia", x, 7.45, 21.38, 7.55, 0.7, 0.06, paint);
   }
   // Light ceiling cassettes: open central slots retain directional illumination.
-  for (const x of [-16, -8, 8, 16])
+  for (const x of level.mapId === "cargo" ? [] : [-16, -8, 8, 16])
     for (const z of [-15, -3, 9, 19])
       box("ceiling cassette", x, 10.6, z, 6.8, 0.16, 8.3, concrete);
   // Existing cores get a recessed vertical amber panel rather than a new obstruction.
@@ -124,7 +133,7 @@ export function buildEnvironmentDetails(level: Level): void {
     }
   }
   // Wall-mounted systems sit inside the existing perimeter, above playable head height.
-  for (const x of [-21.42, 21.42])
+  for (const x of level.mapId === "cargo" ? [] : [-21.42, 21.42])
     for (const z of [-17, -7, 3, 13]) {
       box("wall service panel", x, 4.9, z, 0.08, 2.2, 5.4, dark);
       for (let i = 0; i < 5; i++)
@@ -150,7 +159,7 @@ export function buildEnvironmentDetails(level: Level): void {
       );
     }
   // Overhead structural rhythm and distant skyline, not additional movement obstacles.
-  for (const z of [-16, -4, 8, 19]) {
+  for (const z of level.mapId === "cargo" ? [] : [-16, -4, 8, 19]) {
     box("overhead truss", 0, 9.3, z, 43, 0.28, 0.3, dark);
     for (const x of [-14, 0, 14]) {
       box("hanging luminaire", x, 9.07, z, 4, 0.15, 0.75, steel);
@@ -250,42 +259,46 @@ export function buildEnvironmentDetails(level: Level): void {
     }
   } else if (level.mapId === "nexus") {
     // Lab: four observation bays and cool repeated instrument strips.
-    for (const x of [-11, 11])
-      for (const z of [-4, 9]) {
-        const front = z - 2.6;
-        box("lab observation window", x, 2.2, front, 3, 0.85, 0.045, dark);
+    for (const [x, z, depth] of [
+      [-12, -5, 8],
+      [10, -3, 4],
+      [-11, 10, 4],
+      [12, 12, 8],
+    ]) {
+      const front = z - depth / 2 - 0.1;
+      box("lab observation window", x, 2.2, front, 3, 0.85, 0.045, dark);
+      box(
+        "lab observation glass",
+        x,
+        2.2,
+        front - 0.03,
+        2.72,
+        0.63,
+        0.018,
+        steel,
+      );
+      box(
+        "lab observation header",
+        x,
+        2.68,
+        front - 0.02,
+        3.2,
+        0.08,
+        0.04,
+        blue,
+      );
+      for (const side of [-1, 1])
         box(
-          "lab observation glass",
-          x,
+          "lab window bracket",
+          x + side * 1.55,
           2.2,
-          front - 0.03,
-          2.72,
-          0.63,
-          0.018,
-          steel,
+          front - 0.025,
+          0.09,
+          1.06,
+          0.055,
+          white,
         );
-        box(
-          "lab observation header",
-          x,
-          2.68,
-          front - 0.02,
-          3.2,
-          0.08,
-          0.04,
-          blue,
-        );
-        for (const side of [-1, 1])
-          box(
-            "lab window bracket",
-            x + side * 1.55,
-            2.2,
-            front - 0.025,
-            0.09,
-            1.06,
-            0.055,
-            white,
-          );
-      }
+    }
     for (const x of [-16, 0, 16])
       box("lab ceiling index", x, 8.83, 18, 3.5, 0.075, 0.26, blue);
   } else {
@@ -325,6 +338,71 @@ export function buildEnvironmentDetails(level: Level): void {
     Math.PI,
   );
   level.sign("LIVE SIMULATION", new Vector3(14, 7.15, 21.37), 8, 0.65, c.amber);
+  if (level.mapId === "foundry") {
+    const heat = level.material("furnace glow", "#ff8a32", "#ff631f");
+    for (const x of [-12, 12]) {
+      box("furnace face", x, 2.6, 0.28, 5.6, 2.4, 0.12, dark);
+      for (let i = 0; i < 7; i++)
+        box(
+          "furnace slit",
+          x - 2.1 + i * 0.7,
+          2.6,
+          0.19,
+          0.22,
+          1.9,
+          0.04,
+          heat,
+        );
+      for (const z of [3, 10, 16]) {
+        box("exhaust stack", x, 7, z, 1.4, 4.2, 1.4, dark);
+        box("exhaust band", x, 8.8, z, 1.55, 0.22, 1.55, amber);
+      }
+    }
+    level.sign(
+      "SMELTING / 1400°",
+      new Vector3(-12, 4.2, 0.15),
+      5.5,
+      0.6,
+      theme.glow,
+    );
+  } else if (level.mapId === "cargo") {
+    for (const x of [-29, 29])
+      for (let i = 0; i < 5; i++) {
+        box(
+          "distant cargo stack",
+          x,
+          2 + (i % 2) * 2,
+          -18 + i * 9,
+          5.5,
+          4,
+          7,
+          i % 2 ? amber : paint,
+        );
+      }
+    for (const x of [-18, 0, 18]) {
+      box("yard floodlight pole", x, 7.6, 21, 0.2, 7, 0.2, steel);
+      box("yard floodlight", x, 11.1, 21, 2.5, 0.25, 0.6, white);
+    }
+    level.sign(
+      "PORT 12 / LOADING",
+      new Vector3(0, 3.4, 21.35),
+      13,
+      1.2,
+      c.ivory,
+    );
+  } else {
+    for (const x of [-4, 4])
+      for (const z of [-11, 1, 14]) {
+        box("lab ceiling ring", x, 7.8, z, 6, 0.13, 0.3, blue);
+      }
+    level.sign(
+      "NEXUS / BIO SYSTEMS",
+      new Vector3(0, 6.6, 21.32),
+      14,
+      1,
+      c.blue,
+    );
+  }
   // Merge static decorative meshes by material, with no decorative shadow casters.
   for (const [material, meshes] of groups) {
     for (const m of meshes) m.computeWorldMatrix(true);

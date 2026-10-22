@@ -24,14 +24,26 @@ export function buildAdditionalMap(
     solid = true,
   ) => level.box(name, new Vector3(x, y, z), new Vector3(w, h, d), mat, solid);
   if (id === "cargo") {
+    const rust = level.material("cargo rust red", "#a6533d");
+    const sand = level.material("cargo ochre", "#bd9656");
+    let index = 0;
     for (const [x, z, w, d] of [
-      [-11, -3, 5, 7],
+      [-11, -6, 5, 9],
       [-11, 10, 5, 8],
       [11, -7, 5, 6],
-      [11, 5, 5, 8],
-      [7, 16, 5, 3],
+      [11, 6, 5, 11],
+      [3, 15, 7, 3],
     ]) {
-      box("cargo container", x, 1.7, z, w, 3.4, d);
+      box(
+        "cargo container",
+        x,
+        1.7,
+        z,
+        w,
+        3.4,
+        d,
+        [accent, rust, sand][index++ % 3],
+      );
       box("container roof", x, 3.44, z, w + 0.12, 0.08, d + 0.12, trim, false);
       for (let k = -2; k <= 2; k++)
         box(
@@ -76,23 +88,56 @@ export function buildAdditionalMap(
       for (const x of [-19, 19])
         box("lane light", x, 0.028, z, 0.09, 0.016, 5, light, false);
   } else {
-    for (const x of [-11, 11])
-      for (const z of [-4, 9]) {
-        box("lab chamber", x, 1.8, z, 5, 3.6, 5, dark);
-        box("lab canopy", x, 3.68, z, 5.4, 0.16, 5.4, trim, false);
-        box(
-          "lab illuminated panel",
-          x,
-          2,
-          z - 2.535,
-          3.9,
-          1.6,
-          0.045,
-          accent,
-          false,
-        );
-        box("lab status line", x, 3, z - 2.57, 3.9, 0.08, 0.025, light, false);
-      }
+    for (const [x, z, width, depth] of [
+      [-12, -5, 4, 8],
+      [10, -3, 8, 4],
+      [-11, 10, 6, 4],
+      [12, 12, 4, 8],
+    ]) {
+      box(
+        "lab chamber",
+        x,
+        1.8,
+        z,
+        width,
+        3.6,
+        depth,
+        level.material("lab porcelain", "#c3d8d5"),
+      );
+      box(
+        "lab canopy",
+        x,
+        3.68,
+        z,
+        width + 0.4,
+        0.16,
+        depth + 0.4,
+        trim,
+        false,
+      );
+      box(
+        "lab illuminated panel",
+        x,
+        2,
+        z - depth / 2 - 0.035,
+        width - 1,
+        1.6,
+        0.045,
+        accent,
+        false,
+      );
+      box(
+        "lab status line",
+        x,
+        3,
+        z - depth / 2 - 0.07,
+        width - 1,
+        0.08,
+        0.025,
+        light,
+        false,
+      );
+    }
     box("nexus plinth", 0, 0.3, 7, 4.6, 0.6, 4.6, trim);
     box("nexus core", 0, 2.1, 7, 2.1, 3.6, 2.1, accent);
     for (const x of [-1.15, 1.15])

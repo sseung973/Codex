@@ -1,6 +1,6 @@
 {
   "name": "relay-zero",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,7 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --import tsx --test --test-isolation=none tests/*.test.ts",
-    "benchmark": "node --import tsx scripts/benchmark.ts --baked"
+    "benchmark": "node --import tsx scripts/benchmark.ts --baked",
+    "test:server": "node --test --test-isolation=none server/rooms.test.mjs"
   },
   "dependencies": {
     "@babylonjs/core": "9.26.0",
@@ -18,7 +19,9 @@
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
+    "@types/jsdom": "^21.1.7",
     "@types/node": "26.5.1",
+    "jsdom": "^26.1.0",
     "prettier": "3.9.6",
     "tsx": "4.23.13",
     "typescript": "7.0.2",

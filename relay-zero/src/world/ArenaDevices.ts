@@ -40,6 +40,7 @@ interface Barrier {
   cooldown: number;
 }
 export class ArenaDevices {
+  private visuals: Mesh[] = [];
   cells: PowerCell[] = [];
   barriers: Barrier[] = [];
   onBlast: (point: Vector3) => void = () => {};
@@ -49,6 +50,7 @@ export class ArenaDevices {
     public navigation: Navigation,
     mission: readonly Vector3[],
   ) {
+    const existing = new Set(level.scene.meshes);
     const used: Vector3[] = [level.spawn, ...mission];
     const place = (desired: Vector3, wide = false): Vector3 | undefined => {
       const candidates: Vector3[] = [];
@@ -139,7 +141,15 @@ export class ArenaDevices {
         cooldown: 0,
       });
     }
+    this.visuals = level.scene.meshes.filter(
+      (mesh) => !existing.has(mesh),
+    ) as Mesh[];
     navigation.rebuild();
+  }
+  setOnline(online: boolean): void {
+    for (const mesh of this.visuals) mesh.setEnabled(!online);
+    if (!online) this.reset();
+    this.navigation.rebuild();
   }
   private nearby(position: Vector3): Barrier | undefined {
     return this.barriers

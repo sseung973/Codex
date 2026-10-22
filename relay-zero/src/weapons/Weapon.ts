@@ -47,6 +47,7 @@ export class Weapon {
   ads = 0;
   spread = 0;
   held = false;
+  networkAttack?: (ray: Ray, weapon: WeaponData) => void;
   onHit: (head: boolean, kill: boolean, target: IDamageable) => void = () => {};
   onBlocked: (target: IDamageable) => void = () => {};
   onShot: () => void = () => {};
@@ -229,6 +230,10 @@ export class Weapon {
   }
   strike(): void {
     const ray = this.player.camera.getForwardRay(this.data.range);
+    if (this.networkAttack) {
+      this.networkAttack(ray, this.data);
+      return;
+    }
     const hit = meleeHit(
       this.scene,
       ray.origin,
@@ -287,6 +292,7 @@ export class Weapon {
       .addInPlace(right.scale(Math.cos(angle) * radius))
       .addInPlace(up.scale(Math.sin(angle) * radius))
       .normalize();
+    this.networkAttack?.(ray, this.data);
     let hit = this.scene.pickWithRay(
       ray,
       (m) => m.isEnabled() && m.isPickable && m !== this.player.body,
@@ -321,7 +327,7 @@ export class Weapon {
       this.effects.impact(hit.pickedPoint, !!hit.pickedMesh?.metadata?.entity);
       const entity = hit.pickedMesh?.metadata?.entity as
         IDamageable | undefined;
-      if (entity && entity.health > 0) {
+      if (entity && entity.health > 0 && !this.networkAttack) {
         const head = hit.pickedMesh?.metadata?.head === true;
         const info: DamageInfo = {
           damage: this.data.damage * (head ? this.data.headshotMultiplier : 1),

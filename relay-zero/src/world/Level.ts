@@ -48,23 +48,29 @@ export class Level {
     const sky = Color3.FromHexString(theme.clear);
     scene.clearColor = new Color4(sky.r, sky.g, sky.b, 1);
     scene.fogMode = Scene.FOGMODE_EXP2;
-    scene.fogDensity = gameTheme.lighting.fog;
+    scene.fogDensity =
+      mapId === "cargo" ? 0.003 : mapId === "nexus" ? 0.004 : 0.009;
     scene.fogColor = sky;
     scene.collisionsEnabled = true;
     const hemi = new HemisphericLight("sky", new Vector3(0.1, 1, 0.3), scene);
-    hemi.intensity = gameTheme.lighting.ambient;
+    hemi.intensity = mapId === "cargo" ? 1.05 : mapId === "nexus" ? 0.95 : 0.8;
     hemi.groundColor = new Color3(0.12, 0.15, 0.16);
     const sun = new DirectionalLight("sun", new Vector3(-0.6, -1, 0.45), scene);
     sun.position = new Vector3(18, 32, -18);
     sun.intensity = gameTheme.lighting.key;
-    sun.diffuse = new Color3(0.94, 0.97, 1);
+    sun.diffuse =
+      mapId === "cargo"
+        ? Color3.FromHexString("#ffe1b5")
+        : mapId === "foundry"
+          ? Color3.FromHexString("#ffe3ca")
+          : new Color3(0.87, 0.98, 1);
     this.lights.push(hemi, sun);
     const safe = new PointLight("entry fill", new Vector3(0, 4, -17), scene);
     safe.diffuse = Color3.FromHexString(gameTheme.colors.blue);
     safe.intensity = 0.65;
     safe.range = 10;
     const goal = new PointLight("relay fill", new Vector3(0, 6, 7), scene);
-    goal.diffuse = Color3.FromHexString(gameTheme.colors.amber);
+    goal.diffuse = Color3.FromHexString(theme.glow);
     goal.intensity = 0.8;
     goal.range = 12;
     this.lights.push(safe, goal);
@@ -78,18 +84,24 @@ export class Level {
     const floor = this.material("floor panel", theme.floor),
       wall = this.material("wall", theme.wall),
       dark = this.material("graphite", gameTheme.colors.metal),
-      orange = this.material("painted metal", gameTheme.colors.paint),
+      orange = this.material("painted metal", theme.accent),
       trim = this.material("metal", gameTheme.colors.steel),
-      light = this.material(
-        "light",
-        gameTheme.colors.ivory,
-        gameTheme.colors.ivory,
-      );
+      light = this.material("light", theme.glow, theme.glow);
     this.box("ground", new Vector3(0, -0.5, 0), new Vector3(44, 1, 46), floor);
-    this.box("back", new Vector3(0, 4, 22), new Vector3(44, 8, 1), wall);
+    this.box(
+      "back",
+      new Vector3(0, mapId === "cargo" ? 2 : 4, 22),
+      new Vector3(44, mapId === "cargo" ? 4 : 8, 1),
+      wall,
+    );
     this.box("front", new Vector3(0, 3, -22), new Vector3(44, 6, 1), dark);
     for (const x of [-22, 22])
-      this.box("side", new Vector3(x, 4, 0), new Vector3(1, 8, 45), wall);
+      this.box(
+        "side",
+        new Vector3(x, mapId === "cargo" ? 2 : 4, 0),
+        new Vector3(1, mapId === "cargo" ? 4 : 8, 45),
+        wall,
+      );
     for (let x = -20; x <= 20; x += 4) {
       this.box(
         "floor seam",

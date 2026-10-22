@@ -1,10 +1,21 @@
 # RELAY ZERO — Sector 07
 
-## Facility art direction
+## 3.0 — Solo, Duel, Co-op
 
-The game uses a local procedural visual kit matched to the RELAY ZERO style guide: charcoal, matte concrete and steel-blue surfaces with restrained amber navigation; only robotic opponents use red identification lights. Shared PBR material profiles distinguish floor, concrete, metal, rubber, polymer and inset glass. `src/visual/FacilityProps.ts` builds control consoles, service generators and case fittings onto existing geometry, while `EnvironmentDetails.ts` batches decorative floor routes, wall panels, overhead cassettes and relay trim by material. The collision layout, navigation and weapon behavior are unchanged. Graphics presets retain FXAA and reserve restrained bloom for High. Decorative meshes do not take part in raycast or navigation; only major structures and selected robot parts cast shadows.
+Three distinct arenas: warm foundry furnaces and side galleries; an open-sky cargo yard with colored container lanes; a pale ceramic Nexus lab with asymmetric islands and a mint-lit core. The operation screen provides keyboard-accessible mode and map cards. Small CSS diagrams are map illustrations, not gameplay screenshots. Static decoration remains batched by material, and all graphics settings preserve native viewport resolution. Directional damage feedback remains visible in every mode.
 
-A single-player, browser-native arena FPS built with TypeScript, Babylon.js and Vite. Defend an industrial relay against five waves of robotic sentinels, or practice in the firing range. All game meshes, effects and sounds are generated locally. No paid asset or external game service is required.
+Single-player retains its campaign objectives, boss, economy, practice range and endless mode. Friends modes use the Render WebSocket room service, with a maximum of two players:
+
+- **1대1:** AR-7, P-12 and baton for both players; five kills to win; three-second respawn with two seconds of protection (shooting is also disabled during protection).
+- **2인 협동:** five survival waves of assault, defender and support robots; both players start with the same loadout; hold E for two uninterrupted seconds within three meters and line of sight to revive a downed friend to 50 HP. A new wave restores 25 HP and reserve ammunition; downed players return at full health. A team wipe ends the mission. Online survival does not use the campaign objectives, boss, shop, EMP or tactical devices.
+
+Choose a friends mode, create a room and copy the invite link. Your friend opens the link and clicks 입장 (or enters the ten-character room code). Both click 준비 완료, then 게임으로 돌아가기 to capture the mouse. The match begins after both enter. Escape opens the local menu while combat continues. The host must keep the game tab visible; changing tabs ends the room because browsers throttle background simulation. Leaving, a broken connection or a server restart ends the match with an explanation. Create a fresh room to play again. Single-player records remain separate from multiplayer.
+
+The server is deployed at `https://relay-zero-rooms.onrender.com`; `/health` reports health and `/rooms` upgrades to WebSocket. It uses Render's free Singapore web-service plan. A sleeping free service may take roughly a minute to wake; the client displays a connection message and allows retry. Rooms are ephemeral and disappear on server restart. No database, user account, or payment is needed to play.
+
+The room service isolates two-player sessions, validates mode/map/message types and poses, restricts authority messages to the host, limits message size/rate, detects dead sockets and drops stale snapshots under backpressure. The host runs AI and resolves shared health and kills from rays using weapon allowlists, sequence/cadence checks, origin checks and world occlusion. This is a casual friends architecture: movement and the host remain trusted; it is not an anti-cheat system for ranked public matches. Movement and snapshots are sent at 15 Hz, and remote actors interpolate between updates.
+
+All meshes, visual effects and synthesized audio are generated locally. Online play sends game state to the Render server; solo play works independently of it.
 
 ## Run
 
@@ -23,7 +34,17 @@ npm run preview
 npm test
 ```
 
-`build` runs strict TypeScript checks and produces the static `dist/` directory. `base: './'` supports deployment under a subdirectory. Upload `dist/` to a static host such as Netlify, Vercel, Cloudflare Pages or GitHub Pages. The included `.openai/hosting.json` identifies the private Sites deployment; it is not needed by other hosts. No server secrets or backend are used.
+`build` runs strict TypeScript checks and produces the static `dist/` directory. `base: './'` supports deployment under a subdirectory. Upload `dist/` to a static host such as Netlify, Vercel, Cloudflare Pages or GitHub Pages. The included `.openai/hosting.json` identifies the existing Sites deployment; it is not needed by other hosts. No server secret is embedded in the client. Set `VITE_ROOMS_URL` at build time to override the default online server.
+
+## Multiplayer server development and Render
+
+From `relay-zero/server`, run `npm ci` and `npm start` (Node 22+). The service binds `0.0.0.0:$PORT`, default 3001. The frontend can use `VITE_ROOMS_URL=ws://localhost:3001/rooms npm run dev`. `ALLOWED_ORIGINS` is a comma-separated allowlist; production only allows the game origin. No other environment variables or secrets are required. SIGTERM closes sockets and drains the HTTP listener. Do not scale above one instance without adding a shared room coordinator.
+
+`render.yaml` describes the free Singapore service when imported from the GitHub repository root. The existing service uses branch `main`, build command `cd relay-zero/server && npm ci --omit=dev`, and start command `node relay-zero/server/index.mjs`. Auto-deploy is enabled; a new deployment restarts in-memory rooms. The static frontend continues publishing to its existing Sites project.
+
+Validation: `npm test`, `npm run test:server`, `node server/smoke.mjs` with a local service running, and `npm run build`. For a hosted socket smoke test, set `SMOKE_URL` and `SMOKE_ORIGIN` to the WebSocket URL and game origin. Proxy-only environments may optionally supply `SMOKE_PROXY` and an installed `https-proxy-agent` module via `SMOKE_PROXY_AGENT_MODULE`.
+
+Headless tests verify geometry/navigation, authority hit checks, respawns, co-op revival and completion, room isolation, actual socket exchanges, and DOM lobby controls. NullEngine and DOM tests do not certify GPU rendering or real two-person aiming latency; those still require a hardware-accelerated desktop browser.
 
 ## Controls
 
