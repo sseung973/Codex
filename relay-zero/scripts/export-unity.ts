@@ -140,7 +140,7 @@ for (const id of Object.keys(maps) as MapId[]) {
       direction: l.direction?.asArray(),
       color: l.diffuse.asArray(),
       intensity: l.intensity,
-      range: l.range,
+      range: l.getTypeID() === 0 ? l.range : 0,
     })),
   });
   scene.dispose();

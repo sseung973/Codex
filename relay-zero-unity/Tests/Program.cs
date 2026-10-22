@@ -123,7 +123,8 @@ class Program
             using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, map + ".json")));
             var v = doc.RootElement;
             Assert(v.GetProperty("mission").GetArrayLength() == 2 && v.GetProperty("spawns").GetArrayLength() == 7, "exported spawn and objective anchors / " + map);
-            int triangles = 0;
+            Assert(v.GetProperty("lights").EnumerateArray().All(l => l.GetProperty("range").GetDouble() <= 5000), "Unity float-safe light ranges / " + map);
+                int triangles = 0;
             foreach (var p in v.GetProperty("parts").EnumerateArray())
             {
                 var verts = p.GetProperty("vertices");
