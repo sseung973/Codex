@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: relay-zero-rooms
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: relay-zero/server
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: ALLOWED_ORIGINS
+        value: https://relay-zero-arena.sseung973.chatgpt.site
