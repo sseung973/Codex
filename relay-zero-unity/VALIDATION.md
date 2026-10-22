@@ -1,5 +1,19 @@
 # Validation — 2026-10-22
 
+## Unity bug-fix update (`3.2.0-unity.2`)
+
+Executed for this update:
+
+- Recompiled all 13 runtime C# files against the real Unity reference assemblies described below: no errors. Parsed all 16 runtime/Editor C# sources with Roslyn C# 9: no syntax errors. Editor API compilation remains pending.
+- Independent game rules/content: **62 checks passed**.
+- `python Tests/audit_presentation.py`: **18 models, 21,780 triangles, 809 runtime string literals, 8 alpha PNGs, 3 shader resource paths and 57 unique asset GUIDs passed**. Checks finite geometry, normalized normals, valid indices, non-degenerate/outward triangles and font table coverage. This is a static asset audit, not an image or shader execution test.
+- Room server: **3 tests passed**. The unchanged native `RoomSocket` transport passed real two-client **duel and co-op** exchanges against the local room server again. Unity `OnlineSession` gameplay and JsonUtility are not executed by this console test.
+- Built and unpacked the code-only `Updates/RelayZero-Fixes.unitypackage`; each packaged source and asset GUID was verified against its repository file. It includes 19 C#/shader assets and does not change project settings or import Store art. The archive structure was verified here; importing it into Unity is pending.
+
+Expanded `RELAY ZERO → Run Play Mode Smoke Check` now covers Korean/symbol font coverage across all UI pages, slider geometry, safe target cells on all maps, world text shader availability, native hitscan/shields, commander role isolation and fixed warning position, exposed weak points, shop reload cancellation, prefab fitting under parent rotation, and Unity-serialized online state/removed replicas/broken shield/peer heartbeat/rejoin reset. **These Editor checks are provided but have not been executed in this environment.**
+
+The user reported that the previous project opened and ran in Unity 6.3 LTS. This does not establish that this update's rendering, gameplay or builds have passed in that Editor. See [patch installation and remaining validation](Updates/README.md).
+
 ## Executed in this environment
 
 1. All runtime C# sources compiled with Roslyn 4.11 (`csc` from .NET SDK 8.0.426), C# 9, real UnityEngine.Modules 2021.3.33 and UnityEngine.UI 2018.3.5.1 reference assemblies. No compile errors. Validation references and compiler downloads are not shipped in the project. This does not validate Unity 6's actual import, native runtime or shaders.

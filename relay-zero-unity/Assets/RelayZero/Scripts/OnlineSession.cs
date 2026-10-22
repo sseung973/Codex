@@ -176,6 +176,8 @@ namespace RelayZero
 
         public void SetReady()
         {
+            if (!Connected || string.IsNullOrEmpty(Code) || Active)
+                return;
             Ready = !Ready;
             Send(new NetMessage { type = "ready", value = Ready });
         }
@@ -221,7 +223,8 @@ namespace RelayZero
 
         void Message(NetMessage m)
         {
-            lastMessage = Time.realtimeSinceStartup;
+            if (m.type == "begin" || m.type == "pose" || m.type == "state" || m.type == "shot" || m.type == "event")
+                lastMessage = Time.realtimeSinceStartup;
             switch (m.type)
             {
                 case "pong":
@@ -246,6 +249,7 @@ namespace RelayZero
                     game.UI.RefreshLobby();
                     break;
                 case "start":
+                    lastMessage = Time.realtimeSinceStartup;
                     Start(m.mode, m.map);
                     break;
                 case "begin":
@@ -344,6 +348,8 @@ namespace RelayZero
             Wave = Pending = serial = sequence = localEpoch = 0;
             Wait = 3;
             Revive = networkClock = 0;
+            lastPoseTime = 0;
+            lastPose = "";
             gates = new[]
             {
                 new ShotGate(),
@@ -354,6 +360,7 @@ namespace RelayZero
             game.Finished = game.Practice = game.Paused = game.Shopping = false;
             game.Score = game.Kills = game.Shots = game.Hits = game.Heads = 0;
             game.Elapsed = 0;
+            game.DamageTaken = 0;
             ResetLocal();
             Remote = new Pose
             {
@@ -709,7 +716,7 @@ namespace RelayZero
             var seen = new HashSet<string>();
             foreach (var b in s.enemies)
             {
-                if (b == null || !CombatRules.FiniteVector(b.p) || string.IsNullOrEmpty(b.id))
+                if (b == null || !CombatRules.FiniteVector(b.p) || string.IsNullOrEmpty(b.id) || !ValidRole(b.role) || float.IsNaN(b.hp) || float.IsInfinity(b.hp) || b.hp < 0 || b.max <= 0 || float.IsNaN(b.max) || float.IsInfinity(b.max))
                     continue;
                 seen.Add(b.id);
                 Bot bot;
@@ -726,18 +733,41 @@ namespace RelayZero
                 bot.Shield = b.shield;
                 bot.Animation = b.animation;
                 foreach (var z in bot.GetComponentsInChildren<HitZone>(true))
-                    if (z.Shield)
+                    if (z.Shield || z.name.Contains("shield"))
                         z.gameObject.SetActive(b.shield > 0);
             }
 
+            var removed = new List<string>();
+            foreach (var pair in replicas)
+                if (!seen.Contains(pair.Key))
+                {
+                    game.Bots.Remove(pair.Value);
+                    if (pair.Value)
+                    {
+                        pair.Value.gameObject.SetActive(false);
+                        UnityEngine.Object.Destroy(pair.Value.gameObject);
+                    }
+                    removed.Add(pair.Key);
+                }
+            foreach (var id in removed)
+                replicas.Remove(id);
+
             game.Player.Health = HP[Self];
+        }
+
+        static bool ValidRole(string role)
+        {
+            return role == "assault" || role == "defender" || role == "support" || role == "sniper" || role == "bomber";
         }
 
         public void Leave()
         {
             client.Close();
             Active = Begun = Ended = Ready = false;
+            Host = true;
             Code = "";
+            Roster = "";
+            heartbeat = networkClock = lastPoseTime = 0;
             if (avatar)
                 UnityEngine.Object.Destroy(avatar);
             avatar = null;

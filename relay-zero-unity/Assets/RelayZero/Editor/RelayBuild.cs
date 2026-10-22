@@ -18,7 +18,7 @@ namespace RelayZero.Editor
                     return;
                 PlayerSettings.companyName = "RELAY ZERO";
                 PlayerSettings.productName = "RELAY ZERO";
-                PlayerSettings.bundleVersion = "3.2.0-unity.1";
+                PlayerSettings.bundleVersion = "3.2.0-unity.2";
                 PlayerSettings.runInBackground = true;
                 PlayerSettings.colorSpace = ColorSpace.Linear;
                 PlayerSettings.defaultScreenWidth = 1280;

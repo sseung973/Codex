@@ -140,11 +140,11 @@ namespace RelayZero
             bool first = true;
             foreach (var r in renderers)
             {
-                var b = r.bounds;
+                var b = r.localBounds;
                 for (int i = 0; i < 8; i++)
                 {
                     Vector3 point = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
-                    point = root.InverseTransformPoint(point);
+                    point = root.InverseTransformPoint(r.transform.TransformPoint(point));
                     if (first)
                     {
                         bounds = new Bounds(point, Vector3.zero);

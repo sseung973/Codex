@@ -12,6 +12,7 @@
 *.user
 *.pidb
 *.unitypackage
+!Updates/RelayZero-Fixes.unitypackage
 Tests/bin/
 Tests/obj/
 Tools/bin/

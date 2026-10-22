@@ -46,7 +46,7 @@ namespace RelayZero
         {
             game = owner;
             Id = id;
-            Role = role;
+            Role = role = commander ? "commander" : role;
             Elite = elite;
             Commander = commander;
             Practice = practice;
@@ -101,7 +101,8 @@ namespace RelayZero
             body.slopeLimit = 60;
             if (Commander || Role == "bomber")
             {
-                warning = game.Fx.MakeRing(transform, Commander ? 2.45f : 4.2f, Data.ColorOf("#e56561"));
+                // Commander strikes lock to a world position, independent of the moving robot.
+                warning = game.Fx.MakeRing(game.World.transform, Commander ? 2.45f : 4.2f, Data.ColorOf("#e56561"));
                 warning.gameObject.SetActive(false);
             }
 
@@ -226,6 +227,8 @@ namespace RelayZero
                 return;
             }
 
+            if (!Practice && body.enabled)
+                body.Move(Vector3.down * 4 * dt);
             if (Stun > 0)
             {
                 Stun = Mathf.Max(0, Stun - dt);
@@ -398,7 +401,7 @@ namespace RelayZero
                 path = game.Navigation.Route(transform.position, goal);
             }
 
-            while (path.Count > 0 && (transform.position - path[0]).sqrMagnitude < .5f)
+            while (path.Count > 0 && HorizontalDistanceSquared(transform.position, path[0]) < .5f)
                 path.RemoveAt(0);
             if (path.Count == 0)
                 return;
@@ -416,7 +419,7 @@ namespace RelayZero
 
             direction.Normalize();
             float move = speed * (State == "Patrol" ? .55f : 1) * (stagger > 0 ? .2f : 1);
-            body.Move((direction * move + Vector3.down * 4) * dt);
+            body.Move(direction * move * dt);
             AnimateLegs(true);
             if (direction.sqrMagnitude > .01f)
                 transform.rotation = Quaternion.Euler(0, Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg, 0);
@@ -462,6 +465,18 @@ namespace RelayZero
                 properties.SetColor("_Color", Cue > 0 && !r.sharedMaterial.HasProperty("_EmissionColor") ? Data.ColorOf("#edac58") : baseColor[i]);
                 r.SetPropertyBlock(properties);
             }
+        }
+
+        static float HorizontalDistanceSquared(Vector3 a, Vector3 b)
+        {
+            float x = a.x - b.x, z = a.z - b.z;
+            return x * x + z * z;
+        }
+
+        void OnDestroy()
+        {
+            if (warning)
+                Destroy(warning.gameObject);
         }
     }
 }

@@ -89,7 +89,7 @@ namespace RelayZero
             bool ads = controls && game.Guns.Aiming;
             Aiming = ads;
             float mx = controls ? Input.GetAxisRaw("Mouse X") : 0, my = controls ? Input.GetAxisRaw("Mouse Y") : 0;
-            Yaw += mx * .91673f * s.sensitivity * (ads ? .63f : 1);
+            Yaw = Mathf.Repeat(Yaw + mx * .91673f * s.sensitivity * (ads ? .63f : 1), 360);
             Pitch = Mathf.Clamp(Pitch - my * .91673f * s.sensitivity * (ads ? .63f : 1), -88.2f, 88.2f);
             bool shortBody = controls && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.C));
             if (Crouched && !shortBody)
@@ -190,7 +190,7 @@ namespace RelayZero
         public Transform View;
         GameObject model;
         float idle, kick, phase;
-        bool held, pendingSwing;
+        bool held, pendingSwing, blockTrigger;
         string shown = "";
         public Magazine Current
         {
@@ -212,7 +212,7 @@ namespace RelayZero
         {
             get
             {
-                return !Melee && game.Controls && Input.GetMouseButton(1) && Current.Reload <= 0 && game.Player.DashRemaining <= 0;
+                return !Melee && !blockTrigger && game.Controls && Input.GetMouseButton(1) && Current.Reload <= 0 && game.Player.DashRemaining <= 0;
             }
         }
 
@@ -239,7 +239,13 @@ namespace RelayZero
             Cooldown = Heat = Ads = Swing = idle = kick = 0;
             pendingSwing = held = false;
             shown = "";
+            SuppressTrigger();
             Show();
+        }
+
+        public void SuppressTrigger()
+        {
+            blockTrigger = held = true;
         }
 
         public void Switch(int slot)
@@ -264,9 +270,14 @@ namespace RelayZero
                 Inventory[id] = mag;
             }
 
+            Current.Reload = 0;
             Slots[0] = mag;
             PrimaryOwned = true;
-            Switch(0);
+            Slot = 0;
+            Cooldown = .25f;
+            Swing = 0;
+            pendingSwing = false;
+            SuppressTrigger();
             Show();
         }
 
@@ -341,7 +352,9 @@ namespace RelayZero
 
             var w = Current.Spec;
             Spread = ((Aiming ? w.adsSpread : w.baseSpread) + (game.Player.Moving ? w.movementSpread * (Aiming ? .25f : 1) : 0) + (!game.Player.Grounded ? w.airSpread : 0) + Heat * .002f) * (game.Player.Crouched ? .7f : 1);
-            bool fire = controls && Input.GetMouseButton(0);
+            if (controls && !Input.GetMouseButton(0) && !Input.GetMouseButton(1))
+                blockTrigger = false;
+            bool fire = controls && !blockTrigger && Input.GetMouseButton(0);
             if (fire && (!held || w.automatic) && Cooldown <= 0 && Current.Reload <= 0 && !game.Player.Sprinting && game.Player.DashRemaining <= 0)
             {
                 if (Melee)

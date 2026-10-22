@@ -83,13 +83,31 @@ namespace RelayZero
     public static class Data
     {
         public static BalanceData Balance;
-        public static Font Font;
+        public static Font Font, DisplayFont;
         public static void Load()
         {
             Balance = Read<BalanceData>("balance");
             Font = Resources.Load<Font>("Fonts/NotoSansCJKkr-Regular");
+            DisplayFont = Resources.Load<Font>("Fonts/BarlowCondensed-Bold");
             if (!Font)
                 Font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        }
+
+        public static bool Supports(Font font, string text)
+        {
+            if (!font)
+                return false;
+            foreach (char c in text ?? "")
+                if (!char.IsControl(c) && !font.HasCharacter(c))
+                    return false;
+            return true;
+        }
+
+        public static Font TextFont(string text, bool strong = false)
+        {
+            if (strong && Supports(DisplayFont, text))
+                return DisplayFont;
+            return Supports(Font, text) || !Supports(DisplayFont, text) ? Font : DisplayFont;
         }
 
         public static T Read<T>(string name)

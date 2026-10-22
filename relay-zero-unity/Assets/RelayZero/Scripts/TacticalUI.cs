@@ -12,7 +12,10 @@ namespace RelayZero
         Transform root;
         readonly Dictionary<string, GameObject> panels = new Dictionary<string, GameObject>();
         readonly Dictionary<string, Text> labels = new Dictionary<string, Text>();
-        Image healthFill, missionFill, reloadFill, bossFill, damageFlash;
+        readonly HashSet<Text> displayLabels = new HashSet<Text>();
+        readonly Dictionary<string, Sprite> icons = new Dictionary<string, Sprite>();
+        RuntimeOwnedAssets owned;
+        Image healthFill, missionFill, reloadFill, bossFill, damageFlash, centerDot;
         RectTransform damageArrow;
         RadarGraphic radar;
         Text toast, hit, damageLabel;
@@ -20,7 +23,6 @@ namespace RelayZero
         string current = "menu", back = "menu";
         Text lobbyStatus, lobbyRoster, roomCode, readyLabel, shopCoins;
         InputField roomInput, serverInput;
-        Font display;
         Image portrait;
         readonly List<Image> abilityIcons = new List<Image>();
         public string Page
@@ -35,8 +37,8 @@ namespace RelayZero
         public TacticalUI(RelayGame owner)
         {
             game = owner;
-            display = Resources.Load<Font>("Fonts/BarlowCondensed-Bold");
             var go = new GameObject("RELAY ZERO / UI");
+            owned = go.AddComponent<RuntimeOwnedAssets>();
             var canvas = go.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             var scaler = go.AddComponent<CanvasScaler>();
@@ -95,13 +97,15 @@ namespace RelayZero
         {
             var r = Rect(key, parent, x, y, w, h);
             var t = r.gameObject.AddComponent<Text>();
-            t.font = strong && display ? display : Data.Font;
+            t.font = Data.TextFont(value, strong);
+            if (strong)
+                displayLabels.Add(t);
             t.fontSize = size;
             t.color = color ?? White;
             t.text = value;
             t.alignment = align;
             t.horizontalOverflow = HorizontalWrapMode.Wrap;
-            t.verticalOverflow = VerticalWrapMode.Truncate;
+            t.verticalOverflow = VerticalWrapMode.Overflow;
             t.raycastTarget = false;
             if (!string.IsNullOrEmpty(key))
                 labels[key] = t;
@@ -130,9 +134,17 @@ namespace RelayZero
         Image Icon(string resource, Transform parent, float x, float y, float w, float h, Color color)
         {
             var im = Box(resource, parent, x, y, w, h, color);
-            var texture = Resources.Load<Texture2D>("UI/" + resource);
-            if (texture)
-                im.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(.5f, .5f), 100);
+            if (!icons.TryGetValue(resource, out var sprite))
+            {
+                var texture = Resources.Load<Texture2D>("UI/" + resource);
+                if (texture)
+                {
+                    sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(.5f, .5f), 100);
+                    icons[resource] = sprite;
+                    owned.Assets.Add(sprite);
+                }
+            }
+            im.sprite = sprite;
             im.preserveAspect = true;
             return im;
         }
@@ -152,7 +164,10 @@ namespace RelayZero
         void Set(string key, string value)
         {
             if (labels.TryGetValue(key, out var t) && t.text != value)
+            {
+                t.font = Data.TextFont(value, displayLabels.Contains(t));
                 t.text = value;
+            }
         }
 
         void Fill(Image im, float f)
@@ -266,7 +281,7 @@ namespace RelayZero
                 cross.Add(line.rectTransform);
             }
 
-            Box("center dot", p, 639, 359, 2, 2, White);
+            centerDot = Box("center dot", p, 639, 359, 2, 2, White);
             hit = Text("", p, "×", 615, 335, 50, 50, 38, White, true, TextAnchor.MiddleCenter);
             hit.gameObject.SetActive(false);
             damageFlash = Box("damage flash", p, 0, 0, 1280, 720, new Color(1, 0, 0, 0));
@@ -294,7 +309,10 @@ namespace RelayZero
 
             tex.SetPixels(pixels);
             tex.Apply();
-            return Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(.5f, .5f));
+            var sprite = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(.5f, .5f));
+            owned.Assets.Add(sprite);
+            owned.Assets.Add(tex);
+            return sprite;
         }
 
         Sprite DamageVignette()
@@ -312,7 +330,10 @@ namespace RelayZero
 
             tex.SetPixels(pixels);
             tex.Apply();
-            return Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(.5f, .5f));
+            var sprite = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(.5f, .5f));
+            owned.Assets.Add(sprite);
+            owned.Assets.Add(tex);
+            return sprite;
         }
 
         void BuildScope(Transform p)
@@ -336,7 +357,7 @@ namespace RelayZero
             var p = PageRoot("menu").transform;
             Box("menu pane", p, 0, 0, 1280, 720, new Color(.025f, .045f, .065f, .8f));
             Text("", p, "COMBAT SIMULATION / TRAINING DIVISION", 72, 52, 900, 25, 14, Mint);
-            Text("", p, "RELAY\nZERO", 66, 101, 595, 204, 104, White, true);
+            Text("", p, "RELAY\nZERO", 66, 101, 595, 218, 88, White, true);
             Text("", p, "돌파하고. 점령하고. 살아남아.", 76, 324, 530, 40, 23, White);
             Text("", p, "피스톨로 시작하는 다섯 번의 전투.\n친구와는 1vs1 결투 또는 2인 협동으로.", 76, 382, 490, 68, 17, Muted);
             Text("", p, "NATIVE UNITY / ORIGINAL ARENAS & ARSENAL", 76, 639, 620, 25, 12, Mint);
@@ -536,8 +557,14 @@ namespace RelayZero
             s.maxValue = max;
             s.direction = UnityEngine.UI.Slider.Direction.LeftToRight;
             var fill = Box("fill", bg.transform, 0, 0, 365, 12, Mint);
+            fill.rectTransform.anchorMin = Vector2.zero;
+            fill.rectTransform.anchorMax = Vector2.one;
+            fill.rectTransform.offsetMin = fill.rectTransform.offsetMax = Vector2.zero;
             s.fillRect = fill.rectTransform;
             var h = Box("handle", bg.transform, 0, -4, 12, 20, White);
+            h.rectTransform.anchorMin = h.rectTransform.anchorMax = new Vector2(0, .5f);
+            h.rectTransform.pivot = new Vector2(.5f, .5f);
+            h.rectTransform.anchoredPosition = Vector2.zero;
             s.handleRect = h.rectTransform;
             s.targetGraphic = h;
             s.value = value;
@@ -660,13 +687,16 @@ namespace RelayZero
 
         public void Toast(string text, float duration = 2.5f)
         {
+            toast.font = Data.TextFont(text, true);
             toast.text = text;
             toastTime = duration;
         }
 
         public void Hit(bool head, bool killed)
         {
-            hit.text = killed ? "✕" : "×";
+            hit.text = "×";
+            hit.font = Data.TextFont(hit.text, true);
+            hit.fontSize = killed ? 44 : 38;
             hit.color = head ? Amber : White;
             hit.gameObject.SetActive(true);
             hitTime = killed ? .23f : .14f;
@@ -680,7 +710,20 @@ namespace RelayZero
             damageArrow.localRotation = Quaternion.Euler(0, 0, -angle);
             damageArrow.gameObject.SetActive(true);
             damageTime = .75f;
-            damageLabel.text = "−" + Mathf.CeilToInt(amount) + " HP";
+            damageLabel.text = "-" + Mathf.CeilToInt(amount) + " HP";
+        }
+
+        public void ResetFeedback()
+        {
+            toastTime = hitTime = damageTime = 0;
+            toast.text = damageLabel.text = "";
+            hit.gameObject.SetActive(false);
+            damageArrow.gameObject.SetActive(false);
+            damageFlash.color = Color.clear;
+            scope.SetActive(false);
+            centerDot.gameObject.SetActive(true);
+            foreach (var line in cross)
+                line.gameObject.SetActive(true);
         }
 
         public void Tick(float dt)
@@ -723,7 +766,7 @@ namespace RelayZero
 
             float wait = net ? online.Mode == "coop" ? online.Wait : 0 : game.Practice ? 0 : game.Waves.Wait;
             string objective = net ? online.Mode == "duel" ? "먼저 5킬을 달성해" : "서로 엄호하며 살아남아" : game.Practice ? "사격 연습장" : game.Mission.Kind == "capture" ? "중계기 점령" : game.Mission.Kind == "activate" ? "장치 2개 작동" : game.Mission.Kind == "defend" ? "구역 방어" : "적 전멸";
-            Set("match-wave", net ? online.Mode == "duel" ? "FRIENDS / 1 VS 1" : "CO-OP / WAVE " + online.Wave + " / 05" : game.Practice ? "FIRING RANGE" : "WAVE " + Mathf.Max(1, game.Waves.Wave).ToString("00") + " / " + (game.Waves.Endless ? "∞" : "05"));
+            Set("match-wave", net ? online.Mode == "duel" ? "FRIENDS / 1 VS 1" : "CO-OP / WAVE " + online.Wave + " / 05" : game.Practice ? "FIRING RANGE" : "WAVE " + Mathf.Max(1, game.Waves.Wave).ToString("00") + " / " + (game.Waves.Endless ? "ENDLESS" : "05"));
             Set("match-time", wait > 0 ? Mathf.CeilToInt(wait).ToString("00") : Data.Clock(game.Elapsed));
             Set("objective", objective);
             Set("friendly", net ? (online.Mode == "duel" ? online.Scores[local] : online.Scores[0] + online.Scores[1]).ToString() : game.Kills.ToString());
@@ -776,7 +819,11 @@ namespace RelayZero
             cross[1].anchoredPosition = new Vector2(639, -(360 + gap));
             cross[2].anchoredPosition = new Vector2(640 - gap - 8, -359);
             cross[3].anchoredPosition = new Vector2(640 + gap, -359);
-            scope.SetActive(gun.Aiming && gun.Current.Spec.weaponType == "sniper");
+            bool scoped = gun.Aiming && gun.Current.Spec.weaponType == "sniper";
+            scope.SetActive(scoped);
+            centerDot.gameObject.SetActive(!scoped);
+            foreach (var line in cross)
+                line.gameObject.SetActive(!scoped);
             mapClock += .05f;
             if (mapClock >= .1f)
             {

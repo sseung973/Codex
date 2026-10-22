@@ -43,7 +43,7 @@ namespace RelayZero
         {
             get
             {
-                return Started && !Finished && !Paused && !Shopping && Player.Health > 0 && (!Online.Active || Online.Begun);
+                return Started && !Finished && !Paused && !Shopping && Cursor.lockState == CursorLockMode.Locked && Player.Health > 0 && (!Online.Active || Online.Begun);
             }
         }
 
@@ -160,15 +160,7 @@ namespace RelayZero
                 go.transform.SetParent(World.transform, false);
                 go.transform.position = Data.V(s.p);
                 go.transform.rotation = Quaternion.Euler(s.ground ? 90 : 0, s.yaw * Mathf.Rad2Deg, 0);
-                var text = go.AddComponent<TextMesh>();
-                text.text = s.text;
-                text.font = Data.Font;
-                text.fontSize = 72;
-                text.characterSize = s.h / 70;
-                text.anchor = TextAnchor.MiddleCenter;
-                text.alignment = TextAlignment.Center;
-                text.color = Data.ColorOf(s.color);
-                go.GetComponent<Renderer>().sharedMaterial = Data.Font.material;
+                go.AddComponent<WorldSign>().Configure(s);
             }
 
             Navigation = new GridNavigation();
@@ -231,7 +223,7 @@ namespace RelayZero
                 }
 
                 )
-                    CreateBot("target-" + i++, "assault", p, 1, false, false, true);
+                    CreateBot("target-" + i++, "assault", Navigation.Spawn(p, Player.Feet, Bots), 1, false, false, true);
             }
 
             Resume();
@@ -241,6 +233,7 @@ namespace RelayZero
         public void Resume()
         {
             Paused = Shopping = false;
+            Guns.SuppressTrigger();
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
             UI.Show("playing");
@@ -678,6 +671,8 @@ namespace RelayZero
 
         void ResetEquipment()
         {
+            Fx.Clear();
+            UI.ResetFeedback();
             foreach (var p in grenades)
                 p.Destroy();
             grenades.Clear();

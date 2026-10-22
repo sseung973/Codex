@@ -19,6 +19,7 @@ namespace RelayZero
         {
             root = new GameObject("Pooled combat effects").transform;
             material = new Material(Resources.Load<Shader>("RelayUnlit"));
+            root.gameObject.AddComponent<RuntimeOwnedAssets>().Assets.Add(material);
             for (int i = 0; i < pool.Length; i++)
             {
                 pool[i] = new Line
@@ -113,6 +114,7 @@ namespace RelayZero
         {
             game = owner;
             var root = new GameObject("Synthesized original SFX");
+            var owned = root.AddComponent<RuntimeOwnedAssets>();
             for (int i = 0; i < voices.Length; i++)
             {
                 voices[i] = root.AddComponent<AudioSource>();
@@ -132,6 +134,8 @@ namespace RelayZero
             Make("enemy", 165, .065f, .08f, 2);
             Make("alert", 620, .18f, .05f, 0);
             Make("ui", 660, .08f, .06f, 0);
+            foreach (var clip in clips.Values)
+                owned.Assets.Add(clip);
         }
 
         void Make(string id, float freq, float duration, float amp, int type)
