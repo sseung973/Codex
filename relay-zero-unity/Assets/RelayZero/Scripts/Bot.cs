@@ -88,8 +88,8 @@ namespace RelayZero
             for (int i = 0; i < renderers.Length; i++)
             {
                 var mat = renderers[i].sharedMaterial;
-                baseEmission[i] = mat.HasProperty("_EmissionColor") ? mat.GetColor("_EmissionColor") : Color.black;
-                baseColor[i] = mat.color;
+                baseEmission[i] = mat && mat.HasProperty("_EmissionColor") ? mat.GetColor("_EmissionColor") : Color.black;
+                baseColor[i] = mat ? mat.color : Color.white;
             }
 
             body = gameObject.AddComponent<CharacterController>();
@@ -456,7 +456,7 @@ namespace RelayZero
             for (int i = 0; i < renderers.Length; i++)
             {
                 var r = renderers[i];
-                if (!r)
+                if (!r || !r.sharedMaterial)
                     continue;
                 properties.SetColor("_EmissionColor", baseEmission[i] + c);
                 properties.SetColor("_Color", Cue > 0 && !r.sharedMaterial.HasProperty("_EmissionColor") ? Data.ColorOf("#edac58") : baseColor[i]);

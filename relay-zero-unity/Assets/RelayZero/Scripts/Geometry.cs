@@ -13,6 +13,7 @@ namespace RelayZero
         {
             public ModelData Data;
             public Mesh[] Meshes;
+            public Mesh[] RenderMeshes;
             public Material[] Materials;
         }
 
@@ -27,6 +28,7 @@ namespace RelayZero
                 Data = Data.Read<ModelData>(name)
             };
             t.Meshes = new Mesh[t.Data.parts.Length];
+            t.RenderMeshes = new Mesh[t.Data.parts.Length];
             t.Materials = new Material[t.Data.materials.Length];
             for (int i = 0; i < t.Materials.Length; i++)
             {
@@ -69,6 +71,8 @@ namespace RelayZero
                     mesh.RecalculateNormals();
                 mesh.RecalculateBounds();
                 t.Meshes[i] = mesh;
+                float radius = name.StartsWith("weapon-") ? .018f : name.StartsWith("robot-") || name.StartsWith("operative-") ? .045f : .06f;
+                t.RenderMeshes[i] = VisualOverrides.Soften ? SoftMesh.Create(mesh, radius) : mesh;
             }
 
             Cache[name] = t;
@@ -88,7 +92,7 @@ namespace RelayZero
                 go.transform.SetParent(root.transform, false);
                 go.layer = targets ? TargetLayer : name.StartsWith("weapon-") ? ViewLayer : 0;
                 var filter = go.AddComponent<MeshFilter>();
-                filter.sharedMesh = t.Meshes[i];
+                filter.sharedMesh = t.RenderMeshes[i];
                 var renderer = go.AddComponent<MeshRenderer>();
                 renderer.sharedMaterial = t.Materials[p.material];
                 renderer.shadowCastingMode = targets ? ShadowCastingMode.On : ShadowCastingMode.Off;
@@ -106,6 +110,36 @@ namespace RelayZero
                 }
             }
 
+            var profile = VisualOverrides.Current;
+            var entry = profile ? VisualOverrides.Find(profile.models, name) : null;
+            if (entry != null)
+            {
+                Bounds bounds = new Bounds();
+                bool first = true;
+                foreach (var mesh in t.Meshes)
+                {
+                    if (first)
+                    {
+                        bounds = mesh.bounds;
+                        first = false;
+                    }
+                    else
+                        bounds.Encapsulate(mesh.bounds);
+                }
+
+                var art = VisualOverrides.Attach(entry, root.transform, bounds, targets ? 0 : name.StartsWith("weapon-") ? ViewLayer : 0);
+                if (art)
+                {
+                    for (int i = 0; i < t.Data.parts.Length; i++)
+                    {
+                        var p = t.Data.parts[i];
+                        if (p.shield || p.weakpoint || p.name.Contains("shield"))
+                            continue;
+                        root.transform.GetChild(i).GetComponent<Renderer>().enabled = false;
+                    }
+                }
+            }
+
             return root;
         }
 
@@ -118,11 +152,19 @@ namespace RelayZero
             for (int i = 0; i < t.Data.parts.Length; i++)
             {
                 var p = t.Data.parts[i];
-                if (p.visible && p.enabled)
+                bool replacement = false;
+                var profile = VisualOverrides.Current;
+                if (p.visible && p.enabled && profile)
+                {
+                    var entry = VisualOverrides.Find(profile.environment, p.name, name);
+                    replacement = VisualOverrides.Attach(entry, root.transform, t.Meshes[i].bounds, 0);
+                }
+
+                if (p.visible && p.enabled && !replacement)
                 {
                     if (!combine.ContainsKey(p.material))
                         combine[p.material] = new List<CombineInstance>();
-                    combine[p.material].Add(new CombineInstance { mesh = t.Meshes[i], transform = Matrix4x4.identity });
+                    combine[p.material].Add(new CombineInstance { mesh = t.RenderMeshes[i], transform = Matrix4x4.identity });
                 }
 
                 if (p.solid && p.enabled)
@@ -182,8 +224,13 @@ namespace RelayZero
         {
             foreach (var t in Cache.Values)
             {
-                foreach (var m in t.Meshes)
-                    UnityEngine.Object.Destroy(m);
+                for (int i = 0; i < t.Meshes.Length; i++)
+                {
+                    if (t.RenderMeshes[i] != t.Meshes[i])
+                        UnityEngine.Object.Destroy(t.RenderMeshes[i]);
+                    UnityEngine.Object.Destroy(t.Meshes[i]);
+                }
+
                 foreach (var m in t.Materials)
                     UnityEngine.Object.Destroy(m);
             }

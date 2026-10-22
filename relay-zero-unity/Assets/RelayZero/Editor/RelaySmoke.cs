@@ -36,6 +36,46 @@ namespace RelayZero.Editor
                 throw new Exception("RELAY ZERO smoke: " + message);
         }
 
+        static void CheckVisualMeshes()
+        {
+            var source = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            var parent = new GameObject("Visual smoke target");
+            parent.transform.position = new Vector3(80, 80, 80);
+            Mesh softened = null;
+            try
+            {
+                var mesh = source.GetComponent<MeshFilter>().sharedMesh;
+                var before = mesh.vertices;
+                softened = SoftMesh.Create(mesh, .06f);
+                Require(softened != mesh && softened.vertexCount > mesh.vertexCount, "box receives real rounded render geometry");
+                Require((softened.bounds.min - mesh.bounds.min).sqrMagnitude < .000001f && (softened.bounds.max - mesh.bounds.max).sqrMagnitude < .000001f, "rounded bounds preserve gameplay footprint");
+                var vertices = softened.vertices;
+                var normals = softened.normals;
+                var indices = softened.triangles;
+                for (int i = 0; i < vertices.Length; i++)
+                    Require(Mathf.Abs(normals[i].magnitude - 1) < .001f, "rounded normals remain normalized");
+                for (int i = 0; i < indices.Length; i += 3)
+                    Require(Vector3.Cross(vertices[indices[i + 1]] - vertices[indices[i]], vertices[indices[i + 2]] - vertices[indices[i]]).sqrMagnitude > 1e-12f, "rounded triangles are non-degenerate");
+                Require(mesh.vertices.Length == before.Length && mesh.vertices[0] == before[0], "source collision mesh is unchanged");
+                var entry = new VisualReplacement
+                {
+                    key = "smoke",
+                    prefab = source
+                };
+                var art = VisualOverrides.Attach(entry, parent.transform, new Bounds(Vector3.up, Vector3.one * 2), 0);
+                Require(art, "a visual-only prefab can be attached");
+                foreach (var collider in art.GetComponentsInChildren<Collider>(true))
+                    Require(!collider.enabled, "imported art does not add gameplay collisions");
+            }
+            finally
+            {
+                if (softened && softened != source.GetComponent<MeshFilter>().sharedMesh)
+                    UnityEngine.Object.Destroy(softened);
+                UnityEngine.Object.Destroy(source);
+                UnityEngine.Object.Destroy(parent);
+            }
+        }
+
         static void Tick()
         {
             if (!SessionState.GetBool(Key, false))
@@ -75,6 +115,7 @@ namespace RelayZero.Editor
                     return;
                 if (stage == 1)
                 {
+                    CheckVisualMeshes();
                     Physics.SyncTransforms();
                     Require(g.Bots.Count == 3, "three practice targets");
                     Require(Physics.Raycast(new Vector3(0, 2, -17), Vector3.down, 3, Geometry.WorldMask), "floor collision");
@@ -105,7 +146,7 @@ namespace RelayZero.Editor
                 Require(g.Arena.id == "nexus" && g.Arena.mission.Length == 2, "nexus objective anchors");
                 g.Menu();
                 SessionState.SetBool(Key, false);
-                Debug.Log("RELAY ZERO Unity Play Mode smoke passed: bootstrap, three maps, practice, floor collision, hitscan and pause/resume.");
+                Debug.Log("RELAY ZERO Unity Play Mode smoke passed: bootstrap, three maps, practice, floor collision, hitscan, pause/resume, rounded geometry and visual-only collision separation.");
                 EditorApplication.isPlaying = false;
             }
             catch (Exception e)

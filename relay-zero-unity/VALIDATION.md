@@ -17,3 +17,7 @@
 - End-to-end two Unity clients and Unity↔web 1vs1/co-op with damage, respawn, shields, revival and disconnects over the hosted Render service.
 
 Unity Editor is not installed here. These checks are pending; no executable build or gameplay screenshot is represented as verified.
+
+## Asset Store visual integration update
+
+The runtime includes optional visual prefab mappings, visual-only prefab admission checks, preserved gameplay colliders/hit zones, and cached rounded render meshes. Runtime source was compiled against real Unity reference assemblies. Editor preparation, generic URP/HDRP-to-Standard material copies, mesh smoke checks and prefab alignment still require Unity Editor. No Asset Store package has been acquired, imported, installed or visually verified in this environment. See ASSET_STORE_SETUP.md for the checked free candidates.

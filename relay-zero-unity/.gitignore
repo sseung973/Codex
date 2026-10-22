@@ -17,3 +17,7 @@ Tests/obj/
 Tools/bin/
 Tools/obj/
 .DS_Store
+
+# Account-owned imported Store art and local prefab mappings.
+Assets/RelayZeroLocal/
+Assets/RelayZeroLocal.meta

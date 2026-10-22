@@ -2,6 +2,10 @@
 
 기존 웹 게임 **RELAY ZERO 3.2.0**을 Unity의 C# 게임 로직, CharacterController, PhysX, 메시 렌더러, uGUI로 옮긴 독립 프로젝트입니다. Unity 6 LTS **6000.0.23f1**을 기준으로 작성했습니다. 브라우저 화면을 띄우는 WebView 방식이 아닙니다.
 
+## 그래픽 교체
+
+각진 기본 메시의 모서리를 부드럽게 처리하고, 가져온 Asset Store 프리팹으로 총기·로봇·전장 소품을 교체할 수 있게 했습니다. **실제 Store 패키지는 이 환경에서 다운로드·임포트하지 못했습니다.** 무료 후보와 적용 방법은 [Asset Store 그래픽 교체 안내](ASSET_STORE_SETUP.md)를 확인하세요. Unity 메뉴는 **RELAY ZERO → Asset Store Visual Setup**입니다.
+
 ## 바로 실행하기
 
 1. 저장소를 내려받고 **Unity Hub → Add → Add project from disk**에서 `relay-zero-unity` 폴더를 선택합니다. 저장소 최상위 폴더가 아니라 `Assets`, `Packages`, `ProjectSettings`가 있는 이 폴더입니다.
