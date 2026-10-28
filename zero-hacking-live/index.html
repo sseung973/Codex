@@ -1,11 +1,12 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#080d18">
-<meta name="description" content="Zero-hacking 실시간 보안 모델 비교 시뮬레이터">
-<title>Zero-hacking — Live Security Lab</title>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
+<meta content="#080d18" name="theme-color"/>
+<meta content="Zero-hacking 실시간 보안 모델 비교 시뮬레이터" name="description"/>
+<title>Zero-hacking | 기존 방어와 통합 모델 비교</title>
 <style>
 :root{color-scheme:dark;--bg:#080d18;--panel:#0e1727;--panel2:#121f32;--soft:#172339;--border:rgba(149,176,214,.14);--border-bright:rgba(139,177,231,.26);--txt:#f2f7ff;--muted:#91a4bd;--blue:#79b2ff;--green:#65e7bd;--red:#ff8798;--yellow:#ffc979;--purple:#c1a1ff;--shade:#050912}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;color:var(--txt);font-family:Inter,"Pretendard",SUIT,"Apple SD Gothic Neo",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(ellipse 55% 28% at 50% -10%,rgba(42,86,155,.32),transparent 84%),radial-gradient(ellipse 35% 35% at 100% 50%,rgba(20,90,117,.12),transparent 85%),#080d18;letter-spacing:-.02em}
@@ -43,6 +44,19 @@ footer{margin:21px 0 0;padding:17px 0 0;border-top:1px solid var(--border);color
 @media(prefers-reduced-motion:reduce){.addressTrail .trailCell,.memoryGrid.cleared .memCell{animation:none}}
 
 @media(max-width:360px){.segment button{font-size:11px;letter-spacing:-.05em}}
+
+/* V7: model-first presentation redesign */
+.comparisonHero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(285px,.9fr);gap:0;border:1px solid #345578;background:linear-gradient(120deg,#101e32 5%,#12223b 50%,#102b33);border-radius:17px;overflow:hidden;margin:-8px 0 18px}
+.heroIntro{padding:21px 23px;display:flex;flex-direction:column;justify-content:center;gap:6px}.heroEyebrow{font:800 10px ui-monospace,Consolas,monospace;letter-spacing:1.7px;color:#9bbcf0}.heroIntro strong{font-size:clamp(16px,1.5vw,22px);font-weight:850;line-height:1.4;letter-spacing:-.05em}.heroIntro strong em{color:#76ecc8;font-style:normal}.heroIntro p{margin:1px 0 0;font-size:11px;color:#9bb0c8;line-height:1.6}
+.heroNumbers{display:flex;align-items:center;justify-content:center;gap:14px;padding:14px 24px}.heroData{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}.heroData>span{font-size:10px;font-weight:780;color:#9cb2c9;white-space:nowrap}.heroData>strong{font-size:clamp(27px,2.7vw,40px);letter-spacing:-2px;color:#f6f8ff;line-height:1.2}.heroData>strong span{font-size:11px;letter-spacing:0;margin-left:3px;color:#9db1ca}.heroData small{font-size:9px;color:#819bb6}.heroData.integratedHero>strong{color:#76edc2}.heroLink{color:#7d9ab7;font-size:25px}.heroFooter{grid-column:1/-1;border-top:1px solid #31496480;background:#07152588;display:flex;justify-content:space-between;gap:8px;padding:10px 23px;color:#9cacc0;font-size:10px}.heroFooter b{color:#dceafe}
+.primaryNote{font-size:12px;line-height:1.75;margin:0 0 15px;color:#acbfd7}.primaryNote b{color:#dbeaff}.secondaryControls{margin:13px 0 0;padding:0;border:1px solid #314762;border-radius:11px;background:#0b192b;overflow:hidden}.secondaryControls summary{list-style:none;display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:12px 13px;color:#b7cce5;font-size:12px;font-weight:800}.secondaryControls summary::-webkit-details-marker{display:none}.secondaryControls summary:before{content:'▸';color:#82aeec;margin-right:8px}.secondaryControls[open] summary:before{content:'▾'}.secondaryTag{font:650 9px ui-monospace,monospace;letter-spacing:.4px;color:#7594b5;border:1px solid #3c5570;border-radius:5px;padding:4px 6px;margin-left:auto}.scenarioInside{border-top:1px solid #2e435a;padding:8px 12px 13px}.scenarioLabel{font-size:10px;color:#8daacb;padding:9px 0 7px}.scenarioInside .stepnote{margin-bottom:0}.advanced-controls{margin-top:13px}.side .panel .btnprimary{margin-top:14px}
+.featureComparison{min-width:0}.featureIntro{padding:13px 17px 2px;color:#a2b7cd;font-size:11px;line-height:1.6}.featureTable{margin:10px 15px 12px;overflow:hidden;border:1px solid #2c435a;border-radius:10px}.featureRow{display:grid;grid-template-columns:1.12fr .94fr .94fr;align-items:center;gap:8px;min-height:48px;padding:9px 12px;border-top:1px solid #273b5188;color:#a1b7d1;font-size:11px}.featureRow:first-child{border-top:0}.featureRow>span:first-child{font-weight:780;color:#d7e6f8}.featureRow>strong{font-weight:800;color:#86efc8}.featureTh{background:#19273c;min-height:35px;color:#a6c0dc;font-size:10px;font-weight:850}.featureTh>span:first-child{color:#a6c0dc}.featureFoot{margin:0 15px 14px;padding:11px 12px;border:1px solid #1d4d5070;border-radius:9px;background:#102e3080;color:#a5cfca;font-size:10px;line-height:1.65}
+.mechanismsIntro{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 1px 0}.mechanismsIntro span{font-size:10px;font-weight:800;letter-spacing:1.6px;color:#64d9b6}.mechanismsIntro h2{font-size:16px;letter-spacing:-.5px;margin:5px 0 0}.mechanismsIntro p{font-size:11px;color:#92abc3;max-width:260px;line-height:1.55;text-align:right;margin:0}
+.liveABGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px}.liveABCol{padding:12px 10px;border:1px solid #33506e;background:#13263c;border-radius:10px;min-width:0}.liveABCol.new{background:#11322e;border-color:#326e63}.liveABTitle{font-size:10px;font-weight:850;color:#b5cfe7;line-height:1.4}.liveABCol>strong{display:block;font-size:26px;letter-spacing:-.9px;padding-top:8px;color:#f0f7ff}.liveABCol.new>strong{color:#75edc2}.liveABCol small{font-size:9px;color:#8daac3}.liveABSecondary{border-top:1px solid #44617a55;margin-top:10px;padding-top:9px;font-size:9px;color:#9fbbd0;line-height:1.7}.liveABSecondary b{color:#e2eeff}.liveABNote{font-size:10px;color:#a6bbd2;padding:0 15px 15px;line-height:1.65}.optionalMatrix{border:1px solid #2b4560;border-radius:14px;overflow:hidden;background:#101c2e}.optionalMatrix>summary{padding:14px 15px;list-style:none;cursor:pointer;font-size:12px;font-weight:800;color:#b0c4db}.optionalMatrix>summary::-webkit-details-marker{display:none}.optionalMatrix>summary:after{content:'⌄';float:right;color:#77aad7}.optionalMatrix>summary span{color:#829cba;font-size:9px;margin-left:9px}.optionalMatrix[open]>summary:after{content:'⌃'}.optionalMatrix>section{border-radius:0;border-width:1px 0 0;box-shadow:none}
+.presentation .comparisonHero{margin-bottom:11px}.presentation .heroIntro{padding:14px 20px}.presentation .heroNumbers{padding:10px 20px}.presentation .heroFooter{padding:8px 20px}.presentation .secondaryControls,.presentation .optionalMatrix{display:none!important}.presentation .featureComparison{display:block!important}
+@media(max-width:1260px){.comparisonHero{grid-template-columns:1fr 1fr}.heroNumbers{padding:12px}.heroFooter{flex-wrap:wrap}.heroData>span{white-space:normal}}
+@media(max-width:780px){.comparisonHero{grid-template-columns:1fr}.heroNumbers{padding:0 23px 15px;justify-content:start}.heroFooter{padding:10px 15px}.heroIntro{padding:16px 20px}.heroIntro strong{font-size:19px}.heroData>strong{font-size:30px}.mechanismsIntro{align-items:flex-start}.mechanismsIntro p{font-size:10px}}
+@media(max-width:520px){.heroFooter{flex-direction:column}.heroNumbers{padding:0 17px 13px}.heroIntro{padding:15px 17px}.featureRow{grid-template-columns:1fr .92fr 1fr;gap:5px;padding:10px 7px;font-size:9px}.featureTh{font-size:9px}.featureIntro{font-size:10px;padding:11px}.featureTable{margin:9px 9px}.featureFoot{margin:0 9px 12px;font-size:9px}.mechanismsIntro{flex-direction:column;gap:3px}.mechanismsIntro p{text-align:left;max-width:none}.liveABGrid{gap:6px}.liveABCol{padding:9px 8px}.liveABTitle{font-size:9px}.liveABCol>strong{font-size:23px}}
 </style>
 <style id="final-enhancements">
 .presentationResults{display:none}
@@ -58,76 +72,92 @@ footer{margin:21px 0 0;padding:17px 0 0;border-top:1px solid var(--border);color
 <body>
 <div class="shell">
 <header>
-  <div class="brand"><div class="logo" aria-hidden="true"><span>Z</span></div><div><div class="eyebrow">SLAT-A / CYBER SECURITY RESEARCH</div><div class="brandname">Zero-hacking <span style="color:#86bbff">Live Lab</span></div></div></div>
-  <div class="headright"><span class="smallpill live">SIMULATION READY</span><button type="button" class="full presentToggle" id="presentBtn" aria-pressed="false" title="모드1 화면으로 전환">▣ 모드1</button><button type="button" class="full" id="fullBtn" title="전체 화면 전환">⛶ <span>전체 화면</span></button></div>
+<div class="brand"><div aria-hidden="true" class="logo"><span>Z</span></div><div><div class="eyebrow">SLAT-A / CYBER SECURITY RESEARCH</div><div class="brandname">Zero-hacking <span style="color:#86bbff">Live Lab</span></div></div></div>
+<div class="headright"><span class="smallpill live">SIMULATION READY</span><button aria-pressed="false" class="full presentToggle" id="presentBtn" title="모드1 화면으로 전환" type="button">▣ 모드1</button><button class="full" id="fullBtn" title="전체 화면 전환" type="button">⛶ <span>전체 화면</span></button></div>
 </header>
-<section class="intro"><div><div class="label">INTERACTIVE DEFENSE WORKSPACE</div><h1>기존 다층 방어 <em>vs Zero-hacking</em></h1><p>기본 시나리오와 AI 활용 시나리오에서 두 보안 모델을 비교합니다.</p></div></section>
+<section class="intro"><div><div class="label">COMPARATIVE SECURITY SIMULATION</div><h1>기존 다층 방어 <em>vs Zero-hacking</em></h1><p>하나의 공격 이벤트를 두 모델에 동일하게 적용하고, 방어 결과와 추가 보호 계층을 비교합니다.</p></div></section><section aria-label="보고서 모델 비교 결과" class="comparisonHero">
+<div class="heroIntro"><span class="heroEyebrow">연구 결과 · MODEL COMPARISON</span><strong>두 모델의 차이는 차단률보다 <em>추가 보호 영역</em>에 있습니다.</strong><p>동일한 다층 방어 판정 + 통합 모델의 주소 이동·데이터 보호·제로화 구조</p></div>
+<div class="heroNumbers"><div class="heroData"><span>기존 다층 방어</span><strong>62.1<span>점</span></strong><small>종합 위험 점수</small></div><div class="heroLink">→</div><div class="heroData integratedHero"><span>Zero-hacking 통합 모델</span><strong>19.3<span>점</span></strong><small>종합 위험 점수</small></div></div>
+<div class="heroFooter"><span>보고서 반복 모의실험 · 다층 차단률 <b>양쪽 85.9%</b></span><span>가중치 기반 종합 위험 점수 <b>약 69% 감소</b> · 실제 보안 성능 검증 아님</span></div>
+</section>
 <div class="layout">
-  <aside class="side" aria-label="실험 제어판"><section class="panel pad">
-    <div class="secTitle"><span class="sectionhead"><span class="nr">01</span> 공격 시나리오</span><span class="sectioncount">SETUP</span></div>
-    <div class="segment" aria-label="공격 시나리오 선택"><button class="active" id="normalBtn" type="button">기본 시나리오</button><button class="ai" id="aiBtn" type="button">AI 활용 시나리오</button></div>
-    <label class="fieldlabel" for="attackSelect">공격 유형</label><select id="attackSelect"><option value="random">무작위 공격 6종</option><option value="phishing">AI 피싱</option><option value="malware">악성코드 다운로드</option><option value="ransomware">랜섬웨어</option><option value="insider">계정 위장 접근</option><option value="vuln">알려진 취약점 시도</option><option value="prompt">프롬프트 인젝션</option></select>
-    <p class="stepnote">AI 활용 시나리오는 일부 공격의 발생 비중과 탐지 확률을 다르게 설정합니다.</p>
-    <div class="advanced-controls"><div class="sep"></div>
-    <div class="secTitle"><span class="sectionhead"><span class="nr">02</span> 시뮬레이션 설정</span><span class="sectioncount">CONTROL</span></div>
-    <div class="twocol"><div><label class="fieldlabel" for="rounds">공격 횟수</label><select id="rounds"><option>10</option><option>20</option><option selected>50</option><option>100</option><option>200</option></select></div><div><label class="fieldlabel" for="speed">실행 속도</label><select id="speed"><option value="600">천천히</option><option selected value="190">보통</option><option value="65">빠르게</option><option value="25">매우 빠르게</option></select></div></div>
-    <label class="fieldlabel" for="seed">난수 시드 <span style="color:#698bad;font-weight:600">/ 실험 재현</span></label><input id="seed" type="number" value="42" min="1" max="999999" inputmode="numeric"/></div>
-    <div class="sep"></div>
-    <button type="button" class="btnprimary" id="playBtn">▶ 라이브 실행</button>
-    <div class="btnrow"><button type="button" class="btnsecond" id="stepBtn">→ 한 단계씩</button><button type="button" class="btnsecond" id="resetBtn">↺ 초기화</button></div>
-    <button type="button" class="btnCompare" id="compareBtn">▦ 2개 시나리오 × 2개 모델 비교</button><button type="button" class="btnExport" id="exportBtn" disabled>↓ 비교 결과 CSV</button>
-    <div class="hint"><strong>실행 방법</strong><div class="legendline"><span class="dot"></span><span><b>라이브 실행</b>으로 전체 흐름 보기</span></div><div class="legendline"><span class="dot" style="background:#73e3b9"></span><span><b>한 단계씩</b>으로 방어 경로 설명하기</span></div><div class="legendline"><span class="dot" style="background:#d0acff"></span><span><b>두 모델 비교</b>로 결과표 만들기</span></div></div>
-  </section></aside>
-  <main class="center">
-    <section class="panel stage">
-      <div class="stageHeader"><div class="secTitle">실시간 공격 처리 경로 <span class="mono" id="stageCount">#00</span></div><span class="smallpill" id="stateBadge" aria-live="polite">실행 전</span></div>
-      <div class="stageRibbon" id="stageRibbon" aria-hidden="true"><span class="phaseDot"></span><span class="phaseDot"></span><span class="phaseDot"></span><span class="phaseDot"></span><span class="phaseDot"></span><span class="phaseDot"></span><span class="phaseDot"></span><span class="phaseDot"></span><span class="phaseDot"></span></div>
-      <div class="topattack"><div class="attackbadge" aria-hidden="true">⌁</div><div style="min-width:0"><div class="attacktype" id="currentAttack">공격 유형을 선택하고 실행하세요</div><div class="attacksub" id="attackDescription">선택한 시나리오의 공격 유형과 방어 과정을 표시합니다.</div></div><div class="countchip" id="riskChip">위험도 —</div></div>
-      <div class="flowdivider">SAME EVENT · SAME DEFENSE RANDOMNESS</div>
-      <div class="modelgrid">
-        <article class="model"><div class="modline"><span class="modelName">A · 기존 다층 방어</span><span class="mini">BASELINE</span></div><div class="label">네트워크·인증·단말·로그 분석 중심</div><div class="packetTrack" id="packetTrackA" aria-label="기존 다층 방어 흐름"><span class="packetTrail" id="packetTrailA"></span><span class="packetDot" id="packetA"></span></div><div class="layerflow" id="layerA"></div><div class="statusCard" id="statusA"><div class="stKicker">기존 방어</div><div class="statusText">실험 준비</div><div class="statusDesc">5개 방어 단계를 순차적으로 표시합니다.</div></div><div class="integratedSteps"><div class="miniBox">주소 이동<b>별도 없음</b></div><div class="miniBox">전송 보호<b>별도 모사 없음</b></div><div class="miniBox">제로화<b>별도 모사 없음</b></div></div></article>
-        <article class="model integrated"><div class="modline"><span class="modelName">B · Zero-hacking</span><span class="mini">INTEGRATED</span></div><div class="label">동일한 다층 방어 + 추가 보호 계층</div><div class="packetTrack" id="packetTrackB" aria-label="통합 모델의 다층 방어 흐름"><span class="packetTrail" id="packetTrailB"></span><span class="packetDot" id="packetB"></span></div><div class="layerflow" id="layerB"></div><div class="statusCard" id="statusB"><div class="stKicker">통합 보안</div><div class="statusText">실험 준비</div><div class="statusDesc">추가 보호 단계는 별도 지표로 표시합니다.</div></div><div class="integratedSteps"><div class="miniBox">카오스 MTD<b id="mtdState">대기</b></div><div class="miniBox">전송 보호<b id="cryptoState">대기</b></div><div class="miniBox">전역 제로화<b id="zeroState">대기</b></div></div></article>
-      </div>
-      <div class="analysisPanel"><span class="mark">⌁</span><div class="stepInfo" id="stepInfo" aria-live="polite"><b>실험 준비 완료</b><br>실행 버튼을 누르면 처리 단계가 표시됩니다.</div></div>
-    </section>
+<aside aria-label="실험 제어판" class="side"><section class="panel pad">
+<div class="secTitle"><span class="sectionhead"><span class="nr">01</span> 모델 비교 실행</span><span class="sectioncount">A / B</span></div><p class="primaryNote">두 모델에 <b>동일한 공격 이벤트</b>를 입력해 다층 방어 과정과 추가 보호 기능을 나란히 확인합니다.</p>
 
-    <section class="mechanisms" id="mechanisms" aria-label="추가 보안 기능 시각화">
-      <section class="panel mechanismCard mtdCard">
-        <div class="panelHead"><span><span class="moduleIndex">01</span> 카오스 기반 주소 셔플링</span><span class="minor">MOVING TARGET DEFENSE</span></div>
-        <div class="moduleBody">
-          <div class="addressCompare"><div class="addressStat"><span>기존 모델 · 고정 주소 가정</span><strong class="mono">#02481</strong><small>주소 이동 단계 없음</small></div><div class="addrArrow">→</div><div class="addressStat secure"><span>Zero-hacking · 가상 주소</span><strong class="mono" id="mtdCurrent">#—</strong><small id="mtdGuess">주소 이벤트 대기</small></div></div>
-          <div class="seqHeader"><span>최근 가상 주소 변화</span><span class="mono" id="mtdSlots">0 SLOTS</span></div>
-          <div class="addressTrail" id="addressTrail" aria-label="최근 가상 주소 기록"><span class="trailEmpty">주소 변환 기록 없음</span></div>
-          <div class="moduleFoot"><span>실제 IP가 아닌 가상 ID · 주소 이동이 공격 차단률에 직접 더해지지는 않음</span><button type="button" id="mtdDemoBtn" class="miniAction">주소 1회 변환 ↗</button></div>
-        </div>
-      </section>
-      <section class="panel mechanismCard memoryCard">
-        <div class="panelHead"><span><span class="moduleIndex mint">02</span> 연산 후 메모리 제로화</span><span class="minor">HARDWARE ZEROIZATION</span></div>
-        <div class="moduleBody">
-          <div class="memTop"><span id="memoryStatus" class="memoryStatus">거래 대기</span><span class="gateBadge" id="gateState">BUS GATE · 차단</span></div>
-          <div class="memoryGrid"><div class="memCell"><span>REGISTER</span><strong id="memReg" class="mono">—</strong></div><div class="memCell"><span>CACHE</span><strong id="memCache" class="mono">—</strong></div><div class="memCell"><span>BUS LINE</span><strong id="memBus" class="mono">—</strong></div></div>
-          <div class="memoryActions"><button type="button" class="miniAction" id="loadDemoBtn">① 더미 거래 처리</button><button type="button" class="miniAction mintAction" id="zeroDemoBtn" disabled>② 제로화 실행</button></div>
-          <div class="moduleFoot"><span>가상 레지스터·캐시·버스 상태 변화 · 실제 하드웨어 접근 없음</span></div>
-        </div>
-      </section>
-    </section>
-    <section class="panel trendPanel" id="trendPanel"><div class="panelHead"><span>실시간 차단률 추이</span><span class="minor">LIVE / BLOCK RATE</span></div><div class="trendBody"><div class="trendIntro"><strong id="trendRate">—</strong><span id="trendSub">실험이 시작되면 누적 차단률이 표시됩니다.</span></div><svg id="trendSvg" class="trendSvg" viewBox="0 0 660 120" preserveAspectRatio="none" role="img" aria-label="공격 처리에 따른 누적 차단률 그래프"></svg></div></section>
-    <section class="panel presentationResults" id="presentationResults"><div class="panelHead">시나리오별 방어 결과 비교 <span class="minor">A · 기존 다층 / B · 통합 보안</span></div><div id="presentationBars" class="compareInner"><div class="empt">왼쪽의 비교 버튼을 누르면 결과가 표시됩니다.</div></div><div class="micro">두 모델의 다층 차단률은 같습니다. 통합 모델은 MTD와 제로화로 보호 범위를 확장합니다.</div></section>
-    <div class="lowergrid"><section class="panel"><div class="panelHead">방어 계층별 차단 횟수 <span class="minor">LIVE / BLOCKS</span></div><div class="levels" id="levels"></div><div class="risknote">두 모델의 다층 방어 판정은 동일합니다. MTD와 제로화는 <b>별도의 보호 영역</b>을 담당합니다.</div></section><section class="panel"><div class="panelHead">가상 공격 이벤트 로그 <span class="minor">RECENT 5</span></div><div class="rows" id="events"><div class="empt">처리된 공격이 없습니다.<br>실행 버튼을 눌러 시작하세요.</div></div></section></div>
-  </main>
-  <aside class="right" aria-label="실시간 통계 및 비교 결과"><section class="panel"><div class="panelHead">실시간 보안 지표 <span class="minor">TELEMETRY</span></div><div class="metrics"><div class="metric"><div class="mLabel">진행한 공격</div><div class="mValue" id="mAttempts">0 <span class="mUnit">/ 50</span></div><div class="small">누적 처리 건수</div></div><div class="metric"><div class="mLabel">다층 방어 차단률</div><div class="mValue numbergreen" id="mBlock">—</div><div class="small">두 모델 동일</div></div><div class="metric"><div class="mLabel">다층 방어 침해</div><div class="mValue numberred" id="mBreach">0</div><div class="small">탐지 실패 건수</div></div><div class="metric"><div class="mLabel">평균 잔여 위험도</div><div class="mValue numberblue" id="mRisk">—</div><div class="small">가상 평가 점수</div></div><div class="metric"><div class="mLabel">MTD 주소 미적중</div><div class="mValue numbergreen" id="mMtd">—</div><div class="small">가상 주소 추측</div></div><div class="metric"><div class="mLabel">제로화 확인</div><div class="mValue numberblue" id="mZero">0</div><div class="small">더미 거래 상태</div></div></div><div class="progressbox"><div class="line"><span>실험 진행률</span><b id="pct">0%</b></div><div class="track"><span id="progress"></span></div></div><div class="note">모의실험 수치이며 실제 장비 성능을 측정한 값은 아닙니다.</div></section>
-    <section class="panel"><div class="panelHead">시나리오별 모델 비교 <span class="minor">2 × 2 MATRIX</span></div><div style="padding:7px 10px 2px"><table class="matrixTable"><thead><tr><th>시나리오</th><th>기존 모델</th><th>Zero-hacking</th></tr></thead><tbody><tr><td>기본 시나리오</td><td id="matrixNA">—</td><td id="matrixNB">—</td></tr><tr><td>AI 활용 시나리오</td><td id="matrixAA">—</td><td id="matrixAB">—</td></tr></tbody></table></div><div class="micro">같은 난수 시드와 실험 횟수를 적용합니다. <b>다층 차단률은 동일</b>하며, 통합 모델의 추가 보호 단계를 별도로 표시합니다.</div></section>
-    <section class="panel compareVisual"><div class="panelHead"><span>시나리오별 결과</span><span class="minor">LIVE COMPARISON</span></div><div class="compareInner"><div id="compareScope" class="compareScope">공격 유형: 무작위 공격 혼합</div><div id="compareBars" class="compareBars"><div class="empt">비교 버튼을 누르면 두 시나리오의 차단률과 침해율을 표시합니다.</div></div><div class="compareLegend"><span><i class="legendMint"></i>차단</span><span><i class="legendRed"></i>침해</span></div></div></section>
-    <section class="research"><div class="rtitle">보고서의 종합 위험 점수 <span>고정 참고 수치</span></div><div class="numbers"><strong>62.1</strong><span class="arrow">→</span><strong>19.3</strong></div><div class="bars"><div><span style="width:62.1%"></span></div><div><span style="width:19.3%"></span></div></div><p>기존 다층 방어 → 통합 모델. 보고서에 제시된 종합 위험 점수로, 위 실시간 차단률과는 별개입니다.</p></section>
-    <section class="callout"><b>기술별 보호 범위</b>Zero-hacking은 기존 다층 방어에 <b>카오스 MTD 주소 변환·전송 보호 모사·하드웨어 제로화</b>를 추가한 통합 모델입니다.</section>
-  </aside>
+
+
+<details class="secondaryControls" id="scenarioDetails"><summary>공격 조건 조정 <span class="secondaryTag">보조 변수</span></summary><div class="scenarioInside"><div class="scenarioLabel">공격 조건</div><div aria-label="공격 시나리오 선택" class="segment"><button class="active" id="normalBtn" type="button">기본 시나리오</button><button class="ai" id="aiBtn" type="button">AI 활용 시나리오</button></div><label class="fieldlabel" for="attackSelect">공격 유형</label><select id="attackSelect"><option value="random">무작위 공격 6종</option><option value="phishing">AI 피싱</option><option value="malware">악성코드 다운로드</option><option value="ransomware">랜섬웨어</option><option value="insider">계정 위장 접근</option><option value="vuln">알려진 취약점 시도</option><option value="prompt">프롬프트 인젝션</option></select><p class="stepnote">AI 활용 시나리오는 일부 공격의 발생 비중과 탐지 확률을 다르게 설정합니다.</p></div></details><div class="advanced-controls"><div class="sep"></div>
+<div class="secTitle"><span class="sectionhead"><span class="nr">02</span> 실행 설정</span><span class="sectioncount">CONTROL</span></div>
+<div class="twocol"><div><label class="fieldlabel" for="rounds">공격 횟수</label><select id="rounds"><option>10</option><option>20</option><option selected="">50</option><option>100</option><option>200</option></select></div><div><label class="fieldlabel" for="speed">실행 속도</label><select id="speed"><option value="600">천천히</option><option selected="" value="190">보통</option><option value="65">빠르게</option><option value="25">매우 빠르게</option></select></div></div>
+<label class="fieldlabel" for="seed">난수 시드 <span style="color:#698bad;font-weight:600">/ 실험 재현</span></label><input id="seed" inputmode="numeric" max="999999" min="1" type="number" value="42"/></div>
+<div class="sep"></div>
+<button class="btnprimary" id="playBtn" type="button">▶ 라이브 실행</button>
+<div class="btnrow"><button class="btnsecond" id="stepBtn" type="button">→ 한 단계씩</button><button class="btnsecond" id="resetBtn" type="button">↺ 초기화</button></div>
+<button class="btnCompare" id="compareBtn" type="button">▦ 기존 모델 vs 통합 모델 비교</button><button class="btnExport" disabled="" id="exportBtn" type="button">↓ 비교 결과 CSV</button>
+
+</section></aside>
+<main class="center">
+<section class="panel stage">
+<div class="stageHeader"><div class="secTitle">동일 공격에 대한 두 모델의 처리 경로 <span class="mono" id="stageCount">#00</span></div><span aria-live="polite" class="smallpill" id="stateBadge">실행 전</span></div>
+<div aria-hidden="true" class="stageRibbon" id="stageRibbon"><span class="phaseDot"></span><span class="phaseDot"></span><span class="phaseDot"></span><span class="phaseDot"></span><span class="phaseDot"></span><span class="phaseDot"></span><span class="phaseDot"></span><span class="phaseDot"></span><span class="phaseDot"></span></div>
+<div class="topattack"><div aria-hidden="true" class="attackbadge">⌁</div><div style="min-width:0"><div class="attacktype" id="currentAttack">동일 공격 이벤트를 생성할 준비가 되었습니다</div><div class="attacksub" id="attackDescription">실행하면 아래 두 모델에 같은 공격이 적용됩니다.</div></div><div class="countchip" id="riskChip">위험도 —</div></div>
+<div class="flowdivider">ONE ATTACK EVENT  ·  IDENTICAL DEFENSE DECISIONS</div>
+<div class="modelgrid">
+<article class="model"><div class="modline"><span class="modelName">A · 기존 다층 방어</span><span class="mini">BASELINE</span></div><div class="label">네트워크·인증·단말·로그 분석 중심</div><div aria-label="기존 다층 방어 흐름" class="packetTrack" id="packetTrackA"><span class="packetTrail" id="packetTrailA"></span><span class="packetDot" id="packetA"></span></div><div class="layerflow" id="layerA"></div><div class="statusCard" id="statusA"><div class="stKicker">기존 방어</div><div class="statusText">실험 준비</div><div class="statusDesc">5개 방어 단계를 순차적으로 표시합니다.</div></div><div class="integratedSteps"><div class="miniBox">주소 이동<b>별도 없음</b></div><div class="miniBox">전송 보호<b>별도 모사 없음</b></div><div class="miniBox">제로화<b>별도 모사 없음</b></div></div></article>
+<article class="model integrated"><div class="modline"><span class="modelName">B · Zero-hacking</span><span class="mini">INTEGRATED</span></div><div class="label">동일한 다층 방어 + 추가 보호 계층</div><div aria-label="통합 모델의 다층 방어 흐름" class="packetTrack" id="packetTrackB"><span class="packetTrail" id="packetTrailB"></span><span class="packetDot" id="packetB"></span></div><div class="layerflow" id="layerB"></div><div class="statusCard" id="statusB"><div class="stKicker">통합 보안</div><div class="statusText">실험 준비</div><div class="statusDesc">추가 보호 단계는 별도 지표로 표시합니다.</div></div><div class="integratedSteps"><div class="miniBox">카오스 MTD<b id="mtdState">대기</b></div><div class="miniBox">전송 보호<b id="cryptoState">대기</b></div><div class="miniBox">전역 제로화<b id="zeroState">대기</b></div></div></article>
+</div>
+<div class="analysisPanel"><span class="mark">⌁</span><div aria-live="polite" class="stepInfo" id="stepInfo"><b>실험 준비 완료</b><br/>실행 버튼을 누르면 처리 단계가 표시됩니다.</div></div>
+</section><section aria-label="모델별 보안 기능 비교" class="panel featureComparison" id="featureComparison">
+<div class="panelHead"><span>모델별 보호 범위</span><span class="minor">SAME ATTACK · DIFFERENT COVERAGE</span></div>
+<div class="featureIntro">동일한 네트워크 차단 판정을 사용합니다. 통합 모델의 보호 기능은 차단률에 임의로 더하지 않고 별도 표시합니다.</div>
+<div aria-label="보안 보호 범위 비교" class="featureTable" role="table">
+<div class="featureRow featureTh" role="row"><span>비교 항목</span><span>기존 다층 방어</span><span>Zero-hacking</span></div>
+<div class="featureRow" role="row"><span>공격 탐지·차단</span><span id="featureBaseDefense">실험 대기</span><strong id="featureIntegratedDefense">실험 대기</strong></div>
+<div class="featureRow" role="row"><span>접근 대상 주소</span><span>고정 주소 가정</span><strong id="featureIntegratedAddress">가상 주소 변환 대기</strong></div>
+<div class="featureRow" role="row"><span>전송 데이터</span><span>추가 보호 모사 없음</span><strong id="featureIntegratedData">추가 보호 단계 대기</strong></div>
+<div class="featureRow" role="row"><span>연산 후 임시 데이터</span><span>추가 제로화 모사 없음</span><strong id="featureIntegratedZero">제로화 시연 대기</strong></div>
+</div>
+<div class="featureFoot" id="featureFoot">라이브 실행 중 변화하는 부분을 확인할 수 있습니다. 하단의 추가 보호 기능은 별도로 조작할 수도 있습니다.</div>
+</section>
+<div class="mechanismsIntro"><div><span>INTEGRATED MODEL</span><h2>통합 모델에서 추가되는 보호 단계</h2></div><p>기존 다층 방어에는 없는 가상 주소 이동과 제로화 과정을 직접 확인합니다.</p></div><section aria-label="추가 보안 기능 시각화" class="mechanisms" id="mechanisms">
+<section class="panel mechanismCard mtdCard">
+<div class="panelHead"><span><span class="moduleIndex">01</span> 카오스 기반 주소 셔플링</span><span class="minor">MOVING TARGET DEFENSE</span></div>
+<div class="moduleBody">
+<div class="addressCompare"><div class="addressStat"><span>기존 모델 · 고정 주소 가정</span><strong class="mono">#02481</strong><small>주소 이동 단계 없음</small></div><div class="addrArrow">→</div><div class="addressStat secure"><span>Zero-hacking · 가상 주소</span><strong class="mono" id="mtdCurrent">#—</strong><small id="mtdGuess">주소 이벤트 대기</small></div></div>
+<div class="seqHeader"><span>최근 가상 주소 변화</span><span class="mono" id="mtdSlots">0 SLOTS</span></div>
+<div aria-label="최근 가상 주소 기록" class="addressTrail" id="addressTrail"><span class="trailEmpty">주소 변환 기록 없음</span></div>
+<div class="moduleFoot"><span>실제 IP가 아닌 가상 ID · 주소 이동이 공격 차단률에 직접 더해지지는 않음</span><button class="miniAction" id="mtdDemoBtn" type="button">주소 1회 변환 ↗</button></div>
+</div>
+</section>
+<section class="panel mechanismCard memoryCard">
+<div class="panelHead"><span><span class="moduleIndex mint">02</span> 연산 후 메모리 제로화</span><span class="minor">HARDWARE ZEROIZATION</span></div>
+<div class="moduleBody">
+<div class="memTop"><span class="memoryStatus" id="memoryStatus">거래 대기</span><span class="gateBadge" id="gateState">BUS GATE · 차단</span></div>
+<div class="memoryGrid"><div class="memCell"><span>REGISTER</span><strong class="mono" id="memReg">—</strong></div><div class="memCell"><span>CACHE</span><strong class="mono" id="memCache">—</strong></div><div class="memCell"><span>BUS LINE</span><strong class="mono" id="memBus">—</strong></div></div>
+<div class="memoryActions"><button class="miniAction" id="loadDemoBtn" type="button">① 더미 거래 처리</button><button class="miniAction mintAction" disabled="" id="zeroDemoBtn" type="button">② 제로화 실행</button></div>
+<div class="moduleFoot"><span>가상 레지스터·캐시·버스 상태 변화 · 실제 하드웨어 접근 없음</span></div>
+</div>
+</section>
+</section>
+<section class="panel trendPanel" id="trendPanel"><div class="panelHead"><span>공통 다층 방어 차단률 추이</span><span class="minor">LIVE / BLOCK RATE</span></div><div class="trendBody"><div class="trendIntro"><strong id="trendRate">—</strong><span id="trendSub">실험이 시작되면 누적 차단률이 표시됩니다.</span></div><svg aria-label="공격 처리에 따른 누적 차단률 그래프" class="trendSvg" id="trendSvg" preserveaspectratio="none" role="img" viewbox="0 0 660 120"></svg></div></section>
+<section class="panel presentationResults" id="presentationResults"><div class="panelHead">동일 조건에서 모델별 결과 <span class="minor">A · 기존 다층 / B · 통합 보안</span></div><div class="compareInner" id="presentationBars"><div class="empt">왼쪽의 비교 버튼을 누르면 결과가 표시됩니다.</div></div><div class="micro">동일한 다층 방어 판정을 사용하므로 두 모델의 차단률은 같습니다. 추가 보호 기능은 별도 동작으로 비교합니다.</div></section>
+<div class="lowergrid"><section class="panel"><div class="panelHead">방어 계층별 차단 횟수 <span class="minor">LIVE / BLOCKS</span></div><div class="levels" id="levels"></div><div class="risknote">두 모델의 다층 방어 판정은 동일합니다. MTD와 제로화는 <b>별도의 보호 영역</b>을 담당합니다.</div></section><section class="panel"><div class="panelHead">가상 공격 이벤트 로그 <span class="minor">RECENT 5</span></div><div class="rows" id="events"><div class="empt">처리된 공격이 없습니다.<br/>실행 버튼을 눌러 시작하세요.</div></div></section></div>
+</main>
+<aside aria-label="실시간 통계 및 비교 결과" class="right"><section aria-label="실시간 모델 비교" class="panel liveAB"><div class="panelHead"><span>실시간 모델 비교</span><span class="minor">A / B</span></div>
+<div class="liveABGrid"><div class="liveABCol"><span class="liveABTitle">A · 기존 다층 방어</span><strong id="liveABRateA">—</strong><small>다층 차단률</small><div class="liveABSecondary">추가 보호 <b>적용 안 함</b></div></div><div class="liveABCol new"><span class="liveABTitle">B · Zero-hacking</span><strong id="liveABRateB">—</strong><small>다층 차단률</small><div class="liveABSecondary">주소 변환 <b id="liveABMoves">0회</b> · 제로화 <b id="liveABClears">0회</b></div></div></div>
+<div class="liveABNote" id="liveABNote">동일한 차단률을 기준으로 추가 보호 계층을 비교합니다.</div></section><section class="panel"><div class="panelHead">공통 다층 방어 지표 <span class="minor">TELEMETRY</span></div><div class="metrics"><div class="metric"><div class="mLabel">진행한 공격</div><div class="mValue" id="mAttempts">0 <span class="mUnit">/ 50</span></div><div class="small">누적 처리 건수</div></div><div class="metric"><div class="mLabel">다층 방어 차단률</div><div class="mValue numbergreen" id="mBlock">—</div><div class="small">두 모델 동일</div></div><div class="metric"><div class="mLabel">다층 방어 침해</div><div class="mValue numberred" id="mBreach">0</div><div class="small">탐지 실패 건수</div></div><div class="metric"><div class="mLabel">평균 잔여 위험도</div><div class="mValue numberblue" id="mRisk">—</div><div class="small">가상 평가 점수</div></div><div class="metric"><div class="mLabel">MTD 주소 미적중</div><div class="mValue numbergreen" id="mMtd">—</div><div class="small">가상 주소 추측</div></div><div class="metric"><div class="mLabel">제로화 확인</div><div class="mValue numberblue" id="mZero">0</div><div class="small">더미 거래 상태</div></div></div><div class="progressbox"><div class="line"><span>실험 진행률</span><b id="pct">0%</b></div><div class="track"><span id="progress"></span></div></div><div class="note">모의실험 수치이며 실제 장비 성능을 측정한 값은 아닙니다.</div></section>
+<details class="optionalMatrix"><summary>공격 조건별 참고 비교 <span>선택 항목</span></summary><section class="panel"><div class="panelHead">시나리오별 모델 비교 <span class="minor">2 × 2 MATRIX</span></div><div style="padding:7px 10px 2px"><table class="matrixTable"><thead><tr><th>시나리오</th><th>기존 모델</th><th>Zero-hacking</th></tr></thead><tbody><tr><td>기본 시나리오</td><td id="matrixNA">—</td><td id="matrixNB">—</td></tr><tr><td>AI 활용 시나리오</td><td id="matrixAA">—</td><td id="matrixAB">—</td></tr></tbody></table></div><div class="micro">같은 난수 시드와 실험 횟수를 적용합니다. <b>다층 차단률은 동일</b>하며, 통합 모델의 추가 보호 단계를 별도로 표시합니다.</div></section><section class="panel compareVisual"><div class="panelHead"><span>동일 조건의 두 모델 결과</span><span class="minor">LIVE COMPARISON</span></div><div class="compareInner"><div class="compareScope" id="compareScope">공격 유형: 무작위 공격 혼합</div><div class="compareBars" id="compareBars"><div class="empt">비교 버튼을 누르면 두 시나리오의 차단률과 침해율을 표시합니다.</div></div><div class="compareLegend"><span><i class="legendMint"></i>차단</span><span><i class="legendRed"></i>침해</span></div></div></section></details>
+
+
+<section class="callout"><b>기술별 보호 범위</b>Zero-hacking은 기존 다층 방어에 <b>카오스 MTD 주소 변환·전송 보호 모사·하드웨어 제로화</b>를 추가한 통합 모델입니다.</section>
+</aside>
 </div>
 <footer><strong>ZERO-HACKING / SIMULATION</strong> · 실제 네트워크 연결 없음 · MTD는 가상 주소 변환 · PUF와 학습형 보안 AI는 제안 단계 · Python 모델의 공격 유형과 확률 설정 기반</footer>
 </div>
 <script>
 (()=>{'use strict';
 const defs={
- phishing:{name:'AI가 작성한 피싱 메일',short:'AI 피싱',desc:'가상의 피싱 메일을 통한 계정 접근 시도',risk:70,encrypted:1,valid:0,known:0,fileless:0,loss:0},
+ phishing:{name:'피싱 메일',short:'피싱',desc:'가상의 피싱 메일을 통한 계정 접근 시도',risk:70,encrypted:1,valid:0,known:0,fileless:0,loss:0},
  malware:{name:'악성코드 다운로드',short:'악성코드',desc:'의심스러운 파일 다운로드 상황을 가상화',risk:75,encrypted:1,valid:0,known:1,fileless:0,loss:0},
  ransomware:{name:'랜섬웨어 실행',short:'랜섬웨어',desc:'파일 손실이 발생하는 가상 이벤트',risk:90,encrypted:0,valid:0,known:0,fileless:0,loss:1},
  insider:{name:'정상 계정으로 위장한 내부 접근',short:'계정 위장',desc:'유효한 계정이나 세션처럼 보이는 가상 접근',risk:85,encrypted:1,valid:1,known:0,fileless:1,loss:0},
@@ -172,9 +202,9 @@ function percent(n,d){return d?(100*n/d).toFixed(1)+'%':'—'}
 function setNewRng(){rng=seedRandom(Math.max(1,+$('seed').value||42));hopper=chaosHopper();previewHopper=chaosHopper();mtdTrail=[];manualTrail=[];manualAddress=null;manualPreview=false;manualCount=0}
 function allControlsDisabled(disabled){['attackSelect','rounds','seed','normalBtn','aiBtn','compareBtn'].forEach(id=>$(id).disabled=disabled)}
 function stop(){if(timer!==null){clearInterval(timer);timer=null} $('playBtn').textContent=done>=limit?'↻ 다시 실행':'▶ 라이브 실행';$('stateBadge').textContent=done>=limit?'실험 종료':(current?'일시정지':'실행 대기');allControlsDisabled(false)}
-function reset(keepCompare=false){stop();done=0;phase=-1;current=null;lastCompleted=null;limit=+$('rounds').value;stats=emptyStats();history=[];logs=[];setNewRng();memory={state:'idle',reg:'—',cache:'—',bus:'—',gate:false};if(!keepCompare)compareResults=null;$('exportBtn').disabled=!compareResults;$('compareBtn').textContent=compareResults?'✓ 비교 완료':'▦ 2개 시나리오 × 2개 모델 비교';
+function reset(keepCompare=false){stop();done=0;phase=-1;current=null;lastCompleted=null;limit=+$('rounds').value;stats=emptyStats();history=[];logs=[];setNewRng();memory={state:'idle',reg:'—',cache:'—',bus:'—',gate:false};if(!keepCompare)compareResults=null;$('exportBtn').disabled=!compareResults;$('compareBtn').textContent=compareResults?'✓ 모델 비교 완료':'▦ 기존 모델 vs 통합 모델 비교';
  $('stateBadge').textContent='실행 전';$('playBtn').textContent='▶ 라이브 실행';$('playBtn').disabled=false;updateDisplayCurrent();updateUI();updateMatrix();renderMemory();renderMtd();}
-function changeMode(mode){selectedMode=mode;$('normalBtn').classList.toggle('active',mode==='normal');$('aiBtn').classList.toggle('active',mode==='ai');reset(true)}
+function changeMode(mode){selectedMode=mode;$('normalBtn').classList.toggle('active',mode==='normal');$('aiBtn').classList.toggle('active',mode==='ai');reset(false)}
 function drawLayers(p,e){for(const model of ['A','B']){
  $('layer'+model).innerHTML=layers.map((layer,i)=>{const entry=e?.record[i];let cls='';if(entry&&p>=2+i){if(entry.state==='block')cls='blocked';else if(['pass','logged'].includes(entry.state))cls='passed';else if(entry.state==='skip')cls='skipped';}if(entry&&p===2+i&&entry.state!=='skip')cls+=' current';return '<div class="layer '+cls+'"><span class="symbol">'+layer.icon+'</span><span>'+layer.short+'</span></div>'}).join('');
  const rail=$('packetTrack'+model),trail=$('packetTrail'+model),dot=$('packet'+model);rail.className='packetTrack';if(!e||p<2){trail.style.width='0%';dot.style.left='0%';continue}
@@ -184,7 +214,7 @@ function drawLayers(p,e){for(const model of ['A','B']){
 function drawRibbon(p){phaseDots.forEach((node,i)=>{node.classList.toggle('complete',p>=8||p>i);node.classList.toggle('active',p>=0&&p<8&&i===p)})}
 function statHTML(value,title,description){return '<div class="stKicker">'+title+'</div><div class="statusText">'+value+'</div><div class="statusDesc">'+description+'</div>'}
 function updateDisplayCurrent(){const e=current||lastCompleted,p=current?phase:lastCompleted?8:-1;
- if(!e){$('currentAttack').textContent='공격 유형을 선택하고 실행하세요';$('attackDescription').textContent='기본 시나리오와 AI 활용 시나리오의 방어 흐름을 비교합니다.';$('riskChip').textContent='위험도 —';$('stageCount').textContent='#00';$('mtdState').textContent='대기';$('cryptoState').textContent='대기';$('zeroState').textContent=memory.state==='cleared'?'제로화 완료':'시연 대기';$('statusA').className='statusCard';$('statusB').className='statusCard';$('statusA').innerHTML=statHTML('실험 준비','기존 다층 방어','방어 단계를 순서대로 표시합니다.');$('statusB').innerHTML=statHTML('실험 준비','통합 보안','추가 보호 계층은 별도 시각화합니다.');$('stepInfo').innerHTML='<b>실험 준비 완료</b><br>실행 버튼을 누르면 처리 단계가 표시됩니다.';drawLayers(-1,null);drawRibbon(-1);return}
+ if(!e){$('currentAttack').textContent='공격 유형을 선택하고 실행하세요';$('attackDescription').textContent='기존 다층 방어와 통합 모델에 동일한 공격을 적용합니다.';$('riskChip').textContent='위험도 —';$('stageCount').textContent='#00';$('mtdState').textContent='대기';$('cryptoState').textContent='대기';$('zeroState').textContent=memory.state==='cleared'?'제로화 완료':'시연 대기';$('statusA').className='statusCard';$('statusB').className='statusCard';$('statusA').innerHTML=statHTML('실험 준비','기존 다층 방어','방어 단계를 순서대로 표시합니다.');$('statusB').innerHTML=statHTML('실험 준비','통합 보안','추가 보호 계층은 별도 시각화합니다.');$('stepInfo').innerHTML='<b>모델 비교 준비 완료</b><br>실행하면 기존·통합 모델에 같은 가상 공격을 적용합니다.';drawLayers(-1,null);drawRibbon(-1);return}
  $('currentAttack').textContent=e.e.name;$('attackDescription').textContent=e.e.desc+(e.ai?' · AI 활용 시나리오':' · 기본 시나리오');$('riskChip').textContent='초기 위험 '+e.e.risk+'점';$('stageCount').textContent='#'+String(current?done+1:done).padStart(2,'0');
  const messages=[['가상 공격 생성','같은 공격 이벤트와 다층 방어 판정을 기존·통합 모델 모두에 적용합니다.'],['카오스 기반 주소 이동','같은 키를 가진 정상 클라이언트는 가상 주소 #'+String(e.virtualAddress).padStart(5,'0')+'에 동기화됩니다.'],...layers.map((l,i)=>{const d=e.record[i],r=d.state==='block'?'이 단계에서 차단':d.state==='pass'?'이 단계 통과':d.state==='logged'?'사후 로그 분석':'선행 단계에서 차단';return [l.name+' 단계',r+' · 적용 차단 확률 '+(d.p*100).toFixed(1)+'%']}),['추가 보안 기능','MTD 주소 변환을 적용했습니다. 더미 거래 적재와 제로화는 아래 하드웨어 패널에서 별도 시연할 수 있습니다.'],['공격 처리 완료',e.blocked>=0?'기존·통합 모델 모두 '+layers[e.blocked].name+'에서 차단했습니다.':'다층 방어를 통과한 침해 이벤트입니다.'+(e.recovered?' 백업/복구 성공.':'')]];
  const [heading,desc]=messages[Math.max(0,Math.min(p,8))];$('stepInfo').innerHTML='<b>'+heading+'</b><br>'+desc;drawLayers(p,e);drawRibbon(p);
@@ -205,7 +235,7 @@ function renderMtd(){const e=current||lastCompleted;const list=manualPreview?man
 }
 function renderMemory(){const m=memory;$('memoryStatus').textContent=m.state==='idle'?'거래 대기':m.state==='loaded'?'더미 거래 처리 중':'제로화 완료';$('gateState').textContent='BUS GATE · '+(m.gate?'연결':'차단');$('gateState').classList.toggle('open',m.gate);
  $('memReg').textContent=m.reg;$('memCache').textContent=m.cache;$('memBus').textContent=m.bus;const grid=document.querySelector('.memoryGrid');grid.classList.toggle('loaded',m.state==='loaded');grid.classList.toggle('cleared',m.state==='cleared');$('zeroDemoBtn').disabled=m.state!=='loaded';
- $('zeroState').textContent=m.state==='idle'?'시연 대기':m.state==='loaded'?'데이터 처리 중':'제로화 완료';}
+ $('zeroState').textContent=m.state==='idle'?'시연 대기':m.state==='loaded'?'데이터 처리 중':'제로화 완료';updateModelComparison();}
 function loadDemo(){memory={state:'loaded',reg:'0xA1F3',cache:'TXN:42',bus:'0x8F2B',gate:true};renderMemory();$('memoryStatus').textContent='더미 데이터 적재 · 초기화 대기'}
 function zeroDemo(){if(memory.state!=='loaded')return;memory={state:'cleared',reg:'0x0000',cache:'비어 있음',bus:'None',gate:false};stats.zero++;renderMemory();updateUI();}
 function drawTrend(){const svg=$('trendSvg');const grid='<line class="gridLine" x1="27" y1="14" x2="652" y2="14"/><line class="gridLine" x1="27" y1="61" x2="652" y2="61"/><line class="gridLine" x1="27" y1="108" x2="652" y2="108"/><text x="0" y="19">100</text><text x="8" y="65">50</text><text x="14" y="111">0</text>';
@@ -214,16 +244,38 @@ function drawTrend(){const svg=$('trendSvg');const grid='<line class="gridLine" 
  const str=points.map(([x,y])=>x.toFixed(1)+','+y.toFixed(1)).join(' '),area='27,108 '+str+' 652,108';const last=points[points.length-1];svg.innerHTML=grid+'<polygon class="trendFill" points="'+area+'"/><polyline class="trendLine" points="'+str+'"/><circle class="trendDot" cx="'+last[0]+'" cy="'+last[1]+'" r="4"/>';
  $('trendRate').textContent=(stats.block/stats.attempts*100).toFixed(1)+'%';$('trendSub').textContent='누적 '+stats.attempts+'회 · 초록선은 네트워크 차단률';
 }
+
+function updateModelComparison(){
+ const e=current||lastCompleted;const p=current?phase:lastCompleted?8:-1;
+ const rate=percent(stats.block,stats.attempts);
+ $('liveABRateA').textContent=rate;$('liveABRateB').textContent=rate;
+ $('liveABMoves').textContent=(stats.attempts+(current?1:0))+'회';
+ $('liveABClears').textContent=stats.zero+'회';
+ let network=stats.attempts?'누적 차단 '+rate:(e&&p>=2?'동일한 계층 검사 진행':'실험 대기');
+ if(e&&p>=2&&p<8)network='동일한 계층 검사 진행';
+ $('featureBaseDefense').textContent=network;$('featureIntegratedDefense').textContent=network;
+ $('featureIntegratedAddress').textContent=e&&p>=1?'가상 ID #'+String(e.virtualAddress).padStart(5,'0'):stats.attempts?stats.attempts+'회 주소 변환':'가상 주소 변환 대기';
+ $('featureIntegratedData').textContent=e&&p>=7?'전송 보호 단계 모사':'전송 보호 단계 대기';
+ $('featureIntegratedZero').textContent=memory.state==='cleared'?'더미 데이터 초기화 완료':memory.state==='loaded'?'더미 데이터 적재 중':'제로화 시연 대기';
+ $('liveABNote').textContent=stats.attempts
+  ?'현재 조건에서 양쪽의 차단 건수 '+stats.block+'회 / 침해 이벤트 '+stats.breach+'회가 동일합니다. MTD는 별도 가상 주소 추측 실험입니다.'
+  :'양쪽에 같은 이벤트를 적용합니다. 통합 모델의 주소 이동·데이터 보호·제로화는 기존 차단률과 별도로 표시합니다.';
+ $('featureFoot').textContent=memory.state==='cleared'
+  ?'제로화 시연에서 더미 레지스터·캐시·버스 데이터가 초기화됐습니다. 실제 칩에서 실행된 것은 아닙니다.'
+  :e&&p>=1?'두 모델은 동일한 공격을 검사합니다. Zero-hacking은 이와 별개로 가상 주소 변환을 수행합니다.'
+  :'실행 버튼을 누르면 두 모델의 차단 과정이 함께 표시됩니다. 아래에서 MTD·제로화를 따로 시연할 수도 있습니다.';
+}
+
 function updateUI(){const l=limit||50;$('mAttempts').innerHTML=done+' <span class="mUnit">/ '+l+'</span>';$('mBlock').textContent=percent(stats.block,done);$('mBreach').textContent=stats.breach;$('mRisk').textContent=done?(stats.risk/done).toFixed(1):'—';$('mMtd').textContent=percent(stats.mtdMiss,done);$('mZero').textContent=stats.zero;$('pct').textContent=Math.round(done/l*100)+'%';$('progress').style.width=(done/l*100)+'%';
  $('levels').innerHTML=layers.map((layer,i)=>{const n=stats.blockedAt[i],w=stats.block?100*n/stats.block:0;return '<div class="level"><span>'+layer.name+'</span><div class="barTrack"><div class="barFill'+(i===4?' green':'')+'" style="width:'+w+'%"></div></div><b>'+n+'회</b></div>'}).join('');
  $('events').innerHTML=logs.length?logs.map((e,i)=>'<div class="logentry"><span class="idx">#'+String(done-i).padStart(2,'0')+'</span><div><div class="logtitle">'+e.e.short+'</div><div class="lognote">'+(e.blocked>=0?layers[e.blocked].name+' 차단':e.recovered?'침해 후 백업/복구':'다층 방어 통과')+' · MTD '+(e.hit?'적중':'미적중')+'</div></div><span class="chip '+(e.blocked>=0?'good':'bad')+'">'+(e.blocked>=0?'차단':'침해')+'</span></div>').join(''):'<div class="empt">처리된 공격이 없습니다.<br>실행 버튼을 눌러 시작하세요.</div>';
- drawTrend();if(compareResults)updateMatrix();}
+ drawTrend();updateModelComparison();if(compareResults)updateMatrix();}
 function runInstant(mode){const localRng=seedRandom(Math.max(1,+$('seed').value||42)),hop=chaosHopper(),s=emptyStats(),n=+$('rounds').value,forced=$('attackSelect').value;
  for(let k=0;k<n;k++){const e=buildEvent(localRng,hop,mode,forced);s.attempts++;if(e.blocked>=0)s.block++;else s.breach++;s.risk+=e.residual;if(e.hit)s.mtdHit++;else s.mtdMiss++}return s}
-function drawCompareBars(){const target=$('compareBars');if(!compareResults){target.innerHTML='<div class="empt">비교 버튼을 누르면 두 시나리오의 차단률과 침해율을 표시합니다.</div>';$('compareScope').textContent='공격 유형: '+($('attackSelect').value==='random'?'무작위 공격 혼합':defs[$('attackSelect').value].short);return}
- const labels=[['기본 시나리오',compareResults.normal],['AI 활용 시나리오',compareResults.ai]];target.innerHTML=labels.map(([name,s])=>{const p=s.block/s.attempts*100,b=100-p;return '<div class="compareRow"><div class="compareTop"><strong>'+name+'</strong><span>차단 '+p.toFixed(1)+'% · 침해 '+b.toFixed(1)+'%</span></div><div class="stackedBar"><span class="goodbar" style="width:'+p.toFixed(2)+'%"></span><span class="badbar" style="width:'+b.toFixed(2)+'%"></span></div></div>'}).join('');
- $('compareScope').textContent='공격 유형: '+($('attackSelect').value==='random'?'무작위 공격 혼합':defs[$('attackSelect').value].short)+' · 각 '+(+$('rounds').value)+'회';}
-function updateMatrix(){if(!compareResults){for(const id of ['matrixNA','matrixNB','matrixAA','matrixAB'])$(id).textContent='—';drawCompareBars();$('presentationBars').innerHTML='<div class="empt">왼쪽의 비교 버튼을 누르면 결과가 표시됩니다.</div>';return}const n=compareResults.normal,a=compareResults.ai;
+function drawCompareBars(){const target=$('compareBars');if(!compareResults){target.innerHTML='<div class="empt">비교 실행 후 동일 조건의 기존·통합 모델 결과를 표시합니다.</div>';$('compareScope').textContent='공격 조건: '+(selectedMode==='ai'?'AI 활용':'기본')+' · '+($('attackSelect').value==='random'?'무작위 혼합':defs[$('attackSelect').value].short);return}
+ const active=compareResults[selectedMode==='ai'?'ai':'normal'];const labels=[['기존 다층 방어',active],['Zero-hacking 통합',active]];target.innerHTML=labels.map(([name,s])=>{const p=s.block/s.attempts*100,b=100-p;return '<div class="compareRow"><div class="compareTop"><strong>'+name+'</strong><span>차단 '+p.toFixed(1)+'% · 침해 '+b.toFixed(1)+'%</span></div><div class="stackedBar"><span class="goodbar" style="width:'+p.toFixed(2)+'%"></span><span class="badbar" style="width:'+b.toFixed(2)+'%"></span></div></div>'}).join('');
+ $('compareScope').textContent='공격 조건: '+(selectedMode==='ai'?'AI 활용':'기본')+' · '+($('attackSelect').value==='random'?'무작위 혼합':defs[$('attackSelect').value].short)+' · 두 모델에 동일한 '+(+$('rounds').value)+'회 적용';}
+function updateMatrix(){if(!compareResults){for(const id of ['matrixNA','matrixNB','matrixAA','matrixAB'])$(id).textContent='—';drawCompareBars();$('presentationBars').innerHTML='<div class="empt">모델 비교 버튼을 누르면 동일 조건의 결과가 표시됩니다.</div>';return}const n=compareResults.normal,a=compareResults.ai;
  $('matrixNA').innerHTML='<b>'+percent(n.block,n.attempts)+'</b><span class="tiny">다층 차단률</span>';
  $('matrixNB').innerHTML='<strong>'+percent(n.block,n.attempts)+'</strong><span class="tiny">MTD 미적중 '+percent(n.mtdMiss,n.attempts)+'</span>';
  $('matrixAA').innerHTML='<b>'+percent(a.block,a.attempts)+'</b><span class="tiny">다층 차단률</span>';
@@ -236,9 +288,9 @@ $('rounds').onchange=()=>reset();$('attackSelect').onchange=()=>reset();$('seed'
 $('playBtn').onclick=()=>{if(timer!==null){stop();return}if(done>=limit)reset(true);timer=setInterval(nextStep,Math.max(25,+$('speed').value));$('playBtn').textContent='Ⅱ 일시정지';$('stateBadge').textContent='라이브 진행 중';allControlsDisabled(true)};
 $('speed').onchange=()=>{if(timer){clearInterval(timer);timer=setInterval(nextStep,Math.max(25,+$('speed').value))}};
 $('stepBtn').onclick=()=>{if(timer)stop();nextStep()};$('resetBtn').onclick=()=>reset();
-$('compareBtn').onclick=()=>{compareResults={normal:runInstant('normal'),ai:runInstant('ai')};updateMatrix();$('exportBtn').disabled=false;$('compareBtn').textContent='✓ 비교 완료'};
+$('compareBtn').onclick=()=>{compareResults={normal:runInstant('normal'),ai:runInstant('ai')};updateMatrix();$('exportBtn').disabled=false;$('compareBtn').textContent='✓ 모델 비교 완료'};
 $('exportBtn').onclick=exportCompare;
-$('mtdDemoBtn').onclick=()=>{manualAddress=previewHopper();manualPreview=true;manualCount++;manualTrail.push(manualAddress);if(manualTrail.length>9)manualTrail.shift();renderMtd()};
+$('mtdDemoBtn').onclick=()=>{manualAddress=previewHopper();manualPreview=true;manualCount++;manualTrail.push(manualAddress);if(manualTrail.length>9)manualTrail.shift();renderMtd();updateModelComparison()};
 $('loadDemoBtn').onclick=loadDemo;$('zeroDemoBtn').onclick=zeroDemo;
 $('presentBtn').onclick=()=>{const mode=document.body.classList.toggle('presentation');$('presentBtn').textContent=mode?'▣ 모드1 종료':'▣ 모드1';$('presentBtn').title=mode?'기본 화면으로 돌아가기':'모드1 화면으로 전환';$('presentBtn').setAttribute('aria-pressed',String(mode));};
 $('fullBtn').onclick=()=>{if(!document.fullscreenElement&&document.documentElement.requestFullscreen){document.documentElement.requestFullscreen().catch(()=>alert('이 브라우저에서 전체 화면 전환을 지원하지 않습니다. Windows에서는 F11 키를 사용하세요.'))}else if(document.exitFullscreen)document.exitFullscreen()};
