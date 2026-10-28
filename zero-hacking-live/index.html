@@ -84,6 +84,42 @@ footer{margin:21px 0 0;padding:17px 0 0;border-top:1px solid var(--border);color
 @media(max-width:650px){.differenceLab{padding:14px 12px}.differenceTabs{gap:5px}.diffTab{flex-direction:column;align-items:flex-start;gap:3px;font-size:11px;line-height:1.3}.diffTab b{margin-left:0;font-size:9px}.differenceArena{grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr);gap:3px}.diffCenter{font-size:9px;letter-spacing:0}.diffSideHead{flex-wrap:wrap;font-size:10px;padding:9px 8px;gap:5px}.diffSideHead small{width:100%;margin-left:27px;font-size:9px}.diffIndex{width:20px;height:20px}.diffSideBody{padding:10px 9px;min-height:132px}.diffMainValue{font-size:clamp(17px,5vw,25px)}.diffSideBody p{font-size:10px}.differenceBottom{align-items:stretch;flex-direction:column}.diffAction{align-self:stretch}.diffCommon{white-space:normal}.differenceHead h2{font-size:18px}}
 @media(prefers-reduced-motion:reduce){.diffMainValue.changed{animation:none}}
 
+
+/* V9: explicit additional protection demonstration */
+.protectionShowcase{border:1px solid #426382;border-radius:18px;background:linear-gradient(135deg,#101d31,#0d192a 54%,#0c2628);padding:18px 20px 16px;margin:0 0 18px;box-shadow:0 20px 35px #02070f45}
+.protectHead{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:15px}
+.protectHead .overline{display:block;color:#9abfe4;font:800 10px ui-monospace,Consolas,monospace;letter-spacing:1.6px;margin-bottom:6px}
+.protectHead h2{font-size:clamp(18px,1.65vw,25px);font-weight:880;letter-spacing:-.9px;line-height:1.35;margin:0}
+.protectHead h2 em{font-style:normal;color:#7aebc7}
+.protectHead p{font-size:11px;line-height:1.6;color:#a9bfd4;margin:5px 0 0}
+.protectBtns{display:flex;gap:8px;flex-shrink:0}
+.protectNext{background:#61ddba;color:#082923;border:1px solid #70f6cc;border-radius:9px;padding:12px 17px;font-weight:850;font-size:12px;min-width:160px}
+.protectNext:hover{background:#91f2d3}.protectRestart{background:#15243a;border:1px solid #3d5774;border-radius:9px;padding:11px 13px;color:#cce0f3;font-size:11px;font-weight:750}
+.protectContext{border:1px solid #42628077;border-radius:9px;padding:10px 12px;margin-bottom:12px;background:#0a1626;display:flex;gap:8px;align-items:center;color:#abbfd8;font-size:11px;line-height:1.5}
+.protectContext strong{color:#f1f7ff}.protectContext .protectEqual{color:#83e3c2;margin-left:auto;white-space:nowrap;font-size:10px;font-weight:800}
+.protectStepMeter{display:flex;gap:6px;margin-bottom:12px}
+.protectStepMeter span{flex:1;height:4px;background:#314258;border-radius:6px;transition:background .2s}
+.protectStepMeter span.done{background:#6ee7c0}
+.protectTable{border:1px solid #36506c;border-radius:12px;overflow:hidden}
+.protectRow{display:grid;grid-template-columns:200px minmax(0,1fr) minmax(0,1fr);min-height:77px;border-top:1px solid #344d656e;align-items:stretch}
+.protectRow:first-child{border-top:0}
+.protectRowHead{background:#13253b;display:flex;align-items:center;padding:12px 15px;gap:11px}
+.protectRowHead .protNum{font-size:11px;color:#97b8dd;font-weight:880;font-variant-numeric:tabular-nums}
+.protectRowHead strong{font-size:12px;color:#dce8f8;display:block;line-height:1.3}
+.protectRowHead small{display:block;color:#8da7bf;font-size:10px;margin-top:5px;line-height:1.35}
+.protectCell{background:#101f33;border-left:1px solid #33475e;padding:12px 13px;display:flex;flex-direction:column;justify-content:center;gap:5px;min-width:0;transition:background .25s,border-color .25s}
+.protectCell.protected{background:#10312e;border-color:#367d6d}.protectCell.active{box-shadow:inset 0 0 0 1px #61dbb78a}
+.protectLabel{font-size:9px;color:#9ab1c8;font-weight:800;letter-spacing:.2px}.protected .protectLabel{color:#8ddec1}
+.protectValue{font:850 clamp(13px,1.22vw,18px) ui-monospace,Consolas,"Apple SD Gothic Neo",sans-serif;color:#f3f7fe;letter-spacing:-.3px;overflow-wrap:anywhere}
+.protected .protectValue{color:#7cecc4}.protectNote{font-size:10px;line-height:1.5;color:#a4b6ca}
+.protectFinish{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:12px 14px;margin-top:10px;border:1px solid #294e55;border-radius:10px;background:#0f292e}
+.protectFinish strong{font-size:13px;color:#92f0cb}.protectFinish p{font-size:11px;color:#b6cccd;margin:3px 0 0;line-height:1.5}
+.protectFinish .progressText{font:900 22px ui-monospace,Consolas,monospace;color:#8cebc7;white-space:nowrap}
+.protectFineprint{font-size:10px;line-height:1.55;color:#869eb6;margin:9px 2px 0}
+.presentation .protectionShowcase{padding:13px 14px}.presentation .protectHead{margin-bottom:10px}.presentation .protectRow{min-height:66px}.presentation .protectRowHead{padding:8px 12px}.presentation .protectCell{padding:8px 10px}
+@media(max-width:1000px){.protectRow{grid-template-columns:145px minmax(0,1fr) minmax(0,1fr)}.protectHead{align-items:flex-start}.protectBtns{align-self:flex-start}}
+@media(max-width:650px){.protectionShowcase{padding:14px 10px}.protectHead{flex-direction:column;gap:10px}.protectBtns{width:100%}.protectNext{flex:1}.protectContext{flex-wrap:wrap}.protectContext .protectEqual{margin-left:0}.protectRow{grid-template-columns:88px minmax(0,1fr) minmax(0,1fr);min-height:108px}.protectRowHead{padding:8px 6px;gap:4px;flex-direction:column;align-items:flex-start;justify-content:center}.protectRowHead strong{font-size:11px}.protectRowHead small{font-size:9px}.protectCell{padding:8px 6px;gap:4px}.protectLabel{font-size:8px}.protectValue{font-size:clamp(11px,3.3vw,15px)}.protectNote{font-size:9px}.protectFinish{align-items:flex-start}.protectFinish .progressText{font-size:18px}}
+
 </style>
 <style id="final-enhancements">
 .presentationResults{display:none}
@@ -102,11 +138,40 @@ footer{margin:21px 0 0;padding:17px 0 0;border-top:1px solid var(--border);color
 <div class="brand"><div aria-hidden="true" class="logo"><span>Z</span></div><div><div class="eyebrow">SLAT-A / CYBER SECURITY RESEARCH</div><div class="brandname">Zero-hacking <span style="color:#86bbff">Live Lab</span></div></div></div>
 <div class="headright"><span class="smallpill live">SIMULATION READY</span><button aria-pressed="false" class="full presentToggle" id="presentBtn" title="모드1 화면으로 전환" type="button">▣ 모드1</button><button class="full" id="fullBtn" title="전체 화면 전환" type="button">⛶ <span>전체 화면</span></button></div>
 </header>
-<section class="intro"><div><div class="label">COMPARATIVE SECURITY SIMULATION</div><h1>기존 다층 방어 <em>vs Zero-hacking</em></h1><p>하나의 공격 이벤트를 두 모델에 동일하게 적용하고, 방어 결과와 추가 보호 계층을 비교합니다.</p></div></section><section aria-label="보고서 모델 비교 결과" class="comparisonHero">
-<div class="heroIntro"><span class="heroEyebrow">연구 결과 · MODEL COMPARISON</span><strong>두 모델의 차이는 차단률보다 <em>추가 보호 영역</em>에 있습니다.</strong><p>동일한 다층 방어 판정 + 통합 모델의 주소 이동·데이터 보호·제로화 구조</p></div>
+<section class="intro"><div><div class="label">COMPARATIVE SECURITY SIMULATION</div><h1>기존 다층 방어 <em>vs Zero-hacking</em></h1><p>공통 다층 방어와 추가 보호 3단계를 분리해 모델의 차이를 시연합니다.</p></div></section><section aria-label="보고서 모델 비교 결과" class="comparisonHero">
+<div class="heroIntro"><span class="heroEyebrow">연구 결과 · MODEL COMPARISON</span><strong>두 모델의 차이는 <em>추가 보호 3단계</em>에 있습니다.</strong><p>동일한 다층 방어 판정 + 통합 모델의 주소 이동·데이터 보호·제로화 구조</p></div>
 <div class="heroNumbers"><div class="heroData"><span>기존 다층 방어</span><strong>62.1<span>점</span></strong><small>종합 위험 점수</small></div><div class="heroLink">→</div><div class="heroData integratedHero"><span>Zero-hacking 통합 모델</span><strong>19.3<span>점</span></strong><small>종합 위험 점수</small></div></div>
 <div class="heroFooter"><span>보고서 반복 모의실험 · 다층 차단률 <b>양쪽 85.9%</b></span><span>가중치 기반 종합 위험 점수 <b>약 69% 감소</b> · 실제 보안 성능 검증 아님</span></div>
 </section>
+
+<section class="protectionShowcase" aria-label="추가 보호 단계별 비교 시연" id="protectionShowcase">
+  <div class="protectHead">
+    <div><span class="overline">POST-DEFENSE / ADDITIONAL PROTECTION</span>
+    <h2>공통 방어를 통과했다면, <em>그다음 무엇이 달라질까?</em></h2>
+    <p>두 모델의 다층 차단 판정은 동일하며, 추가 보호 기능 3가지를 순서대로 보여주는 별도 가상 사례입니다.</p></div>
+    <div class="protectBtns"><button class="protectNext" id="protectNext" type="button">▶ 추가 보호 시연</button><button class="protectRestart" id="protectRestart" type="button">↺ 초기화</button></div>
+  </div>
+  <div class="protectContext"><strong>가정</strong> · 공통 다층 방어를 통과한 가상 이벤트 1건
+  <span class="protectEqual">공통 방어: A = B</span></div>
+  <div class="protectStepMeter" aria-label="추가 보호 시연 진행률"><span id="protMeter1"></span><span id="protMeter2"></span><span id="protMeter3"></span></div>
+  <div class="protectTable">
+    <div class="protectRow"><div class="protectRowHead"><span class="protNum">01</span><div><strong>접근 대상</strong><small>카오스 MTD 주소 이동</small></div></div>
+      <div class="protectCell"><span class="protectLabel">A · 기존 모델의 비교 조건</span><strong class="protectValue" id="protAddrA">#02481 · 고정</strong><span class="protectNote">추가 주소 이동 계층 없음</span></div>
+      <div class="protectCell protected" id="protCellAddrB"><span class="protectLabel">B · Zero-hacking</span><strong class="protectValue" id="protAddrB">주소 이동 대기</strong><span class="protectNote" id="protAddrDesc">가상 주소 이동 적용 전</span></div>
+    </div>
+    <div class="protectRow"><div class="protectRowHead"><span class="protNum">02</span><div><strong>데이터 처리</strong><small>추가 보호 계층 모사</small></div></div>
+      <div class="protectCell"><span class="protectLabel">A · 기존 모델의 비교 조건</span><strong class="protectValue">DATA: 42</strong><span class="protectNote">별도 보호 단계 미적용 가정</span></div>
+      <div class="protectCell protected" id="protCellDataB"><span class="protectLabel">B · Zero-hacking</span><strong class="protectValue" id="protDataB">보호 처리 대기</strong><span class="protectNote" id="protDataDesc">실제 암호화가 아닌 상태 표시</span></div>
+    </div>
+    <div class="protectRow"><div class="protectRowHead"><span class="protNum">03</span><div><strong>연산 후 데이터</strong><small>더미 레지스터·캐시·버스</small></div></div>
+      <div class="protectCell"><span class="protectLabel">A · 기존 모델의 비교 조건</span><strong class="protectValue">REG: A1F3</strong><span class="protectNote">추가 전역 제로화 미적용 가정</span></div>
+      <div class="protectCell protected" id="protCellZeroB"><span class="protectLabel">B · Zero-hacking</span><strong class="protectValue" id="protZeroB">제로화 대기</strong><span class="protectNote" id="protZeroDesc">거래 완료 시 초기화 단계 적용</span></div>
+    </div>
+  </div>
+  <div class="protectFinish" aria-live="polite"><div><strong id="protResultTitle">동일 방어 + 추가 보호 단계 3개</strong><p id="protResultNote">시연 버튼을 누르면 통합 모델의 추가 보호 단계를 하나씩 보여줍니다.</p></div><strong class="progressText" id="protProgress">0 / 3</strong></div>
+  <p class="protectFineprint">※ 위 장면은 공통 차단 단계 통과를 가정한 구조 비교입니다. ‘보호 처리’는 암호화가 아닌 시각적 모사이며, 주소 이동·제로화의 실제 침해/유출 방지 효과를 측정한 결과가 아닙니다. 기존 모델도 실제 환경에서는 다른 보호 기술을 포함할 수 있습니다.</p>
+</section>
+
 <section class="differenceLab" aria-label="기존 모델과 통합 모델의 핵심 차이" id="differenceLab">
   <div class="differenceHead">
     <div><span class="diffEyebrow">STRUCTURAL COMPARISON · SAME NETWORK DEFENSE</span><h2>같은 공격을 받아도, <em>추가로 보호하는 영역은 다릅니다.</em></h2></div>
@@ -255,7 +320,7 @@ function setNewRng(){rng=seedRandom(Math.max(1,+$('seed').value||42));hopper=cha
 function allControlsDisabled(disabled){['attackSelect','rounds','seed','normalBtn','aiBtn','compareBtn'].forEach(id=>$(id).disabled=disabled)}
 function stop(){if(timer!==null){clearInterval(timer);timer=null} $('playBtn').textContent=done>=limit?'↻ 다시 실행':'▶ 라이브 실행';$('stateBadge').textContent=done>=limit?'실험 종료':(current?'일시정지':'실행 대기');allControlsDisabled(false)}
 function reset(keepCompare=false){stop();done=0;phase=-1;current=null;lastCompleted=null;limit=+$('rounds').value;stats=emptyStats();history=[];logs=[];setNewRng();memory={state:'idle',reg:'—',cache:'—',bus:'—',gate:false};dataDemoActive=false;if(!keepCompare)compareResults=null;$('exportBtn').disabled=!compareResults;$('compareBtn').textContent=compareResults?'✓ 모델 비교 완료':'▦ 두 모델 차단 결과 비교';
- $('stateBadge').textContent='실행 전';$('playBtn').textContent='▶ 라이브 실행';$('playBtn').disabled=false;updateDisplayCurrent();updateUI();updateMatrix();renderMemory();renderMtd();}
+ $('stateBadge').textContent='실행 전';$('playBtn').textContent='▶ 라이브 실행';$('playBtn').disabled=false;updateDisplayCurrent();updateUI();updateMatrix();renderMemory();renderMtd();protectionStep=0;protectionAddress=null;renderProtection();}
 function changeMode(mode){selectedMode=mode;$('normalBtn').classList.toggle('active',mode==='normal');$('aiBtn').classList.toggle('active',mode==='ai');reset(false)}
 function drawLayers(p,e){for(const model of ['A','B']){
  $('layer'+model).innerHTML=layers.map((layer,i)=>{const entry=e?.record[i];let cls='';if(entry&&p>=2+i){if(entry.state==='block')cls='blocked';else if(['pass','logged'].includes(entry.state))cls='passed';else if(entry.state==='skip')cls='skipped';}if(entry&&p===2+i&&entry.state!=='skip')cls+=' current';return '<div class="layer '+cls+'"><span class="symbol">'+layer.icon+'</span><span>'+layer.short+'</span></div>'}).join('');
@@ -356,6 +421,36 @@ function differenceDemo(){
  differenceView();
  const node=$('diffBValue');node.classList.remove('changed');void node.offsetWidth;node.classList.add('changed');
 }
+
+
+// V9: separate hypothetical walkthrough. It does not alter the network block-rate experiment.
+let protectionStep=0,protectionAddress=null;
+function renderProtection(){
+ const step=protectionStep;
+ for(let i=1;i<=3;i++)$('protMeter'+i).classList.toggle('done',step>=i);
+ $('protAddrB').textContent=step>=1?'#'+String(protectionAddress).padStart(5,'0')+' · 변경':'주소 이동 대기';
+ $('protAddrDesc').textContent=step>=1?'카오스 수열 기반 가상 ID 변경':'가상 주소 이동 적용 전';
+ $('protDataB').textContent=step>=2?'보호 처리 적용 (모사)':'보호 처리 대기';
+ $('protDataDesc').textContent=step>=2?'처리 단계 활성화 · 암호화 검증 아님':'실제 암호화가 아닌 상태 표시';
+ $('protZeroB').textContent=step>=3?'REG: 0000':'제로화 대기';
+ $('protZeroDesc').textContent=step>=3?'더미 레지스터·캐시·버스 초기화':'거래 완료 시 초기화 단계 적용';
+ for(const [id,active] of [['protCellAddrB',step>=1],['protCellDataB',step>=2],['protCellZeroB',step>=3]])$(id).classList.toggle('active',active);
+ const prompts=['▶ 추가 보호 시연','② 데이터 보호 보기','③ 제로화 보기','↺ 처음부터 시연'];
+ $('protectNext').textContent=prompts[step];
+ const headings=['동일 방어 + 추가 보호 단계 3개','1단계: 가상 접근 주소 변경','2단계: 데이터 보호 처리 추가','3단계: 연산 후 더미 정보 초기화'];
+ const notes=['시연 버튼을 누르면 통합 모델의 추가 보호 단계를 하나씩 보여줍니다.','가상 주소를 변경하는 구조입니다. 실제 접근 차단 효과는 별도 검증이 필요합니다.','통합 모델에 보호 처리 단계를 추가해 표시했습니다. 실제 암호화 알고리즘은 실행하지 않습니다.','기존 모델에는 추가 전역 제로화가 없다고 가정했으며, 통합 모델에서 더미 데이터가 초기화됐습니다.'];
+ $('protResultTitle').textContent=headings[step];$('protResultNote').textContent=notes[step];$('protProgress').textContent=step+' / 3';
+}
+function stepProtection(){
+ if(protectionStep>=3){resetProtection();}
+ if(protectionStep===0){$('mtdDemoBtn').click();protectionAddress=manualAddress;differenceFocus='address';differenceView();}
+ else if(protectionStep===1){dataDemoActive=true;differenceFocus='data';differenceView();}
+ else if(protectionStep===2){loadDemo();zeroDemo();differenceFocus='zero';differenceView();}
+ protectionStep++;renderProtection();
+}
+function resetProtection(){protectionStep=0;protectionAddress=null;dataDemoActive=false;memory={state:'idle',reg:'—',cache:'—',bus:'—',gate:false};renderMemory();renderProtection();}
+$('protectNext').onclick=stepProtection;
+$('protectRestart').onclick=resetProtection;
 
 function updateUI(){const l=limit||50;$('mAttempts').innerHTML=done+' <span class="mUnit">/ '+l+'</span>';$('mBlock').textContent=percent(stats.block,done);$('mBreach').textContent=stats.breach;$('mRisk').textContent=done?(stats.risk/done).toFixed(1):'—';$('mMtd').textContent=percent(stats.mtdMiss,done);$('mZero').textContent=stats.zero;$('pct').textContent=Math.round(done/l*100)+'%';$('progress').style.width=(done/l*100)+'%';
  $('levels').innerHTML=layers.map((layer,i)=>{const n=stats.blockedAt[i],w=stats.block?100*n/stats.block:0;return '<div class="level"><span>'+layer.name+'</span><div class="barTrack"><div class="barFill'+(i===4?' green':'')+'" style="width:'+w+'%"></div></div><b>'+n+'회</b></div>'}).join('');
