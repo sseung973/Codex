@@ -4,6 +4,8 @@
 
 이미 프로젝트를 내려받았다면 [수정 패키지와 적용 안내](Updates/README.md)를 확인하세요. 사용자가 Unity 6.3 LTS에서 최초 실행을 확인했으며, 최신 수정 사항의 해당 Editor 실행·화면 검증은 아직 필요합니다.
 
+**바로 실행하는 Unity 웹 링크를 배포하려면:** [WebGL 빌드·ZIP 만들기](WEB_PUBLISH.md). **RELAY ZERO → Build WebGL + ZIP** 메뉴가 추가되어 있습니다. 실제 웹 플레이어 빌드·배포는 아직 완료되지 않았습니다.
+
 ## 그래픽 교체
 
 각진 기본 메시의 모서리를 부드럽게 처리하고, 가져온 Asset Store 프리팹으로 총기·로봇·전장 소품을 교체할 수 있게 했습니다. **실제 Store 패키지는 이 환경에서 다운로드·임포트하지 못했습니다.** 무료 후보와 적용 방법은 [Asset Store 그래픽 교체 안내](ASSET_STORE_SETUP.md)를 확인하세요. Unity 메뉴는 **RELAY ZERO → Asset Store Visual Setup**입니다.
@@ -56,7 +58,7 @@
 - **온라인에서 ESC 메뉴를 열어도 전투는 계속됩니다.** 방장이 나가면 방이 종료됩니다. 방장 컴퓨터에서 전투를 판정하는 기존 구조이며 서버는 방·메시지를 중계합니다.
 - 기존 서버 프로토콜을 유지했습니다. 웹 클라이언트와의 실제 상호 접속 검증은 아직 수행하지 않았습니다.
 
-목표 플랫폼은 **Windows / macOS / Linux 데스크톱**입니다. 네트워크는 `ClientWebSocket`을 사용합니다. Unity WebGL은 이 .NET 소켓을 지원하지 않으므로 WebGL 빌드용 포팅은 포함하지 않습니다. 기존 웹 버전은 `../relay-zero`에 있습니다.
+목표 플랫폼은 **Windows / macOS / Linux 데스크톱과 WebGL**입니다. 데스크톱 네트워크는 `ClientWebSocket`, WebGL은 브라우저 WebSocket을 사용하는 분기 코드를 제공합니다. **WebGL의 실제 빌드·Unity와 JavaScript 연결·브라우저 플레이 검증은 아직 필요합니다.** 기존 Babylon.js 웹 버전은 `../relay-zero`에 있습니다.
 
 ## 실행 파일 만들기
 
@@ -65,6 +67,7 @@ Unity Hub에서 해당 플랫폼의 Build Support를 설치한 뒤 다음 메뉴
 - **RELAY ZERO → Build Windows x64** → `Builds/Windows/RelayZero.exe`
 - **RELAY ZERO → Build Linux x64** → `Builds/Linux/RelayZero.x86_64`
 - **RELAY ZERO → Build macOS** → `Builds/macOS/RelayZero.app`
+- **RELAY ZERO → Build WebGL + ZIP** → `Builds/RelayZero-Unity-WebGL.zip` ([배포 안내](WEB_PUBLISH.md))
 
 라이선스가 활성화된 Unity Editor의 배치 빌드도 지원합니다.
 

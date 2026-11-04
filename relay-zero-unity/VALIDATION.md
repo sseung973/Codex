@@ -1,5 +1,15 @@
 # Validation — 2026-10-22
 
+## Web publication preparation — 2026-11-04
+
+- Runtime C# compiled for **both desktop and `UNITY_WEBGL`** conditional branches using Roslyn / the real Unity reference assemblies noted below. No compile errors. Editor scripts and JavaScript P/Invoke were not run in Unity.
+- **62 game rules/content checks passed**.
+- **7 JavaScript unit tests passed** (`node --test --test-isolation=none Tests/web-socket.test.mjs Tests/web-template.test.mjs`). Covers transport lifecycle, UTF-8 buffers, timeout/queue limits, stale callbacks, preserving final result before close, C# import/export names and template configuration/error paths. Uses a mock WebSocket and DOM shim, **not browser rendering or an end-to-end Unity player**.
+- Static asset audit passed: **18 models, 21,780 triangles, 816 runtime string literals, 8 PNGs and 62 RelayZero asset GUIDs**. Web template folder GUIDs are outside this audit's RelayZero subtree.
+- Prepared **Build WebGL + ZIP**, native/Web socket splitting, the browser transport and the responsive Unity template. The source-only update package contains **23 assets**, including `.jslib` and template HTML. Packaged bytes were checked against their source files.
+- No executable or WebGL player exists in this environment or the checked GitHub releases/Actions history. The official Unity CLI installer fails at its version manifest with HTTP 404. There is no installed Editor or configured Unity build license here. **Unity platform switching, Editor API compilation, actual IL2CPP WebGL build, shader compilation, imported `.jslib` linking, browser play and deployment remain pending.**
+- Existing Sites owner/public access and the original live URL were read successfully. No new Unity Site version or production deployment was created; a Unity build ZIP is required. See [WEB_PUBLISH.md](WEB_PUBLISH.md).
+
 ## Unity bug-fix update (`3.2.0-unity.2`)
 
 Executed for this update:

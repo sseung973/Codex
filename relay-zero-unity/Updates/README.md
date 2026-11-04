@@ -1,5 +1,7 @@
 # 2026-10-22 Unity 수정 패키지
 
+웹 플레이 링크 배포 준비는 [WebGL 빌드·ZIP 안내](../WEB_PUBLISH.md)를 확인하세요. 현재 수정 패키지는 웹 대응 코드도 함께 포함하며, 실행 가능한 WebGL 빌드 파일은 별도로 생성해야 합니다.
+
 기존 `relay-zero-unity` 프로젝트를 이미 실행했다면 전체 저장소를 다시 받을 필요가 없습니다.
 
 1. [수정 패키지 다운로드](https://github.com/sseung973/Codex/raw/refs/heads/main/relay-zero-unity/Updates/RelayZero-Fixes.unitypackage).

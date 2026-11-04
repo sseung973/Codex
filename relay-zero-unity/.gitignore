@@ -13,6 +13,7 @@
 *.pidb
 *.unitypackage
 !Updates/RelayZero-Fixes.unitypackage
+!Updates/RelayZero-Web-Deploy.unitypackage
 Tests/bin/
 Tests/obj/
 Tools/bin/

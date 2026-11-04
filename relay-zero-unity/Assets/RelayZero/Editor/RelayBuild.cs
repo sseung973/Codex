@@ -18,7 +18,7 @@ namespace RelayZero.Editor
                     return;
                 PlayerSettings.companyName = "RELAY ZERO";
                 PlayerSettings.productName = "RELAY ZERO";
-                PlayerSettings.bundleVersion = "3.2.0-unity.2";
+                PlayerSettings.bundleVersion = "3.2.0-unity.3";
                 PlayerSettings.runInBackground = true;
                 PlayerSettings.colorSpace = ColorSpace.Linear;
                 PlayerSettings.defaultScreenWidth = 1280;
@@ -91,6 +91,8 @@ namespace RelayZero.Editor
                 Windows();
             else if (target == "macos")
                 Mac();
+            else if (target == "web" || target == "webgl")
+                RelayWebBuild.CI();
             else
                 Linux();
         }

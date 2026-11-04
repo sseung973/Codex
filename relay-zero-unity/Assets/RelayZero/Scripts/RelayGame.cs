@@ -88,7 +88,11 @@ namespace RelayZero
             if (MapId != "foundry" && MapId != "cargo" && MapId != "nexus")
                 MapId = "foundry";
             Application.runInBackground = true;
+#if UNITY_WEBGL && !UNITY_EDITOR
+            Application.targetFrameRate = -1;
+#else
             Application.targetFrameRate = 144;
+#endif
             QualitySettings.vSyncCount = 0;
             Time.fixedDeltaTime = 1f / 60;
             Physics.IgnoreLayerCollision(Geometry.TargetLayer, Geometry.PlayerLayer);

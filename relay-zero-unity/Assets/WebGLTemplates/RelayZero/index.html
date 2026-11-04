@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RELAY ZERO · Unity</title>
+  <style>
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#081016;color:#eff5f1;font-family:system-ui,sans-serif}
+    #unity-canvas{display:block;width:100%;height:100%;outline:none;background:#081016}
+    #loading{position:fixed;inset:0;display:grid;place-content:center;gap:18px;padding:32px;background:#081016;text-align:center}
+    #loading[hidden]{display:none}h1{font-size:clamp(40px,8vw,88px);letter-spacing:.08em;margin:0}p{color:#b0c2c8;margin:0;line-height:1.7}
+    progress{width:min(420px,80vw);height:7px;margin:12px auto;accent-color:#abefd1}#failure{max-width:640px;color:#ffb9a8;white-space:pre-wrap}
+  </style>
+</head>
+<body>
+  <canvas id="unity-canvas" tabindex="0" aria-label="RELAY ZERO Unity 게임"></canvas>
+  <div id="loading" role="status" aria-live="polite">
+    <p>UNITY PLAYER</p><h1>RELAY ZERO</h1>
+    <progress id="progress" max="1" value="0"></progress>
+    <p id="status">전장을 불러오는 중…</p>
+    <p>PC · 키보드와 마우스<br>WASD 이동 · 클릭 사격 · 우클릭 조준 · ESC 메뉴</p>
+    <p id="failure" hidden></p>
+  </div>
+  <script>
+    var canvas = document.getElementById("unity-canvas");
+    var overlay = document.getElementById("loading");
+    var statusLabel = document.getElementById("status");
+    var progress = document.getElementById("progress");
+    var failure = document.getElementById("failure");
+    var buildUrl = "Build";
+    var config = {
+      dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
+      frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+      codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
+      productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
+      productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+      devicePixelRatio: window.devicePixelRatio || 1,
+      matchWebGLToCanvasSize: true,
+      showBanner: function (message, type) {
+        if (type === "error") showFailure(message);
+        else console.warn(message);
+      }
+    };
+    canvas.addEventListener("contextmenu", function (event) { event.preventDefault(); });
+    function showFailure(message) {
+      overlay.hidden = false;
+      statusLabel.textContent = "게임을 불러오지 못했어. 새로고침 후 다시 시도해줘.";
+      failure.hidden = false;
+      failure.textContent = String(message);
+    }
+    var loader = document.createElement("script");
+    loader.src = buildUrl + "/{{{ LOADER_FILENAME }}}";
+    loader.onerror = function () { showFailure("Unity 로더 파일을 다운로드하지 못했어."); };
+    loader.onload = function () {
+      if (typeof createUnityInstance !== "function") {
+        showFailure("Unity 로더를 실행하지 못했어.");
+        return;
+      }
+      createUnityInstance(canvas, config, function (value) {
+        progress.value = value;
+        statusLabel.textContent = "전장 불러오는 중 · " + Math.round(value * 100) + "%";
+      }).then(function (instance) {
+        window.unityInstance = instance;
+        overlay.hidden = true;
+        canvas.focus();
+      }).catch(showFailure);
+    };
+    document.body.appendChild(loader);
+  </script>
+</body>
+</html>

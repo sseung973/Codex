@@ -1,3 +1,4 @@
+#if !UNITY_WEBGL || UNITY_EDITOR
 using System;
 using System.Collections.Concurrent;
 using System.IO;
@@ -23,6 +24,7 @@ namespace RelayZero
         CancellationTokenSource cancellation;
         readonly SemaphoreSlim sending = new SemaphoreSlim(1, 1);
         int generation;
+        public void Pump() { }
         public async void Connect(string url, string action)
         {
             Close();
@@ -129,3 +131,4 @@ namespace RelayZero
         }
     }
 }
+#endif

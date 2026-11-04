@@ -189,6 +189,7 @@ namespace RelayZero
 
         public void Pump()
         {
+            client.Pump();
             while (client.Messages.TryDequeue(out var json))
             {
                 try
