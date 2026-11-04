@@ -832,6 +832,9 @@ export class OnlineArena {
       enemy.health = b.hp;
       enemy.shieldHealth = b.shield;
       if (enemy.shield) enemy.shield.setEnabled(b.shield > 0 && b.hp > 0);
+      for (const part of enemy.parts)
+        if (part.name === "shield upper rim" || part.name === "shield viewport")
+          part.setEnabled(b.shield > 0 && b.hp > 0);
       const target = this.replicaTargets.get(b.id);
       if (target) Vector3.FromArrayToRef(b.p, 0, target);
       else this.replicaTargets.set(b.id, vec(b.p));

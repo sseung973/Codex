@@ -8,6 +8,7 @@ import {
   Mesh,
 } from "@babylonjs/core";
 import { Health } from "../combat/Damage";
+import { softenActor } from "../visual/SoftMesh";
 export class Avatar extends Health {
   root: TransformNode;
   target = Vector3.Zero();
@@ -49,6 +50,7 @@ export class Avatar extends Health {
       m.material = mat;
       m.metadata = { entity: this, head };
       this.parts.push(m);
+      softenActor(m, 0.045);
     };
     box("operative torso", 0, 1.08, 0, 0.62, 0.62, 0.35, armor);
     box("operative vest", 0, 1.12, -0.19, 0.46, 0.41, 0.08, black);

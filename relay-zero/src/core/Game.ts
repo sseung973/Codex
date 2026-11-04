@@ -1,3 +1,4 @@
+import { practiceSpawns } from "../world/PracticeSpawns";
 import { OnlineArena } from "../multiplayer/OnlineArena";
 import { PerformanceBudget } from "./PerformanceBudget";
 import { Equipment } from "../weapons/Equipment";
@@ -88,7 +89,7 @@ export class Game {
   private enemyCueCooldown = 0;
   constructor(canvas: HTMLCanvasElement, hud: HUD) {
     this.settings = hud.settings;
-    this.engine = new Engine(canvas, false, {
+    this.engine = new Engine(canvas, true, {
       powerPreference: "high-performance",
       preserveDrawingBuffer: false,
       stencil: false,
@@ -137,7 +138,10 @@ export class Game {
       this.difficulty = difficulties[this.hud.selectedDifficulty];
       this.start(false);
     };
-    this.hud.onPractice = () => this.start(true);
+    this.hud.onPractice = () => {
+      this.difficulty = difficulties[this.hud.selectedDifficulty];
+      this.start(true);
+    };
     this.hud.onShop = () => this.openShop();
     this.hud.onEndless = () => this.continueEndless();
     this.hud.onEMPBuy = () => {
@@ -492,10 +496,9 @@ export class Game {
     // Keep the flash light registered between shots: toggling lights invalidates shaders.
     this.weapon.muzzleLight.setEnabled(quality === "high");
     this.pipeline.imageProcessingEnabled = quality !== "low";
-    this.pipeline.fxaaEnabled =
-      quality !== "low" && (window.devicePixelRatio || 1) <= 1.25;
+    this.pipeline.fxaaEnabled = (this.engine.getCaps().maxMSAASamples ?? 1) < 2;
     this.pipeline.bloomEnabled = quality === "high";
-    this.pipeline.samples = 1;
+    this.pipeline.samples = quality === "low" ? 2 : 4;
     for (const material of this.scene.materials)
       if (material.isFrozen) material.unfreeze();
     this.engine.resize();
@@ -547,12 +550,16 @@ export class Game {
     this.hud.killTime = 0;
     this.hud.tick(0);
     if (practice) {
-      for (const [x, z] of [
-        [0, -9],
-        [-5, -3],
-        [5, 1],
-      ])
-        this.targets.push(new Target(this.scene, new Vector3(x, 0, z)));
+      for (const safe of practiceSpawns(this.navigation, this.level.spawn))
+        this.targets.push(
+          new Target(
+            this.scene,
+            safe,
+            this.level,
+            this.navigation,
+            this.difficulty,
+          ),
+        );
       this.hud.toast("FIRING RANGE · TARGETS RESET · UNLIMITED RESUPPLY", 3);
     } else {
       this.waves.reset(this.difficulty.waves, this.difficulty.rest);
@@ -1064,12 +1071,13 @@ export class Game {
         );
       }
     }
-    h.style("crosshair", "--gap", `${w.aiming ? 2 : 4 + w.spread * 650}px`);
+    h.style("crosshair", "--gap", `${4 + w.spread * 1000}px`);
     h.style("crosshair", "--scale", String(this.settings.crosshairSize));
     h.el("ammo").classList.toggle("empty-feedback", w.dryTime > 0);
     h.el("ammo").classList.toggle("reloading", w.reloading);
-    h.style("crosshair", "opacity", String(1 - w.ads));
-    h.el("ads-reticle").hidden = !w.aiming;
+    const scoped = w.aiming && w.data.weaponType === "sniper";
+    h.style("crosshair", "opacity", scoped ? "0" : "1");
+    h.el("ads-reticle").hidden = !scoped;
     h.el("ads-reticle").classList.toggle("smg", w.data.weaponType === "smg");
     h.el("ads-reticle").classList.toggle("heavy", w.data.id === "r20");
     h.el("ads-reticle").classList.toggle(

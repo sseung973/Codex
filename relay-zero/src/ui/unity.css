@@ -1,0 +1,805 @@
+@font-face {
+  font-family: Relay Korean;
+  src: url("/fonts/NotoSansCJKkr-Regular.otf") format("opentype");
+  font-display: swap;
+  font-weight: 400;
+}
+@font-face {
+  font-family: Relay Display;
+  src: url("/fonts/BarlowCondensed-Bold.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 700;
+}
+:root {
+  --unity-mint: #abefd1;
+  --unity-white: #f2f7f0;
+  --unity-muted: #94a6b0;
+  --unity-panel: #111a24;
+  font-family: "Relay Korean", sans-serif;
+  color: var(--unity-white);
+}
+#ui .topbar {
+  inset: 12px 24px auto auto;
+  width: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  z-index: 2;
+}
+#ui .topbar .wordmark,
+#ui .topbar .sector-tag,
+#menu-footer {
+  display: none;
+}
+#ui .topbar .top-right {
+  gap: 4px;
+}
+#ui .topbar .icon-button {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: none;
+  font-size: 20px;
+  color: var(--unity-muted);
+}
+#ui .vignette {
+  background: #060b10cc;
+  transition: opacity 0.2s;
+}
+#ui.in-game .vignette {
+  background: none;
+  opacity: 0;
+}
+#ui #menu.unity-menu,
+#hud {
+  position: absolute;
+  inset: auto;
+  width: 1280px;
+  height: 720px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(var(--unity-ui-scale, 1));
+  transform-origin: center;
+  overflow: visible;
+}
+#ui #menu.unity-menu {
+  display: block;
+  padding: 0;
+  margin: 0;
+  background: none;
+  align-items: initial;
+  gap: 0;
+  pointer-events: none;
+}
+#menu .unity-intro {
+  position: absolute;
+  left: 76px;
+  top: 52px;
+  width: 530px;
+  height: 620px;
+}
+#menu .unity-intro .eyebrow {
+  display: block;
+  margin: 0;
+  color: var(--unity-mint);
+  font-size: 14px;
+  letter-spacing: 0.05em;
+}
+#menu.unity-menu h1 {
+  position: absolute;
+  left: -10px;
+  top: 49px;
+  font:
+    700 88px/1.2 "Relay Display",
+    sans-serif;
+  letter-spacing: 0;
+  margin: 0;
+  color: var(--unity-white);
+  padding: 0;
+  text-shadow: none;
+}
+#menu.unity-menu .tagline {
+  position: absolute;
+  top: 272px;
+  font-size: 23px;
+  font-weight: 400;
+  line-height: 1.5;
+  margin: 0;
+  color: var(--unity-white);
+}
+#menu .unity-description {
+  position: absolute;
+  top: 327px;
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.8;
+  color: var(--unity-muted);
+}
+#menu .unity-controls {
+  position: absolute;
+  top: 490px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--unity-muted);
+}
+#menu .unity-caption {
+  position: absolute;
+  top: 585px;
+  margin: 0;
+  font-size: 12px;
+  color: var(--unity-mint);
+  letter-spacing: 0.04em;
+}
+#menu.unity-menu .menu-copy.unity-setup {
+  position: absolute;
+  left: 667px;
+  top: 51px;
+  width: 536px;
+  max-width: none;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+#menu.unity-menu .menu-actions {
+  position: static;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+#menu.unity-menu .section-label {
+  margin: 0 0 18px;
+  color: var(--unity-mint);
+  font-size: 16px;
+  letter-spacing: 0;
+  display: block;
+}
+#menu.unity-menu .map-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 0;
+}
+#menu.unity-menu button {
+  border-radius: 0;
+  box-shadow: none;
+  text-transform: none;
+  letter-spacing: 0;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
+  color: var(--unity-white);
+}
+#menu.unity-menu .map-card {
+  height: 57px;
+  min-height: 0;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  background: #21313d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+#menu.unity-menu .map-card-copy {
+  position: static;
+  display: block;
+  padding: 0;
+  background: none;
+  inset: auto;
+  transform: none;
+}
+#menu.unity-menu .map-card-copy b {
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: inherit;
+}
+#menu.unity-menu button:hover {
+  filter: none;
+  background: #304855;
+}
+#menu.unity-menu button.selected {
+  border-color: var(--unity-mint);
+  color: var(--unity-mint);
+  background: #243b44;
+}
+#menu.unity-menu .map-summary {
+  display: block;
+  height: 61px;
+  margin: 8px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--unity-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+#menu.unity-menu .map-summary b {
+  display: inline;
+  font:
+    400 14px "Relay Korean",
+    sans-serif;
+  color: var(--unity-muted);
+}
+#menu.unity-menu .map-summary b::after {
+  content: " · ";
+}
+#menu.unity-menu .map-summary span {
+  display: inline;
+  font-size: 14px;
+  color: var(--unity-muted);
+}
+#menu.unity-menu #solo-options {
+  display: block;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+#menu.unity-menu .unity-difficulties {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+#menu.unity-menu .unity-difficulties button,
+#menu.unity-menu .unity-pistols button {
+  height: 44px;
+  border: 1px solid transparent;
+  background: #21313d;
+  font-size: 17px;
+  padding: 0 10px;
+}
+#menu.unity-menu .unity-difficulties button.selected,
+#menu.unity-menu .unity-pistols button.selected {
+  border-color: var(--unity-mint);
+  color: var(--unity-mint);
+}
+#menu.unity-menu #difficulty-detail {
+  display: block;
+  height: 55px;
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 7px 0 0;
+  color: var(--unity-muted) !important;
+}
+#menu.unity-menu .unity-pistols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+#menu.unity-menu #unity-selection {
+  font-size: 13px;
+  margin: 11px 0 20px;
+  color: #edad59;
+  line-height: 1.7;
+}
+#menu.unity-menu #play {
+  display: flex;
+  align-items: center;
+  height: 57px;
+  min-height: 57px;
+  margin: 0;
+  padding: 0 16px;
+  background: var(--unity-mint);
+  color: var(--unity-panel);
+  font-size: 18px;
+  font-weight: 400;
+}
+#menu.unity-menu #play:hover {
+  background: #c6f7e2;
+}
+#menu.unity-menu .unity-friends {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 14px 0 0;
+}
+#menu.unity-menu .secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 47px;
+  padding: 0 10px;
+  margin: 0;
+  border: 1px solid transparent;
+  background: #21313d;
+  font-size: 17px;
+  font-weight: 400;
+}
+#menu.unity-menu .unity-bottom {
+  display: grid;
+  grid-template-columns: 170px 60px 1fr;
+  align-items: start;
+  gap: 12px;
+  margin-top: 20px;
+}
+#menu.unity-menu .unity-bottom .secondary {
+  height: 40px;
+  min-height: 40px;
+}
+#menu.unity-menu .unity-bottom .text-button {
+  margin: 10px 0;
+  padding: 0;
+  font-size: 12px;
+  color: var(--unity-muted);
+  letter-spacing: 0;
+}
+#menu.unity-menu #personal-best {
+  margin: 0;
+  text-align: right;
+  font-size: 11px;
+  line-height: 1.65;
+  color: var(--unity-muted) !important;
+}
+#menu.unity-menu .desktop-note {
+  display: none;
+}
+.dialog,
+.online-dialog {
+  font-family: "Relay Korean", sans-serif;
+  background: #111a24f5;
+  border: 0;
+  border-radius: 0;
+  color: var(--unity-white);
+  box-shadow: none;
+}
+.dialog h2,
+.online-dialog h2 {
+  font-family: "Relay Display", "Relay Korean", sans-serif;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.dialog .primary,
+.online-dialog .primary {
+  background: var(--unity-mint);
+  color: var(--unity-panel);
+}
+.dialog label,
+.dialog .settings-note {
+  line-height: 1.6;
+}
+.dialog input[type="range"] {
+  accent-color: var(--unity-mint);
+}
+#hud {
+  --hud-white: var(--unity-white);
+  --hud-muted: var(--unity-muted);
+  --hud-mint: var(--unity-mint);
+  --hud-red: #e64d4a;
+  font-family: "Relay Korean", sans-serif;
+  pointer-events: none;
+}
+#hud::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 112px;
+  background: #05090d8c;
+  z-index: -1;
+}
+#hud::after {
+  height: 118px;
+  background: #05090da3;
+}
+#hud .tactical-radar {
+  left: 25px;
+  top: 35px;
+  width: 204px;
+}
+#hud .radar-disc {
+  border: 0;
+  background: #0d1a24c2;
+}
+#hud .radar-north {
+  font-size: 12px;
+  color: var(--unity-mint);
+}
+#hud #radar-map {
+  font:
+    700 18px "Relay Display",
+    sans-serif;
+  letter-spacing: 0;
+  margin-top: 7px;
+}
+#hud .tactical-radar small {
+  font-size: 10px;
+  letter-spacing: 0;
+  color: var(--unity-muted);
+}
+#hud .match-strip {
+  left: 334px;
+  top: 2px;
+  transform: none;
+  grid-template-columns: 195px 218px 195px;
+  width: 608px;
+  min-height: 105px;
+}
+#hud .team-wing {
+  height: 44px;
+  background: none;
+  clip-path: none;
+  border: 0;
+  border-bottom: 3px solid var(--unity-mint);
+  padding: 0;
+  gap: 12px;
+}
+#hud .hostile-wing {
+  border-bottom-color: #e64d4a;
+}
+#hud .team-tally {
+  width: 60px;
+  text-align: left;
+}
+#hud .friendly-wing .team-tally {
+  margin: 0 auto 0 0;
+}
+#hud .hostile-wing .team-tally {
+  margin: 0 0 0 auto;
+  text-align: right;
+}
+#hud .team-tally b {
+  font:
+    700 32px "Relay Display",
+    sans-serif;
+}
+#hud .team-tally small,
+#hud .wave-bars {
+  display: none;
+}
+#hud .team-portrait {
+  height: 40px;
+  width: 34px;
+}
+#hud .team-portrait > svg {
+  width: 34px;
+  height: 40px;
+  top: 0;
+}
+#hud .enemy-roster {
+  display: flex;
+  height: 40px;
+}
+#hud .enemy-portrait:not(:first-child),
+#hud #enemy-overflow {
+  display: none;
+}
+#hud #wave-label {
+  font-size: 13px;
+  letter-spacing: 0;
+  color: var(--unity-mint);
+}
+#hud #match-time {
+  font:
+    700 37px/1.1 "Relay Display",
+    sans-serif;
+}
+#hud #objective {
+  font:
+    400 17px "Relay Korean",
+    sans-serif;
+  letter-spacing: 0;
+  margin-top: 8px;
+}
+#hud .mission-stack {
+  left: 30px;
+  top: 308px;
+  width: 320px;
+  transform: none;
+}
+#hud #enemies {
+  font-size: 16px;
+  color: var(--unity-white);
+}
+#hud #mission-status {
+  padding: 12px 0 0;
+  border: 0;
+  background: none;
+  gap: 10px;
+}
+#hud #mission-hint {
+  font-size: 15px;
+  font-weight: 400;
+}
+#hud #mission-distance {
+  font-size: 13px;
+  color: var(--unity-muted);
+}
+#hud .mission-track {
+  height: 3px;
+  width: 230px;
+  background: #ffffff26;
+}
+#hud #mission-fill {
+  background: var(--unity-mint);
+}
+#hud .score {
+  top: 38px;
+  right: 30px;
+  width: 250px;
+  min-width: 0;
+  background: none;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}
+#hud .score > span {
+  font-size: 11px;
+}
+#hud #score {
+  font:
+    700 29px "Relay Display",
+    sans-serif;
+}
+#hud #coins {
+  font-size: 13px;
+  color: #edad59;
+}
+#hud .health {
+  left: 24px;
+  bottom: 15px;
+  width: 312px;
+  height: 110px;
+  background: none;
+  border: 0;
+  padding: 0;
+  gap: 20px;
+  box-shadow: none;
+  clip-path: none;
+}
+#hud .operator-badge {
+  width: 80px;
+  height: 98px;
+  min-width: 80px;
+  border: 0;
+  transform: none;
+  clip-path: none;
+  background: none;
+}
+#hud .operator-badge > svg {
+  width: 80px;
+  height: 98px;
+  transform: none;
+}
+#hud .operator-badge > span {
+  display: none;
+}
+#hud .vitals {
+  width: 211px;
+  padding: 0;
+}
+#hud .health .hud-label {
+  font-size: 10px;
+  letter-spacing: 0;
+  color: var(--unity-muted);
+}
+#hud .health-value {
+  gap: 8px;
+  margin: 8px 0 0;
+}
+#hud .health-value b {
+  font:
+    700 35px/1.1 "Relay Display",
+    sans-serif;
+}
+#hud .health-value span {
+  font:
+    400 16px "Relay Korean",
+    sans-serif;
+}
+#hud .health-track {
+  height: 8px;
+  margin: 8px 0 0;
+  transform: none;
+}
+#hud .vital-ticks {
+  display: none;
+}
+#hud .weapon-hud {
+  left: 50%;
+  bottom: 3px;
+  width: 286px;
+  height: 103px;
+  background: none;
+  border: 0;
+  padding: 0;
+  transform: translateX(-50%);
+}
+#hud #weapon-name {
+  font:
+    700 15px "Relay Display",
+    sans-serif;
+  letter-spacing: 0;
+  color: var(--unity-muted);
+}
+#hud .ammo {
+  margin: 8px 0 0;
+  gap: 16px;
+}
+#hud .ammo > b {
+  font:
+    700 48px/1 "Relay Display",
+    sans-serif;
+}
+#hud .ammo > span:last-child {
+  font:
+    700 26px "Relay Display",
+    sans-serif;
+  color: var(--unity-muted);
+}
+#hud .ammo-marks {
+  display: none;
+}
+#hud #reload-label {
+  font-size: 10px;
+  letter-spacing: 0;
+}
+#hud #reload-bar {
+  height: 2px;
+  width: 220px;
+  margin: 4px auto 0;
+}
+#hud .weapon-rail {
+  left: auto;
+  right: 40px;
+  top: 430px;
+  bottom: auto;
+  width: 280px;
+  gap: 0;
+  transform: none;
+}
+#hud .loadout-row {
+  display: grid;
+  grid-template-columns: 1fr 72px 28px;
+  align-items: center;
+  gap: 14px;
+  height: 50px;
+  min-height: 50px;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid #ffffff4d;
+  clip-path: none;
+}
+#hud .rail-icon {
+  grid-column: 2;
+  grid-row: 1;
+  width: 72px;
+  height: 34px;
+}
+#hud .loadout-row > span:not(.rail-icon) {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 12px;
+  text-align: right;
+}
+#hud .loadout-row > kbd {
+  grid-column: 3;
+  grid-row: 1;
+  font-size: 13px;
+}
+#hud #tactical-hud {
+  left: auto;
+  right: 28px;
+  bottom: 14px;
+  width: 338px;
+  height: 102px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+#hud .ability {
+  width: auto;
+  height: 102px;
+  border: 0;
+  background: none;
+  clip-path: none;
+  transform: none;
+}
+#hud .ability-icon {
+  width: 34px;
+  height: 34px;
+  margin: 22px auto 0;
+}
+#hud .ability-value {
+  font-size: 12px;
+  top: 0;
+  color: var(--unity-mint);
+}
+#hud .ability-name {
+  display: block;
+  font-size: 10px;
+  color: var(--unity-muted);
+  margin-top: 7px;
+}
+#hud .ability kbd {
+  font-size: 11px;
+  bottom: 0;
+}
+#hud .ability-track,
+#hud .signature-ability::before {
+  display: none;
+}
+#hud #device-hint {
+  position: absolute;
+  top: -35px;
+  right: 0;
+  width: 450px;
+  font-size: 14px;
+  color: var(--unity-mint);
+  text-align: right;
+}
+#hud .bottom-hint {
+  left: 30px;
+  right: 30px;
+  bottom: 1px;
+  font-size: 9px;
+}
+#hud #boss-panel {
+  left: 50%;
+  top: 114px;
+  width: 420px;
+  transform: translateX(-50%);
+  padding: 0;
+  border: 0;
+  background: none;
+}
+#hud #boss-panel > span {
+  font-size: 10px;
+}
+#hud #boss-state {
+  font-size: 14px;
+}
+#hud .boss-track {
+  height: 4px;
+  width: 360px;
+  margin: 5px auto;
+}
+#hud #ads-reticle.sniper {
+  inset: 0;
+  left: 0;
+  top: 0;
+  width: 1280px;
+  height: 720px;
+  transform: none;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(
+    90deg,
+    #000 0 280px,
+    transparent 280px 1000px,
+    #000 1000px
+  );
+  box-shadow: none;
+}
+#hud #ads-reticle.sniper::before {
+  display: none;
+}
+#hud #ads-reticle.sniper::after {
+  content: "";
+  position: absolute;
+  inset: 0 280px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 359px,
+      #020509cc 359px 361px,
+      transparent 361px
+    ),
+    linear-gradient(transparent 359px, #020509cc 359px 361px, transparent 361px);
+  box-shadow: none;
+  border: 0;
+}
+#hud #ads-reticle.sniper .scope-glass {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  #menu.unity-menu button {
+    transition: none;
+  }
+}

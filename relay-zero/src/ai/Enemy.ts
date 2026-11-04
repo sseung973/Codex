@@ -1,5 +1,6 @@
 import { gameTheme } from "../visual/GameTheme";
 import { RobotShutdown } from "./RobotShutdown";
+import { softenActor } from "../visual/SoftMesh";
 import {
   Scene,
   MeshBuilder,
@@ -389,6 +390,7 @@ export class Enemy extends Health {
       );
     }
     this.batchParts();
+    for (const mesh of this.parts) softenActor(mesh, 0.045, level.shadows);
     this.shutdown = new RobotShutdown(this.root, this.parts);
     this.think = Math.random() * 0.15;
   }
@@ -562,6 +564,9 @@ export class Enemy extends Health {
       this.shutdown.update(dt);
       return;
     }
+    this.body.moveWithCollisions(new Vector3(0, -4 * dt, 0));
+    this.root.position.copyFrom(this.body.position).y -= 0.9;
+    this.root.position.y = Math.max(0, this.root.position.y);
     const alert = this.state === "Chase" || this.state === "Attack";
     const glow =
       this.attackReady && this.attackCue > 0
@@ -701,7 +706,9 @@ export class Enemy extends Health {
     }
     while (
       this.path.length &&
-      Vector3.DistanceSquared(this.position, this.path[0]) < 0.5
+      (this.position.x - this.path[0].x) ** 2 +
+        (this.position.z - this.path[0].z) ** 2 <
+        0.5
     )
       this.path.shift();
     const waypoint = this.path[0];
@@ -722,7 +729,7 @@ export class Enemy extends Health {
       (this.state === "Patrol" ? 0.55 : 1) *
       (this.stagger > 0 ? 0.2 : 1);
     this.body.moveWithCollisions(
-      new Vector3(direction.x * speed * dt, -4 * dt, direction.z * speed * dt),
+      new Vector3(direction.x * speed * dt, 0, direction.z * speed * dt),
     );
     this.root.position.copyFrom(this.body.position).y -= 0.9;
     this.root.position.y = Math.max(0, this.root.position.y);

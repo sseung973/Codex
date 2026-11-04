@@ -138,6 +138,10 @@ export class Weapon {
     this.flash.parent = this.muzzle;
   }
   update(dt: number): void {
+    // Unity renders the gun with a separate fixed 90-degree camera. Compensating
+    // x/y projection reproduces that framing without a second browser render pass.
+    const framing = Math.tan(this.player.camera.fov / 2);
+    this.root.scaling.set(framing, framing, 1);
     if (this.swingTime > 0) {
       this.swingTime = Math.max(0, this.swingTime - dt);
       if (this.swingPending && this.swingTime <= 0.3) {
@@ -392,6 +396,7 @@ export class Weapon {
     }
   }
   equipPrimary(data: WeaponData): void {
+    this.mag.reloadRemaining = 0;
     if (this.primaryOwned)
       this.inventory.set(this.magazines[0].data.id, this.magazines[0]);
     this.magazines[0] =
@@ -404,6 +409,7 @@ export class Weapon {
     this.switchTo(0);
   }
   reset(): void {
+    this.root.scaling.setAll(1);
     for (const m of this.magazines) m.reset();
     this.slot = 0;
     this.models.select(0);

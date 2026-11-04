@@ -3,6 +3,7 @@ import { gameTheme, surface } from "../visual/GameTheme";
 import { buildEnvironmentDetails } from "../visual/EnvironmentDetails";
 import { maps, MapId } from "./MapData";
 import { buildAdditionalMap } from "./AdditionalMaps";
+import { softenMesh } from "../visual/SoftMesh";
 import {
   Scene,
   MeshBuilder,
@@ -354,6 +355,7 @@ export class Level {
       batch.isPickable = batch.checkCollisions = false;
       batch.receiveShadows = true;
       batch.metadata = { renderBatch: true, visualOnly: true };
+      softenMesh(batch, 0.06);
       batch.freezeWorldMatrix();
       if (casts) this.shadows.addShadowCaster(batch);
       for (const m of meshes) {
@@ -420,23 +422,39 @@ export class Level {
     ground = false,
     yaw = 0,
   ): void {
+    const aspect = Math.max(0.1, w / h);
+    const width = Math.min(2048, Math.max(256, Math.round(384 * aspect)));
+    const height = Math.max(64, Math.round(width / aspect));
     const tex = new DynamicTexture(
       "sign " + text,
-      { width: 1024, height: 256 },
+      { width, height },
       this.scene,
       false,
     );
-    const ctx = tex.getContext();
-    ctx.clearRect(0, 0, 1024, 256);
-    tex.drawText(
-      text,
-      null,
-      170,
-      "bold 104px sans-serif",
-      color,
-      "transparent",
-      true,
+    const ctx = tex.getContext() as CanvasRenderingContext2D;
+    ctx.clearRect(0, 0, width, height);
+    ctx.font = '128px "Relay Korean", sans-serif';
+    const measure = ctx.measureText(text) as TextMetrics;
+    const lineHeight =
+      measure.actualBoundingBoxAscent + measure.actualBoundingBoxDescent || 128;
+    const fit = Math.min(
+      (width * 0.9) / Math.max(1, measure.width),
+      (height * 0.65) / lineHeight,
     );
+    ctx.font = `${128 * fit}px "Relay Korean", sans-serif`;
+    ctx.fillStyle = color;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    const fitted = ctx.measureText(text) as TextMetrics;
+    ctx.fillText(
+      text,
+      width / 2,
+      height / 2 +
+        ((fitted.actualBoundingBoxAscent || 0) -
+          (fitted.actualBoundingBoxDescent || 0)) /
+          2,
+    );
+    tex.update();
     tex.hasAlpha = true;
     const mat = new StandardMaterial("sign", this.scene);
     mat.diffuseTexture = tex;

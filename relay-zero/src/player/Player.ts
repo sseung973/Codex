@@ -83,7 +83,7 @@ export class Player extends Health {
   }
   look(ads: boolean): void {
     const s = 0.0016 * this.settings.sensitivity * (ads ? 0.63 : 1);
-    this.yaw += this.input.dx * s;
+    this.yaw = (this.yaw + this.input.dx * s) % (Math.PI * 2);
     this.pitch = Math.max(
       -1.54,
       Math.min(1.54, this.pitch + this.input.dy * s),

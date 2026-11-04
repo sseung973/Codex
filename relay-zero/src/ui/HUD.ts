@@ -1,4 +1,5 @@
 import { combatMarkup } from "./CombatMarkup";
+import { unityMenu } from "./UnityMenu";
 import { TacticalMap, type MapState } from "./TacticalMap";
 import type { Level } from "../world/Level";
 import { DamageFeedback } from "./DamageFeedback";
@@ -61,20 +62,11 @@ export class HUD {
   constructor(public settings: Settings) {
     this.root.innerHTML = `
  <div class="vignette"></div><header class="topbar"><a class="wordmark" href="#" aria-label="Relay Zero home"><span class="brand-symbol">R/</span> RELAY ZERO<span class="edition">ARENA</span></a><div class="top-right"><span id="sector-tag" class="sector-tag">SECTOR 07</span><button id="fullscreen" class="icon-button" aria-label="Toggle fullscreen">⛶</button><button id="sound" class="icon-button" aria-label="Toggle sound">♪</button></div></header>
- <main id="menu" class="menu"><div class="menu-copy"><div class="eyebrow"><span></span> COMBAT SIMULATION / VOL. 03</div><h1>RELAY <em>ZERO</em><span class="title-period">.</span></h1><p class="tagline">네 방식으로, 전장을 돌파해.</p><div class="menu-actions"><div class="section-label"><span>01 / SELECT OPERATION</span><b>플레이 방식</b></div><div class="mode-grid" role="group" aria-label="플레이 방식"><button class="mode-card selected" data-mode="solo" aria-pressed="true"><span class="mode-icon">⌖</span><b>싱글 작전</b><small>5웨이브 / 목표 수행</small></button><button class="mode-card" data-mode="duel" aria-pressed="false"><span class="mode-icon">×</span><b>친구 1대1</b><small>개인전 / 5킬 선승</small></button><button class="mode-card" data-mode="coop" aria-pressed="false"><span class="mode-icon">＋</span><b>2인 협동</b><small>생존전 / 친구 소생</small></button></div><div class="section-label"><span>02 / SELECT SECTOR</span><label for="map-choice">전장 선택</label></div><div class="map-grid" role="group" aria-label="전장 선택">${Object.entries(
-   maps,
- )
-   .map(
-     ([id, m]) =>
-       `<button class="map-card map-${id}" data-map="${id}" aria-pressed="${id === this.selectedMap}"><span class="map-art" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="map-card-copy"><small>SECTOR ${m.sector}</small><b>${m.name}</b></span></button>`,
-   )
-   .join(
-     "",
-   )}</div><select id="map-choice" class="difficulty-select" aria-label="전장 선택" hidden><option value="foundry">주조 공장</option><option value="cargo">화물 터미널</option><option value="nexus">넥서스 연구소</option></select><div class="map-summary"><b id="map-title">THE FOUNDRY</b><span id="map-detail"></span></div><div id="solo-options"><div><label class="difficulty-label" for="difficulty">난이도</label><select id="difficulty" class="difficulty-select"><option value="easy">쉬움</option><option value="normal">보통</option><option value="hard">어려움</option><option value="nightmare">악몽</option></select></div><div><label for="starter-pistol" class="difficulty-label">시작 피스톨</label><select id="starter-pistol" class="difficulty-select"></select></div><p id="difficulty-detail" class="difficulty-detail"></p><p id="personal-best" class="difficulty-detail"></p></div><p id="mode-detail" hidden class="difficulty-detail"></p><button id="play" class="primary">작전 시작 <span>↗</span></button><div class="menu-utilities"><button id="practice" class="secondary">사격 연습장 <span>⌖</span></button><button id="settings" class="secondary">설정</button><button id="controls" class="secondary">조작법</button></div></div><p class="desktop-note">PC BROWSER · KEYBOARD + MOUSE · FREE TO PLAY</p></div><aside class="arena-caption"><span class="caption-line"></span><div>ACTIVE SECTOR <b id="map-caption">07 / FOUNDRY</b></div><span class="coordinates">EXPLORE. ADAPT. STAY CONNECTED.</span><span id="mission-number" class="mission-number" hidden>07</span></aside></main>
+ ${unityMenu(this.selectedMap)}
  <section id="overlay" class="overlay" hidden><div class="dialog"><p class="eyebrow" id="overlay-label">SESSION PAUSED</p><h2 id="overlay-title">Take a breath.</h2><p id="overlay-detail">Your run is right where you left it.</p><p id="run-difficulty"></p><div id="results"></div><div id="shop-items" hidden></div><button id="endless" class="primary" hidden>무한 웨이브 도전 <span>∞</span></button><button id="open-shop" class="secondary">B · 무기 상점 (웨이브 사이)</button><button id="resume" class="primary">게임으로 돌아가기 <span>↗</span></button><button id="restart" class="secondary">다시 시작</button><button id="exit" class="secondary">메인 화면으로 나가기</button><button id="pause-settings" class="text-button">SETTINGS</button></div></section>
- <section id="settings-panel" class="overlay" hidden><div class="dialog settings-dialog"><div class="panel-heading"><h2>Settings</h2><button id="close-settings" class="icon-button" aria-label="Close settings">✕</button></div><label for="sensitivity">Mouse sensitivity <output id="sensitivity-out"></output><input id="sensitivity" type="range" min="0.15" max="3" step="0.05"></label><label for="masterVolume">Master volume <output id="masterVolume-out"></output><input id="masterVolume" type="range" min="0" max="1" step="0.05"></label><label for="sfxVolume">Effects volume <output id="sfxVolume-out"></output><input id="sfxVolume" type="range" min="0" max="1" step="0.05"></label><label for="fov">Field of view <output id="fov-out"></output><input id="fov" type="range" min="70" max="110" step="1"></label><label for="crosshairSize">Crosshair size <output id="crosshairSize-out"></output><input id="crosshairSize" type="range" min="0.5" max="2" step="0.1"></label><label class="inline">Graphics quality<select id="quality"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></label><label class="inline">자동 성능 조절<input id="autoGraphics" type="checkbox"></label><p id="graphics-detail" class="settings-note">해상도를 유지하면서 그림자·조명 효과를 조절해 끊김을 줄여줘.</p><label class="inline">Head bob<input id="headBob" type="checkbox"></label><p class="settings-note">Saved automatically on this device.</p></div></section>
- <section id="controls-panel" class="overlay" hidden><div class="dialog"><div class="panel-heading"><h2>Controls</h2><button id="close-controls" class="icon-button" aria-label="Close controls">✕</button></div><dl class="controls-list"><dt>Move</dt><dd>W A S D</dd><dt>Look</dt><dd>MOUSE</dd><dt>Fire / Aim</dt><dd>LMB / RMB</dd><dt>Sprint / Jump</dt><dd>SHIFT / SPACE</dd><dt>대시</dt><dd>ALT · 쿨타임 3.5초</dd><dt>EMP 수류탄</dt><dd>G · 로봇 정지 / B에서 보충</dd><dt>Crouch</dt><dd>CTRL / C</dd><dt>Reload</dt><dd>R</dd><dt>Switch weapon</dt><dd>1 / 2 / 3 / WHEEL</dd><dt>무기 상점</dt><dd>B · 웨이브 사이</dd><dt>장치 작동</dt><dd>E 길게 누르기</dd><dt>Pause</dt><dd>ESC</dd></dl><p class="settings-note">경량 돌격형: 빠른 접근 · 방패 방어형: 방패 파괴 또는 측면 공격 · 수리팩 지원형: 주변 적 수리 · 저격형: 레이저를 보고 이동 · 자폭형: 경고 원 밖으로 회피.</p><p class="settings-note">게임 시작을 누르면 마우스가 게임에 고정돼.<br>ESC를 누르면 일시정지·나가기 메뉴가 열려.</p></div></section>
- ${combatMarkup(sightMarkup())}<pre id="debug" hidden></pre><div id="error" role="status" hidden></div><footer id="menu-footer"><span>RELAY ZERO <b>03.2</b></span><span>STAY MOVING. MAKE EVERY SHOT COUNT.</span><span id="graphics-status">WEBGL / READY</span></footer>`;
+ <section id="settings-panel" class="overlay" hidden><div class="dialog settings-dialog"><div class="panel-heading"><h2>전투 환경 설정</h2><button id="close-settings" class="icon-button" aria-label="Close settings">✕</button></div><label for="sensitivity">마우스 감도 <output id="sensitivity-out"></output><input id="sensitivity" type="range" min="0.15" max="3" step="0.05"></label><label for="masterVolume">전체 음량 <output id="masterVolume-out"></output><input id="masterVolume" type="range" min="0" max="1" step="0.05"></label><label for="sfxVolume">효과음 음량 <output id="sfxVolume-out"></output><input id="sfxVolume" type="range" min="0" max="1" step="0.05"></label><label for="fov">시야각 <output id="fov-out"></output><input id="fov" type="range" min="70" max="110" step="1"></label><label for="crosshairSize">크로스헤어 크기 <output id="crosshairSize-out"></output><input id="crosshairSize" type="range" min="0.5" max="2" step="0.1"></label><label class="inline">그래픽 품질<select id="quality"><option value="low">낮음</option><option value="medium">중간</option><option value="high">높음</option></select></label><label class="inline">자동 성능 조절<input id="autoGraphics" type="checkbox"></label><p id="graphics-detail" class="settings-note">해상도를 유지하면서 그림자·조명 효과를 조절해 끊김을 줄여줘.</p><label class="inline">머리 흔들림<input id="headBob" type="checkbox"></label><p class="settings-note">설정은 현재 브라우저에 자동 저장돼.</p></div></section>
+ <section id="controls-panel" class="overlay" hidden><div class="dialog"><div class="panel-heading"><h2>조작법</h2><button id="close-controls" class="icon-button" aria-label="Close controls">✕</button></div><dl class="controls-list"><dt>Move</dt><dd>W A S D</dd><dt>Look</dt><dd>MOUSE</dd><dt>Fire / Aim</dt><dd>LMB / RMB</dd><dt>Sprint / Jump</dt><dd>SHIFT / SPACE</dd><dt>대시</dt><dd>ALT · 쿨타임 3.5초</dd><dt>EMP 수류탄</dt><dd>G · 로봇 정지 / B에서 보충</dd><dt>Crouch</dt><dd>CTRL / C</dd><dt>Reload</dt><dd>R</dd><dt>Switch weapon</dt><dd>1 / 2 / 3 / WHEEL</dd><dt>무기 상점</dt><dd>B · 웨이브 사이</dd><dt>장치 작동</dt><dd>E 길게 누르기</dd><dt>Pause</dt><dd>ESC</dd></dl><p class="settings-note">경량 돌격형: 빠른 접근 · 방패 방어형: 방패 파괴 또는 측면 공격 · 수리팩 지원형: 주변 적 수리 · 저격형: 레이저를 보고 이동 · 자폭형: 경고 원 밖으로 회피.</p><p class="settings-note">게임 시작을 누르면 마우스가 게임에 고정돼.<br>ESC를 누르면 일시정지·나가기 메뉴가 열려.</p></div></section>
+ ${combatMarkup(sightMarkup())}<pre id="debug" hidden></pre><div id="error" role="status" hidden></div><footer id="menu-footer"><span>RELAY ZERO <b>03.3</b></span><span>STAY MOVING. MAKE EVERY SHOT COUNT.</span><span id="graphics-status">WEBGL / READY</span></footer>`;
     this.tacticalMap = new TacticalMap(this.root);
     this.waveBars = [
       ...this.root.querySelectorAll<HTMLElement>(".wave-bars i"),
@@ -88,6 +80,7 @@ export class HUD {
     }
     starter.onchange = () => {
       this.selectedPistol = starter.value;
+      this.syncUnityChoices();
     };
     this.el("endless").onclick = () => this.onEndless();
     this.el("open-shop").onclick = () => this.onShop();
@@ -101,6 +94,7 @@ export class HUD {
       this.set("sector-tag", `SECTOR ${map.sector}`);
       this.set("mission-number", map.sector);
       this.root.dataset.map = this.selectedMap;
+      this.syncUnityChoices();
       for (const button of this.root.querySelectorAll<HTMLElement>(
         "[data-map]",
       )) {
@@ -154,7 +148,33 @@ export class HUD {
         difficulties[this.selectedDifficulty].description;
       saveDifficulty(this.selectedDifficulty);
       this.refreshRecord();
+      this.syncUnityChoices();
     };
+    const scale = () =>
+      this.root.style.setProperty(
+        "--unity-ui-scale",
+        String(Math.min(window.innerWidth / 1280, window.innerHeight / 720)),
+      );
+    scale();
+    window.addEventListener("resize", scale);
+    for (const button of this.root.querySelectorAll<HTMLButtonElement>(
+      "[data-difficulty]",
+    ))
+      button.onclick = () => {
+        difficultySelect.value = button.dataset.difficulty!;
+        difficultySelect.dispatchEvent(new Event("change"));
+        this.syncUnityChoices();
+      };
+    for (const button of this.root.querySelectorAll<HTMLButtonElement>(
+      "[data-pistol]",
+    ))
+      button.onclick = () => {
+        starter.value = button.dataset.pistol!;
+        starter.dispatchEvent(new Event("change"));
+      };
+    this.el("unity-duel").onclick = () => this.onOnline("duel");
+    this.el("unity-coop").onclick = () => this.onOnline("coop");
+    this.syncUnityChoices();
     this.el("play").onclick = () =>
       this.selectedMode === "solo"
         ? this.onPlay()
@@ -216,6 +236,21 @@ export class HUD {
     };
     this.syncSettings();
     this.refreshRecord();
+  }
+  private syncUnityChoices(): void {
+    for (const button of this.root.querySelectorAll<HTMLElement>(
+      "[data-difficulty], [data-pistol]",
+    )) {
+      const selected = button.dataset.difficulty
+        ? button.dataset.difficulty === this.selectedDifficulty
+        : button.dataset.pistol === this.selectedPistol;
+      button.classList.toggle("selected", selected);
+      button.setAttribute("aria-pressed", String(selected));
+    }
+    this.set(
+      "unity-selection",
+      `${maps[this.selectedMap].name} / ${difficulties[this.selectedDifficulty].label} / ${this.selectedPistol.toUpperCase()}`,
+    );
   }
   shop(
     wallet: Wallet,
@@ -460,9 +495,7 @@ export class HUD {
       "interact-status",
       state.revive ? `${Math.floor((state.revive / 2) * 100)}%` : "",
     );
-    const title = state.online
-      ? "E · 쓰러진 친구 소생"
-      : "E · 목표 / 전장 장치";
+    const title = state.online ? "E · 쓰러진 친구 소생" : "E · 목표 장치 작동";
     if (this.el("ability-interact").title !== title)
       this.el("ability-interact").title = title;
     this.el("ability-melee").classList.toggle("equipped", state.melee);
@@ -500,7 +533,7 @@ export class HUD {
     this.el("controls-panel").hidden = true;
     if (screen === "pause") {
       this.set("overlay-label", "SESSION PAUSED");
-      this.set("overlay-title", "Take a breath.");
+      this.set("overlay-title", "전투를 이어갈까?");
       this.set("overlay-detail", "Your run is right where you left it.");
       this.el("results").textContent = "";
     }

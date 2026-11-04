@@ -7,11 +7,39 @@ import {
   Mesh,
 } from "@babylonjs/core";
 import { Health, DamageInfo } from "../combat/Damage";
+import { Enemy, enemyConfig } from "./Enemy";
+import type { Level } from "../world/Level";
+import type { Navigation } from "./Navigation";
+import type { Difficulty } from "../core/Difficulty";
+import { softenActor } from "../visual/SoftMesh";
 export class Target extends Health {
   meshes: Mesh[] = [];
   respawn = 0;
-  constructor(scene: Scene, pos: Vector3) {
+  private robot?: Enemy;
+  constructor(
+    scene: Scene,
+    pos: Vector3,
+    level?: Level,
+    navigation?: Navigation,
+    difficulty?: Difficulty,
+  ) {
     super("training-target", 100);
+    if (level && navigation) {
+      const config = enemyConfig(1, false, difficulty, "assault");
+      this.health = this.maxHealth = config.health;
+      this.robot = new Enemy(
+        scene,
+        level,
+        navigation,
+        config,
+        pos,
+        "training-target",
+      );
+      this.meshes = this.robot.parts;
+      for (const mesh of this.meshes)
+        mesh.metadata = { ...mesh.metadata, entity: this };
+      return;
+    }
     const mat = new StandardMaterial("target orange", scene);
     mat.diffuseColor = Color3.FromHexString("#eaa66b");
     for (const [name, y, w, h] of [
@@ -27,13 +55,14 @@ export class Target extends Health {
       m.material = mat;
       m.metadata = { entity: this, head: name === "head" };
       this.meshes.push(m);
+      softenActor(m, 0.045);
     }
   }
   receiveDamage(info: DamageInfo): boolean {
     const dead = super.receiveDamage(info);
     if (dead) {
       for (const m of this.meshes) m.setEnabled(false);
-      this.respawn = 3;
+      this.respawn = 2.5;
     }
     return dead;
   }
@@ -47,6 +76,10 @@ export class Target extends Health {
     }
   }
   dispose(): void {
+    if (this.robot) {
+      this.robot.dispose();
+      return;
+    }
     this.meshes[0]?.material?.dispose();
     for (const m of this.meshes) m.dispose();
   }

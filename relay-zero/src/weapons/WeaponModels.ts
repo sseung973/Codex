@@ -1,4 +1,5 @@
 import { gameTheme } from "../visual/GameTheme";
+import { softenMesh } from "../visual/SoftMesh";
 import type { WeaponData } from "./WeaponData";
 import {
   Scene,
@@ -298,6 +299,8 @@ export class WeaponModels {
         batch.isPickable = false;
         batch.renderingGroupId = 1;
       }
+      for (const mesh of root.getChildMeshes())
+        if (mesh instanceof Mesh) softenMesh(mesh, 0.018);
       this.views.push({ root, muzzle });
       root.setEnabled(slot === 0);
     }

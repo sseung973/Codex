@@ -7,6 +7,7 @@ import {
   Vector3,
 } from "@babylonjs/core";
 import { Enemy, enemyConfig } from "./Enemy";
+import { softenActor } from "../visual/SoftMesh";
 import type { Difficulty } from "../core/Difficulty";
 import type { DamageInfo } from "../combat/Damage";
 import type { Level } from "../world/Level";
@@ -65,6 +66,7 @@ export class Commander extends Enemy {
       mesh.material = material;
       mesh.metadata = { entity: this, head: weakpoint, weakpoint };
       this.parts.push(mesh);
+      softenActor(mesh, 0.045, level.shadows);
       return mesh;
     };
     for (const side of [-1, 1]) {

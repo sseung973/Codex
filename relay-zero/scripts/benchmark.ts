@@ -6,8 +6,6 @@ import { Player } from "../src/player/Player";
 import { Weapon } from "../src/weapons/Weapon";
 import { Effects } from "../src/effects/Effects";
 import { defaults } from "../src/core/Settings";
-import { ArenaDevices } from "../src/world/ArenaDevices";
-import { objectivePoints } from "../src/world/ObjectiveMarker";
 class GeometryLevel extends Level {
   override sign(): void {}
 }
@@ -26,7 +24,6 @@ const engine = new NullEngine({
 const scene = new Scene(engine),
   level = new GeometryLevel(scene),
   nav = new Navigation(level);
-new ArenaDevices(level, nav, objectivePoints(nav, level));
 const input: any = {
   dx: 0,
   dy: 0,
