@@ -79,26 +79,62 @@ S.practice={ids:shuffle(pool).slice(0,count).map(x=>x.id),idx:0,answers:{},check
 nav("practice");
 }
 function question(session,mode){
-clearInterval(timer); const q=qid(session.ids[session.idx]),ans=session.answers[q.id],checked=Boolean(session.checked&&session.checked[q.id]),ex=mode==="exam";
+clearInterval(timer);
+const q=qid(session.ids[session.idx]),ans=session.answers[q.id],checked=Boolean(session.checked&&session.checked[q.id]),ex=mode==="exam";
 const title=ex?'<div class="exam-head"><div><div class="tiny muted">45분 실전 모의고사</div><div id="timer" class="timer">45:00</div></div><span class="tiny muted">총 20점 · 25문제</span><button data-act="finish-exam" class="btn danger">시험 제출</button></div>':header("TRAINING","문제 풀이",session.fromWrong?"오답 다시 풀기":"정답 확인 후 해설을 읽고 넘어가 봐.");
+const labels={mc:"객관식",short:"단답형",blank:"빈칸 채우기",ox:"OX 퀴즈",match:"개념 연결하기",order:"순서 배열하기"};
 let opts="";
-if(q.type==="mc")opts='<div class="choice-grid">'+q.choices.map((c,i)=>'<button data-pick="'+i+'" '+(checked?"disabled":"")+' class="choice '+(ans!==undefined&&Number(ans)===i?"selected ":"")+(checked&&i===q.correct?"correct ":"")+(checked&&Number(ans)===i&&i!==q.correct?"wrong ":"")+'"><span class="no">'+(i+1)+'</span><span>'+esc(c)+'</span></button>').join("")+'</div>';
-else opts='<input id="short" class="answer" placeholder="답을 입력해 줘" value="'+esc(ans||"")+'" '+(checked?"disabled":"")+'>';
-const explanation=(!ex&&checked)?'<div class="explain '+(isCorrect(q,ans)?"good":"bad")+'"><strong>'+(isCorrect(q,ans)?"✓ 정답!":"✗ 오답")+'</strong><p>정답: '+(q.type==="mc"?esc(q.choices[q.correct]):esc(q.accept[0]))+'</p><p>'+esc(q.why)+'</p></div>':"";
-const actions='<div class="question-actions"><button data-act="previous" class="btn line" '+(session.idx===0?"disabled":"")+'>← 이전</button><button data-act="'+(ex?"next":checked?"next":"check")+'" class="btn primary" '+(!ex&&!checked&&ans===undefined?"disabled":"")+'>'+(ex?"다음 문제":checked?(session.idx===session.ids.length-1?"결과 보기":"다음 문제"):"정답 확인")+' →</button></div>';
-const pager=ex?'<div class="exam-pager">'+session.ids.map((id,i)=>'<button data-jump="'+i+'" class="'+(i===session.idx?"now ":"")+(session.answers[id]!==undefined?"answered":"")+'">'+(i+1)+'</button>').join("")+'</div>':"";
-root.innerHTML=title+'<div class="quiz-top" style="max-width:800px;margin:0 auto 12px"><span class="badge">'+uname(q.unit)+' · 교재 '+q.pages+'쪽</span><strong class="tiny muted">'+(session.idx+1)+' / '+session.ids.length+'</strong></div><div class="question-card"><div class="question-meta">'+(q.type==="mc"?"객관식":"단답형")+'</div><h2>'+esc(q.q)+'</h2>'+opts+explanation+actions+'</div>'+pager;
+if(q.type==="mc"||q.type==="ox"){
+opts='<div class="choice-grid '+(q.type==="ox"?"ox-grid":"")+'">'+q.choices.map((c,i)=>'<button data-pick="'+i+'" '+(checked?"disabled":"")+' class="choice '+(ans!==undefined&&Number(ans)===i?"selected ":"")+(checked&&i===q.correct?"correct ":"")+(checked&&Number(ans)===i&&i!==q.correct?"wrong ":"")+'"><span class="no">'+(q.type==="ox"?c:i+1)+'</span><span>'+esc(c)+'</span></button>').join("")+'</div>';
+}else if(q.type==="short"||q.type==="blank"){
+opts='<input id="textAnswer" class="answer" autocomplete="off" placeholder="'+(q.type==="blank"?"빈칸에 들어갈 말만 입력해 줘":"답을 입력해 줘")+'" value="'+esc(ans||"")+'" '+(checked?"disabled":"")+'>';
+}else if(q.type==="match"){
+const picked=Array.isArray(ans)?ans:[];
+opts='<div class="match-grid"><p class="muted tiny">왼쪽 개념과 알맞은 설명을 각각 연결해 줘.</p>'+q.pairs.map((t,i)=>'<div class="match-row"><label for="pair'+i+'">'+esc(t)+'</label><select class="select match-select" data-match="'+i+'" id="pair'+i+'" '+(checked?"disabled":"")+'><option value="">정답을 선택해 줘</option>'+q.choices.map((d,j)=>'<option value="'+j+'" '+(picked[i]===j?"selected":"")+'>'+esc(d)+'</option>').join("")+'</select></div>').join("")+'</div>';
+}else if(q.type==="order"){
+const picked=Array.isArray(ans)?ans:[];
+opts='<div class="order-wrap"><p class="tiny muted">아래 조각을 순서대로 눌러 배열해 줘.</p><div class="order-selected">'+(picked.length?picked.map((idx,i)=>'<span class="order-chip">'+(i+1)+'. '+esc(q.choices[idx])+'</span>').join(""):'<span class="tiny muted">아직 선택한 항목이 없어.</span>')+'</div><div class="order-choices">'+q.choices.map((t,i)=>'<button data-order="'+i+'" class="choice" '+(picked.includes(i)||checked?"disabled":"")+'><span class="no">'+(i+1)+'</span>'+esc(t)+'</button>').join("")+'</div><button data-act="undo-order" class="checkbtn" '+(!picked.length||checked?"disabled":"")+'>↶ 마지막 선택 취소</button></div>';
+}
+const explanation=(!ex&&checked)?'<div class="explain '+(isCorrect(q,ans)?"good":"bad")+'"><strong>'+(isCorrect(q,ans)?"✓ 정답!":"✗ 오답")+'</strong><p><b>정답:</b> '+esc(correctString(q))+'</p><p>'+esc(q.why)+'</p></div>':"";
+const actions='<div class="question-actions"><button data-act="previous" class="btn line" '+(session.idx===0?"disabled":"")+'>← 이전</button><button data-act="'+(ex?"next":checked?"next":"check")+'" class="btn primary" '+(!ex&&!checked&&!hasAnswer(q,ans)?"disabled":"")+'>'+(ex?(session.idx===session.ids.length-1?"답안 검토":"다음 문제"):checked?(session.idx===session.ids.length-1?"결과 보기":"다음 문제"):"정답 확인")+' →</button></div>';
+const pager=ex?'<div class="exam-pager">'+session.ids.map((id,i)=>'<button data-jump="'+i+'" class="'+(i===session.idx?"now ":"")+(hasAnswer(qid(id),session.answers[id])?"answered":"")+'">'+(i+1)+'</button>').join("")+'</div>':"";
+root.innerHTML=title+'<div class="quiz-top" style="max-width:800px;margin:0 auto 12px"><span class="badge">'+uname(q.unit)+' · 교재 '+q.pages+'쪽</span><strong class="tiny muted">'+(session.idx+1)+' / '+session.ids.length+'</strong></div><div class="question-card"><div class="question-meta">'+labels[q.type]+'</div><h2>'+esc(q.q)+'</h2>'+opts+explanation+actions+'</div>'+pager;
 if(ex){updateTimer();timer=setInterval(updateTimer,1000)}
 }
 function updateTimer(){const ex=S.exam;if(!ex||ex.finished)return;const seconds=Math.max(0,Math.ceil((ex.deadline-Date.now())/1000)),e=$("#timer");
 if(e){e.textContent=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");e.classList.toggle("danger",seconds<300)}
 if(seconds===0)finishExam(true)}
-function choose(n){const s=S.page==="exam"?S.exam:S.practice;const q=qid(s.ids[s.idx]);if(s.checked&&s.checked[q.id])return;s.answers[q.id]=n;if(S.page==="exam")save();question(s,S.page)}
-function check(){const s=S.practice;if(!s)return;const q=qid(s.ids[s.idx]);if(q.type==="short"){const value=$("#short").value.trim();if(!value){notify("답을 입력해 줘.");return}s.answers[q.id]=value}
-if(s.answers[q.id]===undefined)return;s.checked[q.id]=true;if(!isCorrect(q,s.answers[q.id]))S.wrong.add(q.id);save();question(s,"practice")}
-function next(){const s=S.page==="exam"?S.exam:S.practice;if(!s)return;if(S.page==="practice"&&!s.checked[s.ids[s.idx]])return;
-if(s.idx===s.ids.length-1){if(S.page==="practice")finishPractice();else notify("마지막 문제야. 제출 버튼을 눌러 줘.");return}
-s.idx++;if(S.page==="exam")save();question(s,S.page)}
+function choose(n){
+const session=S.page==="exam"?S.exam:S.practice;if(!session)return;
+const q=qid(session.ids[session.idx]);
+if(session.checked&&session.checked[q.id])return;
+session.answers[q.id]=n;
+if(S.page==="exam")save();
+question(session,S.page);
+}
+function check(){
+const session=S.practice;if(!session)return;
+const q=qid(session.ids[session.idx]);
+if(q.type==="short"||q.type==="blank"){
+const value=$("#textAnswer")?.value.trim();
+if(!value){notify("답을 입력해 줘.");return}
+session.answers[q.id]=value;
+}
+if(!hasAnswer(q,session.answers[q.id])){notify("답을 모두 완성해 줘.");return}
+session.checked[q.id]=true;
+if(!isCorrect(q,session.answers[q.id]))S.wrong.add(q.id);
+save();question(session,"practice");
+}
+function next(){
+const session=S.page==="exam"?S.exam:S.practice;if(!session)return;
+if(S.page==="practice"&&!session.checked[session.ids[session.idx]])return;
+if(session.idx===session.ids.length-1){
+if(S.page==="practice")finishPractice();
+else notify("마지막 문제야. 상단의 시험 제출 버튼을 눌러 줘.");
+return;
+}
+session.idx++;if(S.page==="exam")save();question(session,S.page);
+}
 function finishPractice(){const s=S.practice;s.finished=true;const c=s.ids.filter(id=>isCorrect(qid(id),s.answers[id])).length;S.history.unshift({mode:"practice",correct:c,total:s.ids.length,when:Date.now()});save();practice()}
 function exam(){
 if(S.exam){if(S.exam.finished){results(S.exam,"exam");return}if(S.exam.deadline<=Date.now()){finishExam(true);return}question(S.exam,"exam");return}
