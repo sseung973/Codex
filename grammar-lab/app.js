@@ -153,27 +153,57 @@ list.push(shuffle(candidates)[0].id);
 S.exam={ids:shuffle(list),idx:0,answers:{},deadline:Date.now()+2700000,finished:false};save();nav("exam");
 }
 function finishExam(auto){const s=S.exam;if(!s||s.finished)return;s.finished=true;s.auto=auto;const correct=s.ids.filter(id=>isCorrect(qid(id),s.answers[id])).length;s.ids.forEach(id=>{if(!isCorrect(qid(id),s.answers[id]))S.wrong.add(id)});S.history.unshift({mode:"exam",correct,total:s.ids.length,when:Date.now()});save();nav("exam")}
-function results(s,mode){
-const correct=s.ids.filter(id=>isCorrect(qid(id),s.answers[id])).length,total=s.ids.length;
+function results(session,mode){
+const correct=session.ids.filter(id=>isCorrect(qid(id),session.answers[id])).length,total=session.ids.length;
 const score=mode==="exam"?(correct*20/total).toFixed(1):Math.round(correct/total*100);
-root.innerHTML=header("RESULT","결과 및 해설",s.auto?"45분이 지나 자동 제출했어.":"각 문제의 해설을 확인하고 부족한 부분을 복습해.")+
+root.innerHTML=header("RESULT","결과 및 해설",session.auto?"45분이 지나 자동 제출했어.":"각 문제의 해설을 확인하고 부족한 부분을 복습해.")+
 '<div class="panel" style="max-width:830px;margin:auto"><span class="eyebrow">'+(mode==="exam"?"EXAM SCORE":"PRACTICE SCORE")+'</span><div class="resultBig">'+score+'<span> '+(mode==="exam"?"/ 20점":"% 정답률")+'</span></div><p class="muted">정답 '+correct+'개 · 오답/미응답 '+(total-correct)+'개 · 총 '+total+'문제</p><div class="progress-track"><span style="width:'+(correct/total*100)+'%"></span></div><button data-act="reset-'+mode+'" class="btn primary">다시 도전하기</button> <button data-act="wrong" class="btn light">오답 노트</button></div>'+
-'<div class="section-row"><h2>문제별 해설</h2></div>'+s.ids.map((id,i)=>{const q=qid(id),a=s.answers[id],ok=isCorrect(q,a);return '<div class="review"><span class="badge '+(ok?"":"wrong")+'">'+(ok?"정답":"오답")+'</span> <span class="tiny muted">'+(i+1)+'번 · '+uname(q.unit)+' · '+q.pages+'쪽</span><h3>'+esc(q.q)+'</h3><p class="tiny">내 답: '+(a===undefined?"미응답":q.type==="mc"?esc(q.choices[a]):esc(a))+'</p><p class="tiny"><b>정답:</b> '+(q.type==="mc"?esc(q.choices[q.correct]):esc(q.accept[0]))+'</p><div class="muted tiny">'+esc(q.why)+'</div></div>'}).join("");
+'<div class="section-row"><h2>문제별 해설</h2></div>'+session.ids.map((id,i)=>{const q=qid(id),a=session.answers[id],ok=isCorrect(q,a);return '<div class="review"><span class="badge '+(ok?"":"wrong")+'">'+(ok?"정답":"오답")+'</span> <span class="tiny muted">'+(i+1)+'번 · '+uname(q.unit)+' · '+q.pages+'쪽</span><h3>'+esc(q.q)+'</h3><p class="tiny"><b>내 답:</b> '+esc(answerString(q,a))+'</p><p class="tiny"><b>정답:</b> '+esc(correctString(q))+'</p><div class="muted tiny">'+esc(q.why)+'</div></div>'}).join("");
 }
-function wrong(){const items=[...S.wrong].map(qid).filter(Boolean);
+function wrong(){
+const items=[...S.wrong].map(qid).filter(Boolean);
 root.innerHTML=header("REVIEW","오답 노트","틀렸던 문제만 모았어. 다시 풀거나 충분히 이해했다면 제거할 수 있어.")+
 '<div class="section-row"><h2>오답 '+items.length+'개</h2>'+(items.length?'<button data-act="retry" class="btn primary">오답 다시 풀기 →</button>':"")+'</div>'+
-(items.length?items.map(q=>'<div class="review"><span class="badge wrong">'+uname(q.unit)+' · '+q.pages+'쪽</span><h3>'+esc(q.q)+'</h3><p class="tiny"><b>정답:</b> '+(q.type==="mc"?esc(q.choices[q.correct]):esc(q.accept[0]))+'</p><p class="tiny muted">'+esc(q.why)+'</p><button data-remove="'+q.id+'" class="checkbtn">✓ 이해했어 · 오답 제거</button></div>').join(""):'<div class="emptystate"><h3>아직 오답이 없어!</h3><p>틀린 문제는 여기 자동 저장돼.</p><button data-act="practice" class="btn primary">문제 풀이 시작 →</button></div>');
+(items.length?items.map(q=>'<div class="review"><span class="badge wrong">'+uname(q.unit)+' · '+q.pages+'쪽</span><h3>'+esc(q.q)+'</h3><p class="tiny"><b>정답:</b> '+esc(correctString(q))+'</p><p class="tiny muted">'+esc(q.why)+'</p><button data-remove="'+q.id+'" class="checkbtn">✓ 이해했어 · 오답 제거</button></div>').join(""):'<div class="emptystate"><h3>아직 오답이 없어!</h3><p>틀린 문제는 여기 자동 저장돼.</p><button data-act="practice" class="btn primary">문제 풀이 시작 →</button></div>');
 }
 document.addEventListener("click",ev=>{const n=ev.target.closest("[data-nav]");if(n){ev.preventDefault();nav(n.dataset.nav);return}if(ev.target.closest("#menuBtn"))$(".sidebar").classList.toggle("open")});
-root.addEventListener("input",e=>{if(e.target.id==="lessonSearch"){S.search=e.target.value;const len=S.search.length;learn();const inp=$("#lessonSearch");inp.focus();inp.setSelectionRange(len,len)}
-if(e.target.id==="short"){const s=S.page==="exam"?S.exam:S.practice,q=qid(s.ids[s.idx]);if(S.page==="exam"){s.answers[q.id]=e.target.value;save()}else{const btn=root.querySelector('[data-act="check"]');if(btn)btn.disabled=!e.target.value.trim()}}});
-root.addEventListener("keydown",e=>{if(e.target.id==="short"&&e.key==="Enter"){e.preventDefault();if(S.page==="practice")check();else next()}});
-root.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+root.addEventListener("input",e=>{
+if(e.target.id==="lessonSearch"){
+S.search=e.target.value;const len=S.search.length;learn();const inp=$("#lessonSearch");inp.focus();inp.setSelectionRange(len,len);
+}
+if(e.target.id==="textAnswer"){
+const session=S.page==="exam"?S.exam:S.practice;if(!session)return;
+const q=qid(session.ids[session.idx]);
+session.answers[q.id]=e.target.value;if(S.page==="exam")save();
+const b=root.querySelector('[data-act="check"]');if(b)b.disabled=!hasAnswer(q,session.answers[q.id]);
+}
+});
+root.addEventListener("change",e=>{
+if(e.target.dataset.match===undefined)return;
+const session=S.page==="exam"?S.exam:S.practice;if(!session)return;
+const q=qid(session.ids[session.idx]);
+const row=Number(e.target.dataset.match);
+const answers=Array.isArray(session.answers[q.id])?[...session.answers[q.id]]:Array(q.pairs.length).fill(null);
+answers[row]=e.target.value===""?null:Number(e.target.value);
+session.answers[q.id]=answers;if(S.page==="exam")save();
+const b=root.querySelector('[data-act="check"]');if(b)b.disabled=!hasAnswer(q,answers);
+});
+root.addEventListener("keydown",e=>{
+if(e.target.id==="textAnswer"&&e.key==="Enter"){e.preventDefault();if(S.page==="practice")check();else next()}
+});
+root.addEventListener("click",e=>{
+const b=e.target.closest("button");if(!b)return;
 if(b.dataset.filter!==undefined){S.filter=b.dataset.filter;learn();return}
 if(b.dataset.unit!==undefined){S.filter=b.dataset.unit;S.search="";nav("learn");return}
 if(b.dataset.done!==undefined){const id=Number(b.dataset.done),open=b.closest("details")?.open;S.done.has(id)?S.done.delete(id):S.done.add(id);save();learn();const d=$("#lesson-"+id);if(d&&open)d.open=true;return}
 if(b.dataset.pick!==undefined){choose(Number(b.dataset.pick));return}
+if(b.dataset.order!==undefined){
+const session=S.page==="exam"?S.exam:S.practice;if(!session)return;
+const q=qid(session.ids[session.idx]),val=Number(b.dataset.order);
+const answers=Array.isArray(session.answers[q.id])?[...session.answers[q.id]]:[];
+if(answers.includes(val))return;answers.push(val);session.answers[q.id]=answers;
+if(S.page==="exam")save();question(session,S.page);return;
+}
 if(b.dataset.jump!==undefined){S.exam.idx=Number(b.dataset.jump);save();question(S.exam,"exam");return}
 if(b.dataset.remove!==undefined){S.wrong.delete(Number(b.dataset.remove));save();wrong();return}
 const a=b.dataset.act;
@@ -182,12 +212,22 @@ else if(a==="reset-search"){S.search="";learn()}
 else if(a==="start-practice")startPractice(false)
 else if(a==="retry")startPractice(true)
 else if(a==="check")check()
-else if(a==="previous"){const s=S.page==="exam"?S.exam:S.practice;if(s&&s.idx>0){s.idx--;if(S.page==="exam")save();question(s,S.page)}}
+else if(a==="undo-order"){
+const session=S.page==="exam"?S.exam:S.practice;if(!session)return;
+const q=qid(session.ids[session.idx]),answers=Array.isArray(session.answers[q.id])?[...session.answers[q.id]]:[];
+answers.pop();session.answers[q.id]=answers;if(S.page==="exam")save();question(session,S.page);
+}
+else if(a==="previous"){const session=S.page==="exam"?S.exam:S.practice;if(session&&session.idx>0){session.idx--;if(S.page==="exam")save();question(session,S.page)}}
 else if(a==="next")next()
 else if(a==="reset-practice"){S.practice=null;practice()}
 else if(a==="start-exam")startExam()
-else if(a==="finish-exam"){const s=S.exam,empty=s.ids.filter(id=>s.answers[id]===undefined).length;if(empty&&!window.confirm("미응답 "+empty+"개가 있어. 그래도 제출할까?"))return;finishExam(false)}
+else if(a==="finish-exam"){
+const session=S.exam,empty=session.ids.filter(id=>!hasAnswer(qid(id),session.answers[id])).length;
+if(empty&&!window.confirm("미응답 "+empty+"개가 있어. 그래도 제출할까?"))return;
+finishExam(false);
+}
 else if(a==="reset-exam"){S.exam=null;save();exam()}
 });
+
 if(S.exam&&!S.exam.finished&&S.exam.deadline<=Date.now())finishExam(true);else render();
 })();
