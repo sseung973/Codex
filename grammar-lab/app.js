@@ -35,14 +35,37 @@ x.points.map(p=>'<li>'+esc(p)+'</li>').join("")+'</ul>'+x.examples.map(p=>'<div 
 }
 function isCorrect(q,a){
 if(a===undefined||a===null||a==="")return false;
-if(q.type!=="short")return Number(a)===q.correct;
-const normalize=v=>String(v).replace(/[\s,\[\]·]/g,"").normalize("NFC");
-return (q.accept||[]).some(x=>normalize(x)===normalize(a));
+if(q.type==="match"||q.type==="order")return Array.isArray(a)&&a.length===q.correct.length&&q.correct.every((v,i)=>Number(a[i])===v);
+if(q.type==="blank"||q.type==="short"){
+const normalize=v=>String(v).replace(/[\s,\[\]·,，]/g,"").normalize("NFC");
+return(q.accept||[]).some(x=>normalize(x)===normalize(a));
+}
+return Number(a)===q.correct;
+}
+function hasAnswer(q,a){
+if(a===undefined||a===null)return false;
+if(q.type==="blank"||q.type==="short")return String(a).trim().length>0;
+if(q.type==="match")return Array.isArray(a)&&a.length===q.pairs.length&&a.every(x=>Number.isInteger(x));
+if(q.type==="order")return Array.isArray(a)&&a.length===q.choices.length&&new Set(a).size===a.length;
+return a!==""&&Number.isInteger(Number(a));
+}
+function answerString(q,a){
+if(!hasAnswer(q,a))return "미응답";
+if(q.type==="match")return q.pairs.map((t,i)=>t+" → "+q.choices[a[i]]).join(" / ");
+if(q.type==="order")return a.map(i=>q.choices[i]).join(" → ");
+if(q.type==="mc"||q.type==="ox")return q.choices[Number(a)];
+return String(a);
+}
+function correctString(q){
+if(q.type==="match")return q.pairs.map((t,i)=>t+" → "+q.choices[q.correct[i]]).join(" / ");
+if(q.type==="order")return q.correct.map(i=>q.choices[i]).join(" → ");
+if(q.type==="mc"||q.type==="ox")return q.choices[q.correct];
+return(q.accept||[])[0]||"";
 }
 function practice(){
 if(!S.practice){
 root.innerHTML=header("TRAINING ZONE","문제 풀이","문제를 풀고 바로 해설을 확인할 수 있어. 틀린 문제는 자동으로 오답 노트에 쌓여.")+
-'<div class="mode-card"><h2 style="margin-top:0">문제 설정</h2><div class="mode-row"><label>영역</label><select id="pUnit" class="select"><option value="all">전체 영역</option>'+U.map((u,i)=>'<option value="'+i+'">'+u.name+'</option>').join("")+'</select><label>유형</label><select id="pType" class="select"><option value="all">혼합</option><option value="short">단답형만</option><option value="mc">객관식만</option></select><label>문제 수</label><select id="pCount" class="select"><option value="10">10문제</option><option value="20">20문제</option><option value="30">30문제</option><option value="50">50문제</option><option value="all">전체</option></select><button data-act="start-practice" class="btn primary">시작하기 →</button></div><p class="tiny muted">객관식과 단답형 연습이 함께 제공돼. 단답형은 다른 표준 표기를 입력한 경우 해설도 확인해 줘.</p></div><div class="units">'+cards()+'</div>';
+'<div class="mode-card"><h2 style="margin-top:0">문제 설정</h2><div class="mode-row"><label>영역</label><select id="pUnit" class="select"><option value="all">전체 영역</option>'+U.map((u,i)=>'<option value="'+i+'">'+u.name+'</option>').join("")+'</select><label>유형</label><select id="pType" class="select"><option value="all">전체 유형 섞기</option><option value="mc">객관식</option><option value="short">단답형</option><option value="blank">빈칸 채우기</option><option value="ox">OX 퀴즈</option><option value="match">개념 연결하기</option><option value="order">순서 배열하기</option></select><label>문제 수</label><select id="pCount" class="select"><option value="10">10문제</option><option value="20">20문제</option><option value="30">30문제</option><option value="50">50문제</option><option value="all">전체</option></select><button data-act="start-practice" class="btn primary">시작하기 →</button></div><p class="tiny muted">객관식과 단답형 연습이 함께 제공돼. 단답형은 다른 표준 표기를 입력한 경우 해설도 확인해 줘.</p></div><div class="units">'+cards()+'</div>';
 return;
 }
 if(S.practice.finished){results(S.practice,"practice");return}
@@ -79,10 +102,20 @@ s.idx++;if(S.page==="exam")save();question(s,S.page)}
 function finishPractice(){const s=S.practice;s.finished=true;const c=s.ids.filter(id=>isCorrect(qid(id),s.answers[id])).length;S.history.unshift({mode:"practice",correct:c,total:s.ids.length,when:Date.now()});save();practice()}
 function exam(){
 if(S.exam){if(S.exam.finished){results(S.exam,"exam");return}if(S.exam.deadline<=Date.now()){finishExam(true);return}question(S.exam,"exam");return}
-root.innerHTML=header("REAL EXAM","45분 모의고사","5개 영역에서 각각 객관식 3문제와 단답형 2문제를 출제해. 총 25문제 실전 연습이야.")+
-'<div class="panel" style="max-width:740px;margin:auto"><div class="eyebrow">BEFORE YOU START</div><h2 style="font-size:29px">45:00 <span class="muted" style="font-size:15px">/ 25문제</span></h2><p>객관식 15문제와 단답형 10문제가 섞인 자체 모의고사야. 실제 수행평가의 문항 수와 세부 배점은 공개되지 않았으므로 완전히 동일하지는 않아.</p><div class="notice">5개 영역 × 5문제 · 총 20점 · 자동 저장 · 시간 종료 자동 제출 · 새로고침해도 타이머 유지</div><button data-act="start-exam" class="btn primary" style="width:100%">모의고사 시작 →</button></div>';
+root.innerHTML=header("REAL EXAM","45분 모의고사","5개 영역에서 각각 5문제씩, 총 25문제로 다양한 문법 유형을 연습해.")+
+'<div class="panel" style="max-width:740px;margin:auto"><div class="eyebrow">BEFORE YOU START</div><h2 style="font-size:29px">45:00 <span class="muted" style="font-size:15px">/ 25문제</span></h2><p>객관식·단답형·빈칸·OX·연결·순서 배열 유형이 섞인 자체 모의고사야. 실제 수행평가와 문항 수·배점이 동일한 것은 아니야.</p><div class="notice">5개 영역 × 5문제 · 총 20점 · 답안 저장 · 시간 종료 자동 제출 · 새로고침해도 타이머 유지</div><button data-act="start-exam" class="btn primary" style="width:100%">모의고사 시작 →</button></div>';
 }
-function startExam(){let list=[];for(let i=0;i<5;i++){list=list.concat(shuffle(Q.filter(q=>q.unit===i&&q.type==="mc")).slice(0,3).map(x=>x.id));list=list.concat(shuffle(Q.filter(q=>q.unit===i&&q.type==="short")).slice(0,2).map(x=>x.id))}S.exam={ids:shuffle(list),idx:0,answers:{},deadline:Date.now()+2700000,finished:false};save();nav("exam")}
+function startExam(){
+let list=[];
+for(let unit=0;unit<5;unit++){
+for(const type of ["mc","short","blank","ox",unit%2===0?"match":"order"]){
+const candidates=Q.filter(q=>q.unit===unit&&q.type===type);
+if(!candidates.length){notify("해당 유형의 문제가 부족해.");return}
+list.push(shuffle(candidates)[0].id);
+}
+}
+S.exam={ids:shuffle(list),idx:0,answers:{},deadline:Date.now()+2700000,finished:false};save();nav("exam");
+}
 function finishExam(auto){const s=S.exam;if(!s||s.finished)return;s.finished=true;s.auto=auto;const correct=s.ids.filter(id=>isCorrect(qid(id),s.answers[id])).length;s.ids.forEach(id=>{if(!isCorrect(qid(id),s.answers[id]))S.wrong.add(id)});S.history.unshift({mode:"exam",correct,total:s.ids.length,when:Date.now()});save();nav("exam")}
 function results(s,mode){
 const correct=s.ids.filter(id=>isCorrect(qid(id),s.answers[id])).length,total=s.ids.length;
