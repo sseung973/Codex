@@ -34,7 +34,7 @@ x.points.map(p=>'<li>'+esc(p)+'</li>').join("")+'</ul>'+x.examples.map(p=>'<div 
 '<div class="trap"><b>주의:</b> '+esc(x.pitfall)+'</div><div class="lesson-foot"><span class="sourceline">학교 자료 '+esc(x.pages)+'쪽 · <a target="_blank" rel="noopener" href="https://stdict.korean.go.kr/">표준국어대사전 ↗</a></span><button data-done="'+x.id+'" class="checkbtn '+(S.done.has(x.id)?"done":"")+'">'+(S.done.has(x.id)?"✓ 학습 완료":"□ 학습 완료 표시")+'</button></div></div></details>').join(""):'<div class="emptystate">검색 결과가 없어.</div>')+'</div>';
 }
 function isCorrect(q,a){
-if(a===undefined||a===null||a==="")return false;
+if(!hasAnswer(q,a))return false;
 if(q.type==="match"||q.type==="order")return Array.isArray(a)&&a.length===q.correct.length&&q.correct.every((v,i)=>Number(a[i])===v);
 if(q.type==="blank"||q.type==="short"){
 const normalize=v=>String(v).replace(/[\s,\[\]·,，]/g,"").normalize("NFC");
