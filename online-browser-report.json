@@ -1,5 +1,6 @@
 {
-  "base": "http://127.0.0.1:41383",
+  "base": "http://127.0.0.1:36423",
+  "managedChromiumTrustOverride": false,
   "passed": 4,
   "results": [
     "two separate human sessions: actual mouse/keyboard serve, phone swipe return and authoritative mirrored score",

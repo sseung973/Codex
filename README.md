@@ -1,5 +1,7 @@
 # SHUTTLE RUSH · 친구 대전
 
+플레이: https://shuttle-rush-online-sseung973.onrender.com
+
 기존 웹 배드민턴의 AI 단식·연습·타구 비교·대회와 일러스트 타이틀을 유지하며, 방 코드 기반 온라인 단식(2명)과 복식(4명)을 제공합니다.
 
 `npm ci` → `npm start`로 실행합니다. `PORT` 환경변수(기본 10000)와 0.0.0.0 바인딩을 사용합니다. 정적 화면과 WebSocket /ws를 같은 Node 프로세스가 제공하며 `/healthz`는 상태 확인용입니다.
