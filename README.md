@@ -17,3 +17,5 @@ Render 무료 Node Web Service 한 인스턴스를 사용합니다. 무료 서�
 검사: `npm test`(서버 물리·방·실제 HTTP/WebSocket), `node tests/online-browser.cjs`(2/4개 독립 브라우저의 실제 입력, 점수 동기화, 새로고침 복귀, 기권/재경기), 기존 `tests/*.test.cjs`와 브라우저 회귀 검사. 브라우저 검사는 작업환경에 이미 설치된 Chromium/Playwright를 사용하며, 실물 iOS/Safari 검사는 별도입니다. `LIVE_ORIGIN`을 실제 Render URL로 지정하면 동일한 온라인 검사를 배포 주소에서 실행합니다.
 
 타이틀 일러스트는 이 게임을 위해 생성한 자산입니다. 폰트와 OFL 라이선스는 dist/assets에 있습니다. 디자인 결정은 DESIGN.md에 기록합니다.
+
+배포 소스: 사용자가 공개 소스 배포를 승인한 `sseung973/Codex`의 독립 브랜치 `shuttle-rush-online-20261117`을 사용합니다. 다른 서비스의 브랜치는 수정하지 않습니다.
