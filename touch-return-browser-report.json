@@ -1,0 +1,377 @@
+{
+  "passed": 14,
+  "results": [
+    "jun 390×844: one continuous touch serves, rearms on AI return, then direct upward counter crosses net before lifting; release cannot double-hit",
+    "nara 390×844: one continuous touch serves, rearms on AI return, then direct upward counter crosses net before lifting; release cannot double-hit",
+    "eden 390×844: one continuous touch serves, rearms on AI return, then direct upward counter crosses net before lifting; release cannot double-hit",
+    "nara 834×1194: one continuous touch serves, rearms on AI return, then pull/push counter crosses net before lifting; release cannot double-hit",
+    "eden 844×390: one continuous touch serves, rearms on AI return, then pull/push counter crosses net before lifting; release cannot double-hit",
+    "jun 390×844: immediate released swipe against high AI clear survives 750ms, physically returns and keeps its early timing grade",
+    "nara 390×844: immediate released swipe against high AI clear survives 750ms, physically returns and keeps its early timing grade",
+    "eden 390×844: immediate released swipe against high AI clear survives 750ms, physically returns and keeps its early timing grade",
+    "nara 1194×834: immediate released swipe against high AI clear survives 750ms, physically returns and keeps its early timing grade",
+    "lifting a stationary finger after the turn changes creates no phantom tap or return",
+    "tablet: one held finger completes serve plus three real AI-return/counter cycles",
+    "native touch cancellation clears the extended input and cannot produce a delayed return",
+    "fresh touch taps still serve and queue a real defensive block",
+    "combined regression: held finger and immediate early counter against a high clear both work together"
+  ],
+  "details": [
+    {
+      "athlete": "jun",
+      "width": 390,
+      "height": 844,
+      "kind": "same finger",
+      "inputLead": 0.11666666666666758,
+      "shot": {
+        "side": 0,
+        "type": "drive",
+        "variant": "block",
+        "stroke": "forehand",
+        "diving": false,
+        "serve": null,
+        "judgement": "perfect",
+        "risk": {
+          "line": 0,
+          "power": 0
+        },
+        "kind": "swipe",
+        "strategy": null,
+        "duration": 0.821960279996894,
+        "time": 2.8416666666666592,
+        "origin": {
+          "x": -1.7649585813044122,
+          "y": 1.464444495030948,
+          "z": -0.28491186371362476
+        },
+        "target": {
+          "x": 0,
+          "y": 0.025,
+          "z": 1.5689114089571756
+        },
+        "velocity": {
+          "vx": 2.3682857860029607,
+          "vy": 2.2672502846586178,
+          "vz": 2.4875318110798803
+        }
+      }
+    },
+    {
+      "athlete": "nara",
+      "width": 390,
+      "height": 844,
+      "kind": "same finger",
+      "inputLead": 0.11666666666666758,
+      "shot": {
+        "side": 0,
+        "type": "drive",
+        "variant": "block",
+        "stroke": "forehand",
+        "diving": false,
+        "serve": null,
+        "judgement": "perfect",
+        "risk": {
+          "line": 0,
+          "power": 0
+        },
+        "kind": "swipe",
+        "strategy": null,
+        "duration": 0.821960279996894,
+        "time": 2.8416666666666592,
+        "origin": {
+          "x": -1.7649585813044122,
+          "y": 1.464444495030948,
+          "z": -0.28491186371362476
+        },
+        "target": {
+          "x": 0,
+          "y": 0.025,
+          "z": 1.5689114089571756
+        },
+        "velocity": {
+          "vx": 2.3682857860029607,
+          "vy": 2.2672502846586178,
+          "vz": 2.4875318110798803
+        }
+      }
+    },
+    {
+      "athlete": "eden",
+      "width": 390,
+      "height": 844,
+      "kind": "same finger",
+      "inputLead": 0.11666666666666758,
+      "shot": {
+        "side": 0,
+        "type": "drive",
+        "variant": "block",
+        "stroke": "forehand",
+        "diving": false,
+        "serve": null,
+        "judgement": "perfect",
+        "risk": {
+          "line": 0,
+          "power": 0
+        },
+        "kind": "swipe",
+        "strategy": null,
+        "duration": 0.821960279996894,
+        "time": 2.8416666666666592,
+        "origin": {
+          "x": -1.7649585813044122,
+          "y": 1.464444495030948,
+          "z": -0.28491186371362476
+        },
+        "target": {
+          "x": 0,
+          "y": 0.025,
+          "z": 1.5689114089571756
+        },
+        "velocity": {
+          "vx": 2.3682857860029607,
+          "vy": 2.2672502846586178,
+          "vz": 2.4875318110798803
+        }
+      }
+    },
+    {
+      "athlete": "nara",
+      "width": 834,
+      "height": 1194,
+      "kind": "same finger",
+      "inputLead": 0.11666666666666758,
+      "shot": {
+        "side": 0,
+        "type": "drive",
+        "variant": null,
+        "stroke": "forehand",
+        "diving": false,
+        "serve": null,
+        "judgement": "perfect",
+        "risk": {
+          "line": 0,
+          "power": 0
+        },
+        "kind": "swipe",
+        "strategy": null,
+        "duration": 1.002997185202206,
+        "time": 2.8416666666666592,
+        "origin": {
+          "x": -1.7649585618456662,
+          "y": 1.4644447371031357,
+          "z": -0.284911688756395
+        },
+        "target": {
+          "x": 0,
+          "y": 0.025,
+          "z": 4.7
+        },
+        "velocity": {
+          "vx": 2.1359333618928273,
+          "vy": 3.5859534364094223,
+          "vz": 6.032694752964088
+        }
+      }
+    },
+    {
+      "athlete": "eden",
+      "width": 844,
+      "height": 390,
+      "kind": "same finger",
+      "inputLead": 0.11666666666666758,
+      "shot": {
+        "side": 0,
+        "type": "drive",
+        "variant": null,
+        "stroke": "forehand",
+        "diving": false,
+        "serve": null,
+        "judgement": "perfect",
+        "risk": {
+          "line": 0,
+          "power": 0
+        },
+        "kind": "swipe",
+        "strategy": null,
+        "duration": 1.002997185202206,
+        "time": 2.8416666666666592,
+        "origin": {
+          "x": -1.7649585618456662,
+          "y": 1.4644447371031357,
+          "z": -0.284911688756395
+        },
+        "target": {
+          "x": 0,
+          "y": 0.025,
+          "z": 4.7
+        },
+        "velocity": {
+          "vx": 2.1359333618928273,
+          "vy": 3.5859534364094223,
+          "vz": 6.032694752964088
+        }
+      }
+    },
+    {
+      "athlete": "jun",
+      "width": 390,
+      "height": 844,
+      "kind": "early released",
+      "inputLead": 1.95,
+      "ttl": 2.2,
+      "shot": {
+        "side": 0,
+        "type": "drive",
+        "variant": null,
+        "stroke": "forehand",
+        "diving": false,
+        "serve": null,
+        "judgement": "early",
+        "risk": {
+          "line": 0,
+          "power": 0
+        },
+        "kind": "swipe",
+        "strategy": null,
+        "duration": 0.7434278622693348,
+        "time": 3.791666666666656,
+        "origin": {
+          "x": -1.838004175700567,
+          "y": 2.3365190511169462,
+          "z": -4.9620043452800795
+        },
+        "target": {
+          "x": 0,
+          "y": 0.025,
+          "z": 4.7
+        },
+        "velocity": {
+          "vx": 3.511398915729,
+          "vy": -0.14916758711881217,
+          "vz": 18.45881741422125
+        }
+      }
+    },
+    {
+      "athlete": "nara",
+      "width": 390,
+      "height": 844,
+      "kind": "early released",
+      "inputLead": 1.95,
+      "ttl": 2.2,
+      "shot": {
+        "side": 0,
+        "type": "drive",
+        "variant": null,
+        "stroke": "forehand",
+        "diving": false,
+        "serve": null,
+        "judgement": "early",
+        "risk": {
+          "line": 0,
+          "power": 0
+        },
+        "kind": "swipe",
+        "strategy": null,
+        "duration": 0.8363563450530017,
+        "time": 3.791666666666656,
+        "origin": {
+          "x": -1.838004175700567,
+          "y": 2.3365190511169462,
+          "z": -4.9620043452800795
+        },
+        "target": {
+          "x": 0,
+          "y": 0.025,
+          "z": 4.7
+        },
+        "velocity": {
+          "vx": 3.1194697346035003,
+          "vy": 0.8633560751163445,
+          "vz": 16.39852598253523
+        }
+      }
+    },
+    {
+      "athlete": "eden",
+      "width": 390,
+      "height": 844,
+      "kind": "early released",
+      "inputLead": 1.95,
+      "ttl": 2.2,
+      "shot": {
+        "side": 0,
+        "type": "drive",
+        "variant": null,
+        "stroke": "forehand",
+        "diving": false,
+        "serve": null,
+        "judgement": "early",
+        "risk": {
+          "line": 0,
+          "power": 0
+        },
+        "kind": "swipe",
+        "strategy": null,
+        "duration": 0.8363563450530017,
+        "time": 3.791666666666656,
+        "origin": {
+          "x": -1.838004175700567,
+          "y": 2.3365190511169462,
+          "z": -4.9620043452800795
+        },
+        "target": {
+          "x": 0,
+          "y": 0.025,
+          "z": 4.7
+        },
+        "velocity": {
+          "vx": 3.1194697346035003,
+          "vy": 0.8633560751163445,
+          "vz": 16.39852598253523
+        }
+      }
+    },
+    {
+      "athlete": "nara",
+      "width": 1194,
+      "height": 834,
+      "kind": "early released",
+      "inputLead": 1.95,
+      "ttl": 2.2,
+      "shot": {
+        "side": 0,
+        "type": "drive",
+        "variant": null,
+        "stroke": "forehand",
+        "diving": false,
+        "serve": null,
+        "judgement": "early",
+        "risk": {
+          "line": 0,
+          "power": 0
+        },
+        "kind": "swipe",
+        "strategy": null,
+        "duration": 0.8363563450530017,
+        "time": 3.791666666666656,
+        "origin": {
+          "x": -1.838004175700567,
+          "y": 2.3365190511169462,
+          "z": -4.9620043452800795
+        },
+        "target": {
+          "x": 0,
+          "y": 0.025,
+          "z": 4.7
+        },
+        "velocity": {
+          "vx": 3.1194697346035003,
+          "vy": 0.8633560751163445,
+          "vz": 16.39852598253523
+        }
+      }
+    }
+  ],
+  "errors": []
+}

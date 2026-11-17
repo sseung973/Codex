@@ -1,0 +1,17 @@
+{
+  "passed": 11,
+  "results": [
+    "1440×900: illustrated title alone, logo/44px Start fit, touch/rotation, lobby choices and real serve",
+    "native touch title→lobby→game→button placement/save restores input and countdown",
+    "390×844: illustrated title alone, logo/44px Start fit, touch/rotation, lobby choices and real serve",
+    "320×568: illustrated title alone, logo/44px Start fit, touch/rotation, lobby choices and real serve",
+    "844×390: illustrated title alone, logo/44px Start fit, touch/rotation, lobby choices and real serve",
+    "834×1194: illustrated title alone, logo/44px Start fit, touch/rotation, lobby choices and real serve",
+    "native Enter/Space only advance to lobby; game shortcuts are inactive on title and returning preserves draft",
+    "paused match stays frozen through title/back and resumes through existing countdown",
+    "art failure: stable readable title and working lobby/start without blocking",
+    "font failure: stable readable title and working lobby/start without blocking",
+    "720×450 reflow equivalent to 200% desktop zoom remains operable with reduced motion"
+  ],
+  "errors": []
+}

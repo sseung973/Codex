@@ -1,0 +1,110 @@
+{
+  "passed": 4,
+  "results": [
+    {
+      "name": "desktop",
+      "fontLoaded": true,
+      "contrast": [
+        {
+          "selector": "#status",
+          "ratio": 13.823176539280771
+        },
+        {
+          "selector": ".shot-selector button[aria-pressed=true]",
+          "ratio": 6.131028818523558
+        },
+        {
+          "selector": "#pause",
+          "ratio": 12.519584722697582
+        }
+      ],
+      "checks": [
+        "menu action fits",
+        "no horizontal overflow",
+        "real serve",
+        "HUD contrast >= 4.5",
+        "fixed dialog action",
+        "keyboard return"
+      ]
+    },
+    {
+      "name": "phone",
+      "fontLoaded": true,
+      "contrast": [
+        {
+          "selector": "#status",
+          "ratio": 13.823176539280771
+        },
+        {
+          "selector": ".shot-selector button[aria-pressed=true]",
+          "ratio": 6.131028818523558
+        },
+        {
+          "selector": "#pause",
+          "ratio": 12.519584722697582
+        }
+      ],
+      "checks": [
+        "menu action fits",
+        "no horizontal overflow",
+        "real serve",
+        "HUD contrast >= 4.5",
+        "fixed dialog action",
+        "keyboard return"
+      ]
+    },
+    {
+      "name": "landscape",
+      "fontLoaded": true,
+      "contrast": [
+        {
+          "selector": "#status",
+          "ratio": 13.823176539280771
+        },
+        {
+          "selector": ".shot-selector button[aria-pressed=true]",
+          "ratio": 6.673929447137332
+        },
+        {
+          "selector": "#pause",
+          "ratio": 12.519584722697582
+        }
+      ],
+      "checks": [
+        "menu action fits",
+        "no horizontal overflow",
+        "real serve",
+        "HUD contrast >= 4.5",
+        "fixed dialog action",
+        "keyboard return"
+      ]
+    },
+    {
+      "name": "font-fallback",
+      "fontLoaded": false,
+      "contrast": [
+        {
+          "selector": "#status",
+          "ratio": 13.823176539280771
+        },
+        {
+          "selector": ".shot-selector button[aria-pressed=true]",
+          "ratio": 6.131028818523558
+        },
+        {
+          "selector": "#pause",
+          "ratio": 12.519584722697582
+        }
+      ],
+      "checks": [
+        "menu action fits",
+        "no horizontal overflow",
+        "real serve",
+        "HUD contrast >= 4.5",
+        "fixed dialog action",
+        "keyboard return"
+      ]
+    }
+  ],
+  "errors": []
+}

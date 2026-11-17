@@ -1,0 +1,11 @@
+{
+  "base": "http://127.0.0.1:41383",
+  "passed": 4,
+  "results": [
+    "two separate human sessions: actual mouse/keyboard serve, phone swipe return and authoritative mirrored score",
+    "refresh restores a private reserved seat, freezes both sessions and resumes with countdown",
+    "four real clients, two teams, individual athletes/conditions, native opposing-team return and one hit per team turn",
+    "leaving a live doubles match awards a forfeit and host can reset the same room with a free slot"
+  ],
+  "errors": []
+}

@@ -1,0 +1,17 @@
+{
+  "passed": 11,
+  "results": [
+    "desktop fills viewport with a painted court/athlete, two focused tabs, collapsed advanced choice and inert game",
+    "tab arrows/Home/End update panels and focus without sending a gameplay input",
+    "all four real kit previews/name/ready summaries stay synchronized; Haru remains 5/5/5",
+    "all mode-specific start labels, ready summary and relevant difficulty/opponent controls follow the draft",
+    "existing help/preferences open from the lobby and restore trigger focus without starting the match",
+    "game canvas/focus recover after lobby; draft settings freeze play, Resume preserves them and New Match applies them",
+    "320×568: touch choices, scrolling, 44px targets, pinned footer, rotation and actual game start",
+    "390×844: touch choices, scrolling, 44px targets, pinned footer, rotation and actual game start",
+    "844×390: touch choices, scrolling, 44px targets, pinned footer, rotation and actual game start",
+    "834×1194: touch choices, scrolling, 44px targets, pinned footer, rotation and actual game start",
+    "200%-equivalent 720×450 reflow with reduced motion retains reachable choices and start"
+  ],
+  "errors": []
+}

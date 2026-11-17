@@ -1,0 +1,17 @@
+.room-heading{font-size:20px;line-height:1.4;margin:0 0 24px}
+.room-label{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;margin:18px 0 8px}.room-label small{font-size:11px;font-weight:normal;color:var(--sheet-muted)}
+.lobby input:not([type=radio]){width:100%;min-height:46px;padding:10px 12px;border:1px solid var(--sheet-muted);border-radius:0;background:transparent;color:var(--sheet-ink);font:14px var(--body)}
+.lobby input::placeholder{color:var(--sheet-muted)}.lobby input[aria-invalid=true]{border-width:2px}.lobby input:focus-visible{outline-color:var(--sheet-ink)}
+.lobby .room-type{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0 16px}.lobby .room-type legend{font-size:13px;margin-bottom:9px}.lobby .room-type label>span{min-height:48px;padding:10px 8px;border:1px solid var(--sheet-muted);background:transparent;color:var(--sheet-ink);font-size:14px;text-align:center}
+#lobby-friends-panel button{min-height:44px;border:1px solid var(--sheet-muted);border-radius:0;background:transparent;color:var(--sheet-ink);padding:10px 12px;font-size:13px;font-weight:600}
+#lobby-friends-panel button:hover:not(:disabled){background:color-mix(in srgb,var(--court) 13%,var(--text))}
+#lobby-friends-panel button.room-primary{background:var(--court);border-color:var(--court);color:var(--text)}
+#lobby-friends-panel button.room-primary:hover:not(:disabled){background:var(--bg)}#room-create{width:100%}.room-code-entry{display:flex;gap:8px}.room-code-entry input{min-width:0;text-transform:uppercase;letter-spacing:3px}.room-code-entry button{flex-shrink:0}
+.room-status{font-size:12px;line-height:1.6;margin:16px 0 0;min-height:38px;color:var(--sheet-ink)}
+.room-invite{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--sheet-muted);padding:0 0 18px}.room-invite span{font-size:12px;color:var(--sheet-muted)}.room-invite strong{display:block;font:700 30px var(--display);letter-spacing:4px}
+.room-roster{list-style:none;padding:0;margin:18px 0}.room-roster li{padding:13px 12px;border-bottom:1px solid color-mix(in srgb,var(--bg) 22%,var(--text));border-left:3px solid var(--player)}.room-roster li[data-team="1"]{border-left-color:var(--opponent)}.room-roster strong{display:block;font-size:15px}.room-roster span{font-size:11px;color:var(--sheet-muted)}
+.room-teams,.room-actions{display:flex;gap:8px;margin-top:12px}.room-actions>*{flex:1}.room-teams button{flex:1}#room-return{display:block;width:100%;margin-top:12px}#lobby-friends-panel .room-leave{border:0;text-decoration:underline;font-weight:normal;padding-left:0;margin-top:10px}
+.is-online .player-name{min-width:0;max-width:40%;font-size:11px}.is-online #opponent-name,.is-online #player-name{overflow-wrap:anywhere}.is-online .lobby-footer{min-height:80px}
+@media(max-width:700px){.lobby-tabs{gap:18px}.lobby-tabs button{font-size:14px}.room-heading{font-size:18px;margin-bottom:16px}.room-roster li{padding:10px}.is-online .scoreboard{padding-left:10px;padding-right:10px}.is-online .player-name{font-size:10px}.is-online .player-name small{font-size:7px}}
+#online-condition{font:9px var(--score);letter-spacing:0}
+@media(max-width:700px){.is-online .rally-strip{gap:5px}.is-online #speed{display:none}#online-condition{font-size:8px}}
