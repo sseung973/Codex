@@ -25,8 +25,14 @@ $('title-enter').addEventListener('click',()=>{$('title-screen').hidden=true;$('
 $('title-return').addEventListener('click',()=>{clearGesture();$('menu').hidden=true;$('title-screen').hidden=false;syncLobby();$('title-enter').focus({preventScroll:true});});
 function updateLobbyReady(){
  if(lobbyTab==='friends'){$('lobby-ready').textContent='친구 대전 · 1 vs 1 / 2 vs 2';$('setup-hint').textContent='방 코드로 함께 입장하고 준비 완료를 눌러주세요.';return;}
- const mode=document.querySelector('[name=mode]:checked').value,level=document.querySelector('[name=difficulty]:checked').value,names={match:'AI 단식',tournament:'토너먼트',practice:'타격 연습',compare:'타구 비교'},levels={easy:'쉬움',normal:'보통',hard:'어려움'};
- $('lobby-ready').textContent=ATHLETES[selectedAthlete].name+' · '+names[mode]+(mode==='compare'?'':' · '+levels[level]);
+ const modeInput=document.querySelector('[name=mode]:checked');
+ const mode=modeInput.value,level=document.querySelector('[name=difficulty]:checked').value,names={match:'AI 단식',tournament:'토너먼트',practice:'타격 연습',compare:'타구 비교'},levels={easy:'쉬움',normal:'보통',hard:'어려움'};
+ const isCompare=mode==='compare';
+ $('lobby-ready').textContent=ATHLETES[selectedAthlete].name+' · '+names[mode]+(isCompare?'':' · '+levels[level]);
+ $('lobby-match-mode').textContent=names[mode];
+ $('lobby-match-format').textContent=modeInput.labels[0].querySelector('small').textContent;
+ $('lobby-match-level').textContent=levels[level];
+ $('lobby-match-level').hidden=isCompare;
  const hints={tournament:'8강부터 결승까지, 3연승에 도전하세요.',compare:'같은 공으로 네 타구의 궤적을 비교해요.',practice:'점수 없이 편하게 랠리를 이어가세요.'};
  const levelHints={easy:'높은 공으로 랠리부터 시작해요.',normal:'코스와 타이밍으로 빈틈을 노려요.',hard:'빠른 타구와 스매시에 대비하세요.'};
  $('setup-hint').textContent=hints[mode]||'11점 경기 · '+levelHints[level];
@@ -35,9 +41,11 @@ function updateLobbyReady(){
 for(const button of document.querySelectorAll('[data-lobby-tab]'))button.addEventListener('click',()=>selectLobbyTab(button.dataset.lobbyTab,button.getAttribute('role')!=='tab'));
 for(const button of document.querySelectorAll('.lobby-tabs [role=tab]'))button.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();e.stopPropagation();const tabs=['play','athlete','friends'],index=tabs.indexOf(lobbyTab);selectLobbyTab(e.key==='Home'?'play':e.key==='End'?'friends':tabs[(index+(e.key==='ArrowLeft'?2:1))%3],true);}});
 function syncLobbyArtwork(){
- const showPortrait=lobbyTab==='athlete';
- $('lobby-court-art').hidden=showPortrait;
- $('lobby-court-caption').hidden=showPortrait;
+ const showPortrait=lobbyTab==='athlete',showCourt=lobbyTab==='play';
+ $('lobby-showcase').dataset.art=lobbyTab;
+ $('lobby-court-art').hidden=!showCourt;
+ $('lobby-friends-art').hidden=lobbyTab!=='friends';
+ $('lobby-court-caption').hidden=!showCourt;
  $('lobby-athlete-caption').hidden=!showPortrait;
  for(const athlete of Object.values(ATHLETES))$('lobby-portrait-'+athlete.id).hidden=!showPortrait||athlete.id!==selectedAthlete;
 }
@@ -45,6 +53,8 @@ function renderAthleteChoice(){
  const a=ATHLETES[selectedAthlete];
  $('lobby-hero-name').textContent=a.name;
  $('lobby-current-athlete').textContent=a.name;
+ const thumb=$('lobby-athlete-thumb'),portrait=$('lobby-portrait-'+a.id);
+ if(thumb.src!==portrait.src)thumb.src=portrait.src;
  $('lobby-hero-role').textContent=a.role;
  $('lobby-athlete-caption').style.setProperty('--preview-kit',ART.kits[a.id]);
  $('athlete-note').textContent=a.name+' · '+a.hint;
