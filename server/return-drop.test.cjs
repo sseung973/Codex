@@ -13,7 +13,7 @@ test('front and back drops, including low net touches, clear the tape and land s
  const front=dropFlight({x:0,y:2.7,z:-1.2},{x:0,y:.025,z:1.1});assert.ok(front.duration<.6);assert.ok(front.velocity.vy<0,'front touch travels down instead of floating up');
 });
 for(const doubles of [false,true])test((doubles?'doubles':'singles')+' server accepts the serving player’s first counter as a low drop',()=>{
- const m=make(doubles),receiver=doubles?2:1;m.select(0,'drop');m.strike(0,{shot:'drop',power:.55,aim:0});
+ const m=make(doubles),receiver=doubles?2:1;if(doubles)m.formations[0].lead=1;m.select(0,'drop');m.strike(0,{shot:'drop',power:.55,aim:0});
  for(let i=0;i<600&&m.rally===1;i++){if(m.contacts[receiver]?.t<.15&&!m.pending[receiver])m.strike(receiver,{shot:'drive',power:.55,aim:0});m.step();}
  assert.equal(m.rally,2);assert.ok(m.contacts[0].y<1.8,'reproduces formerly forbidden drop height');assert.ok(m.strike(0,{shot:'drop',power:.55,aim:0,kind:'swipe'}));finishReturn(m);assert.equal(m.rally,3);assert.equal(m.lastHit,0);assert.equal(m.lastShot.type,'drop');assert.deepEqual(m.score,[0,0]);
 });

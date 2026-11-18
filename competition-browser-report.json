@@ -1,0 +1,13 @@
+{
+  "base": "http://127.0.0.1:37363",
+  "passed": 5,
+  "scoreVerification": "trusted local server ground-contact fixtures",
+  "results": [
+    "keyboard format selection, synchronized one-set room, no doubles controls in singles",
+    "own-team shared formation and absolute role swap, correct names, team-only ready invalidation, idempotent selection",
+    "four human native serve/return/counter, formation change while paused cannot move feet instantly, shared countdown resumes play",
+    "three complete sets, 1:0 -> 1:1 -> 2:1, mirrored set history and final result, interval pause/formation change, legal next-set serve",
+    "host prepares another series in the same room; all four ready states reset"
+  ],
+  "errors": []
+}

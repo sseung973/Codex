@@ -14,4 +14,13 @@
 .is-online .player-name{min-width:0;max-width:40%;font-size:11px}.is-online #opponent-name,.is-online #player-name{overflow-wrap:anywhere}.is-online .lobby-footer{min-height:80px}
 @media(max-width:700px){.lobby-tabs{gap:18px}.lobby-tabs button{font-size:14px}.room-heading{font-size:18px;margin-bottom:16px}.room-roster li{padding:10px}.is-online .scoreboard{padding-left:10px;padding-right:10px}.is-online .player-name{font-size:10px}.is-online .player-name small{font-size:7px}}
 #online-condition{font:9px var(--score);letter-spacing:0}
+.room-formation{display:block;width:100%;margin:20px 0;padding:16px 0;border:0;border-top:1px solid var(--sheet-muted);border-bottom:1px solid var(--sheet-muted)}
+.lobby .room-formation legend{padding:0;font-size:13px;font-weight:600}.room-note{font-size:12px;line-height:1.6;color:var(--sheet-muted);margin:10px 0}
+#lobby-friends-panel [data-formation][aria-pressed=true]{background:var(--court);color:var(--text);border-color:var(--court)}
+#lobby-friends-panel [data-formation][aria-pressed=true]::after{content:' ✓'}
+@media(forced-colors:active){#lobby-friends-panel [data-formation][aria-pressed=true]{outline:2px solid ButtonText;outline-offset:-3px}}
+.is-online .scoreboard{padding-bottom:24px}.online-series{position:absolute;bottom:5px;left:8px;right:8px;text-align:center;font:10px var(--score);color:var(--muted);letter-spacing:.3px}
+.is-online .rally-strip{transform:translateY(14px)}.is-online .serve-selector{margin-top:14px}
+.online-set-break{position:absolute;top:180px;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);padding:16px 20px;text-align:center;pointer-events:none;z-index:4;background:var(--surface);border:1px solid var(--line)}
+.online-set-break strong,.online-set-break small{display:block}.online-set-break strong{font-size:14px}.online-set-break small{font-size:11px;color:var(--muted);margin-top:6px}#online-set-timer{display:block;margin-top:8px;font:700 28px var(--score);color:var(--primary)}
 @media(max-width:700px){.is-online .rally-strip{gap:5px}.is-online #speed{display:none}#online-condition{font-size:8px}}
