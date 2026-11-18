@@ -234,10 +234,35 @@
   }
 
   function drawVenue(ctx, view) {
-    mezzanine(ctx, view);
+    const {width, floor, palette, finalArt, compact, displayMinY=0} = view;
+    let display = null;
+    if (finalArt?.naturalWidth) {
+      const imageWidth = finalArt.naturalWidth, imageHeight = finalArt.naturalHeight;
+      const cropHeight = imageHeight * (compact ? .92 : .69);
+      const cropWidth = Math.min(imageWidth, width * cropHeight / floor);
+      const x = (imageWidth - cropWidth) / 2;
+      const y = compact ? 0 : imageHeight - cropHeight;
+      const panelY=(450/912*imageHeight-y)/cropHeight;
+      const top=Math.min(floor*.61,Math.max(0,(displayMinY-panelY*floor)/(1-panelY)));
+      const visibleHeight=floor-top;
+      if(top)fill(ctx,palette.roof,0,0,width,top);
+      ctx.drawImage(finalArt, x, y, cropWidth, cropHeight, 0, top, width, visibleHeight);
+      fill(ctx, gradient(ctx, 0, 0, 0, floor, [
+        [0, palette.roof+'14'], [.66, palette.roof+'19'], [1, palette.roof+'33']
+      ]), 0, 0, width, floor);
+      // The artwork's two inset panels are drawn at the same scale as the wall.
+      display = {
+        centers: [628,908].map(panel => (panel/1536*imageWidth-x)*width/cropWidth),
+        y: top+panelY*visibleHeight,
+        height: 142/912*imageHeight*visibleHeight/cropHeight
+      };
+    } else {
+      mezzanine(ctx, view);
+    }
     timber(ctx, view);
     mat(ctx, view);
-    if (view.wallArt?.naturalWidth) windowLight(ctx, view);
+    if (!finalArt?.naturalWidth && view.wallArt?.naturalWidth) windowLight(ctx, view);
+    return display;
   }
 
   function outdoorBackdrop(ctx, {width, floor, palette, tone, outdoorArt}) {
@@ -329,7 +354,7 @@
   }
 
   function drawOutdoorVenue(ctx, view) {
-    const {width, height, floor, project, palette, tone} = view;
+    const {width, height, floor, project, palette, tone, propsArt} = view;
     outdoorBackdrop(ctx, view);
     const paving = '#a79a88';
     fill(ctx, gradient(ctx, 0, floor, 0, height, [
@@ -350,6 +375,19 @@
     surfaceGrain(ctx, width, height, .065);
     ctx.restore();
     mat(ctx, view, true);
+    if (propsArt?.naturalWidth) {
+      const tile = propsArt.naturalWidth / 2, rows = propsArt.naturalHeight;
+      const props = [
+        {x:-4.9,z:2.8,width:2.24,height:.95},
+        {x:4.61,z:.18,width:1.62,height:.79}
+      ];
+      props.forEach((prop,index)=>{
+        const point = project(prop), w = prop.width*point.s, h = prop.height*point.s;
+        if (point.y < floor) return;
+        oval(ctx,point.x+2,point.y+1,w*.42,h*.095,palette.roof+'49');
+        ctx.drawImage(propsArt,index*tile,0,tile,rows,point.x-w/2,point.y-h,w,h);
+      });
+    }
   }
 
   function drawWindFlags(ctx, project, palette, wind, time) {

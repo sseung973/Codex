@@ -8,15 +8,18 @@ function tone(hex,amount){const value=parseInt(hex.slice(1),16),target=amount>0?
 const {drawVenue,drawOutdoorVenue,drawWindFlags,drawTape,gradient,surfaceGrain}=ShuttleCourtArt;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const director=new ShuttleCamera.CameraDirector(CFG,{reduced});let pendingFinish=null;
-let W=720,H=1060,cameraScale=1,wideView=false,chosen='drive',debug=false,audio=false,ac=null,last=0,gesture=null,feedbackTimer=0,particles=[],trail=[],best=0,staticLayer=null,helpWasRunning=false;
-const wallArt=$('arena-wall-art'),outdoorArt=$('arena-outdoor-art');
+let W=720,H=1060,cameraScale=1,wideView=false,chosen='drive',debug=false,audio=false,ac=null,last=0,gesture=null,feedbackTimer=0,particles=[],trail=[],best=0,staticLayer=null,helpWasRunning=false,finalDisplay=null;
+const wallArt=$('arena-wall-art'),outdoorArt=$('arena-outdoor-art'),propsArt=$('arena-props-art');
+const finalArt=$('arena-final-art'),athletesArt=$('arena-athletes-art');
 wallArt.addEventListener('load',()=>{staticLayer=null;});
-outdoorArt.addEventListener('load',()=>{if(renderedVenue==='outdoor')staticLayer=null;});
-function loadOutdoorArt(){if(!outdoorArt.hasAttribute('src'))outdoorArt.src=outdoorArt.dataset.src;}
+for(const [art,arena] of [[outdoorArt,'outdoor'],[propsArt,'outdoor'],[finalArt,'final']]){
+ art.addEventListener('load',()=>{if(renderedArena===arena)staticLayer=null;});
+}
+function loadArt(art){if(!art.hasAttribute('src'))art.src=art.dataset.src;}
 try{best=Number(localStorage.getItem('shuttle-rush-best'))||0;}catch{}$('best').textContent=best;
 const shotNames=Object.fromEntries(Object.entries(SHOTS).map(([key,value])=>[key,value.label]));
 let controls=ShuttleInput.preferences(),controlsStorage=true,savedControls=null;try{savedControls=localStorage.getItem('shuttle-rush-controls-v1');}catch{controlsStorage=false;}try{controls=ShuttleInput.preferences(JSON.parse(savedControls));}catch{}
-let online=null,renderedVenue=null,renderedWind=0;
+let online=null,renderedArena=null,renderedWind=0;
 function selectedVenue(){return normalizeVenue(document.querySelector('[name=venue]:checked').value);}
 let selectedAthlete='jun',athleteStorage=true,lobbyTab='play';
 try{selectedAthlete=normalizeAthlete(localStorage.getItem('shuttle-rush-athlete-v1'));}catch{athleteStorage=false;}
@@ -41,7 +44,8 @@ function updateLobbyReady(){
  $('lobby-match-level').hidden=isCompare;
  const hints={tournament:'8강부터 결승까지, 3연승에 도전하세요.',compare:'같은 공으로 네 타구의 궤적을 비교해요.',practice:'점수 없이 편하게 랠리를 이어가세요.'};
  const levelHints={easy:'높은 공으로 랠리부터 시작해요.',normal:'코스와 타이밍으로 빈틈을 노려요.',hard:'빠른 타구와 스매시에 대비하세요.'};
- $('setup-hint').textContent=!isCompare&&selectedVenue()==='outdoor'?'깃발이 가리키는 쪽으로 셔틀이 밀려요.':hints[mode]||'11점 경기 · '+levelHints[level];
+ const outdoor=!isCompare&&selectedVenue()==='outdoor';
+ $('setup-hint').textContent=outdoor?(mode==='tournament'?'8강과 준결승은 야외에서 · 결승은 실내에서 열려요.':'깃발이 가리키는 쪽으로 셔틀이 밀려요.'):hints[mode]||'11점 경기 · '+levelHints[level];
  $('start').firstChild.textContent=($('menu-resume').hidden?{match:'경기 시작',tournament:'대회 시작',practice:'연습 시작',compare:'비교 시작'}[mode]:'새 경기 시작')+' ';
 }
 for(const button of document.querySelectorAll('[data-lobby-tab]'))button.addEventListener('click',()=>selectLobbyTab(button.dataset.lobbyTab,button.getAttribute('role')!=='tab'));
@@ -54,7 +58,7 @@ function syncLobbyArtwork(){
  const outdoor=friends?roomVenue==='outdoor':showCourt&&selectedVenue()==='outdoor'&&!document.querySelector('[name=mode][value=compare]').checked;
  $('lobby-court-art').hidden=!showCourt||outdoor;
  $('lobby-outdoor-art').hidden=!outdoor;
- if(outdoor)loadOutdoorArt();
+ if(outdoor){loadArt(outdoorArt);loadArt(propsArt);}
  $('lobby-friends-art').hidden=!friends||outdoor;
  $('lobby-court-caption').hidden=!showCourt;
  $('lobby-athlete-caption').hidden=!showPortrait;
@@ -115,13 +119,14 @@ function showMatchEnd(data){
  $('resume').innerHTML=friendMatch?'대기방으로 <span>↗</span>':'다시 경기 <span>↗</span>';
  if(match.mode==='tournament'){
   const status=tournament.status;$('pause-eyebrow').textContent='SHUTTLE CUP / '+ROUND_NAMES[tournament.round];$('pause-title').textContent=status==='champion'?'대회 우승!':status==='between'?ROUND_NAMES[tournament.round]+' 통과!':'다음 대회에서 다시!';
+  if(status==='between'&&tournament.round===ROUND_NAMES.length-2)loadArt(finalArt);
   $('pause-copy').textContent=match.score.join(' : ')+' · '+(status==='between'?'다음 경기 시작 시 체력 100% 회복':status==='champion'?'3연승으로 트로피를 차지했어요':ROUND_NAMES[tournament.round]+'에서 도전을 마쳤어요');$('resume').innerHTML=(status==='between'?ROUND_NAMES[tournament.round+1]+' 시작':'대회 다시 도전')+' <span>↗</span>';
  }
  $('pause-overlay').hidden=false;if($('menu').hidden&&$('title-screen').hidden)$('resume').focus({preventScroll:true});say('경기 종료. '+$('pause-title').textContent+' '+$('pause-copy').textContent);
 }
 const match=new Rally((event,data)=>{
  if(event==='matchEnd')showMatchEnd(data);
- if(event==='start'){$('player-name').textContent=match.athlete.name;$('player-role').textContent=match.athlete.role;document.body.style.setProperty('--active-kit',ART.kits[match.athleteId]);crowdFx=0;crowdLevel=0;$('resume-countdown').hidden=true;resetMatchSummary();director.reset();pendingFinish=null;$('line-call').hidden=true;hideFeedback();document.body.classList.add('is-playing');$('menu').hidden=true;syncLobby();$('pause-overlay').hidden=true;$('point-banner').hidden=true;$('pause').disabled=false;$('opponent-name').textContent=match.mode==='tournament'?tournament.current.opponent:'클럽 AI';$('condition').hidden=!match.scored;$('mode-label').textContent=match.mode==='tournament'?'SHUTTLE CUP / '+tournament.current.label:match.mode==='compare'?'SHOT LAB / COURT 01':match.mode==='practice'?'PRACTICE / COURT 01':'SINGLES / COURT 01';$('difficulty-label').textContent=AI_STYLES[match.aiStyle].label+' · '+match.difficulty.toUpperCase();$('score-you').textContent=$('score-ai').textContent='0';$('rally').textContent='0';$('speed').textContent='— km/h';trail=[];particles=[];clearGesture();lastInput=null;$('last-shot').textContent='타구를 고르면 아래에서 특징을 볼 수 있어요';lastImpactFx=null;if(match.mode==='compare')setShot('clear');updateComparison();}
+ if(event==='start'){loadArt(athletesArt);$('player-name').textContent=match.athlete.name;$('player-role').textContent=match.athlete.role;document.body.style.setProperty('--active-kit',ART.kits[match.athleteId]);crowdFx=0;crowdLevel=0;$('resume-countdown').hidden=true;resetMatchSummary();director.reset();pendingFinish=null;$('line-call').hidden=true;hideFeedback();document.body.classList.add('is-playing');$('menu').hidden=true;syncLobby();$('pause-overlay').hidden=true;$('point-banner').hidden=true;$('pause').disabled=false;$('opponent-name').textContent=match.mode==='tournament'?tournament.current.opponent:'클럽 AI';$('condition').hidden=!match.scored;$('mode-label').textContent=match.mode==='tournament'?'SHUTTLE CUP / '+tournament.current.label:match.mode==='compare'?'SHOT LAB / COURT 01':match.mode==='practice'?'PRACTICE / COURT 01':'SINGLES / COURT 01';$('difficulty-label').textContent=AI_STYLES[match.aiStyle].label+' · '+match.difficulty.toUpperCase();$('score-you').textContent=$('score-ai').textContent='0';$('rally').textContent='0';$('speed').textContent='— km/h';trail=[];particles=[];clearGesture();lastInput=null;$('last-shot').textContent='타구를 고르면 아래에서 특징을 볼 수 있어요';lastImpactFx=null;if(match.mode==='compare')setShot('clear');updateComparison();}
  if(event==='serve'){director.reset();$('line-call').hidden=true;updateComparison();trail=[];$('point-banner').hidden=true;$('gesture-guide').style.opacity='1';say(data===0?serveInstruction():match.mode==='practice'?'연습 공급 · 돌아오는 셔틀콕을 준비하세요':(online?.active?'상대 서브 · ':'AI 서브 · ')+(match.service?.right?'오른쪽':'왼쪽')+' → 대각선');}
  if(event==='hit'){if(data.side===1&&gesture?.fired){gesture.reset(gesture.last,performance.now());gesture.accepted=false;}const hitName=data.variant==='block'?'블록 수비':shotNames[data.type],hitHint=data.variant==='block'?'힘을 빼고 네트 앞에 짧게':SHOTS[data.type].hint;director.hit(data,match.mode);lastImpactFx={point:{...data.point},time:data.time,side:data.side};if(data.side===0)lastShotColor=SHOTS[data.type].color;beep(data.variant==='block'?'block':data.type,false,data.combo);if(data.side===0&&!data.teammate&&data.combo>=2){crowdFx=.7;crowdLevel=data.combo;if(audio&&ac)try{ShuttleFeel.cheer(ac,data.combo);}catch{}}burst(data.point,data.side===0?ART.player:ART.opponent);$('rally').textContent=match.rally;$('speed').textContent=Math.round(data.speed)+' km/h';trail=[];if(match.best>best){best=match.best;$('best').textContent=best;try{localStorage.setItem('shuttle-rush-best',best);}catch{}}if(data.teammate){
  const partner=data.bot?'AI 파트너':'파트너';
@@ -150,7 +155,13 @@ for(const b of document.querySelectorAll('[data-serve]'))b.addEventListener('cli
 function updateComparisonChart(){const chart=$('comparison-chart');const empty=match.comparisons.length===0;chart.toggleAttribute('hidden',empty);if(empty)return;const map=p=>[12+(p.z+6.7)/13.4*236,116-Math.max(0,p.y)/8*100];chart.innerHTML='<path d="M12 116H248M130 116V96" fill="none" stroke="#91a7ae" stroke-width="1"/><text x="6" y="12" fill="#b3c1c4" font-size="9">높이</text><text x="132" y="93" fill="#b3c1c4" font-size="9">네트</text><text x="17" y="133" fill="#b3c1c4" font-size="9">나</text><text x="206" y="133" fill="#b3c1c4" font-size="9">상대 뒤</text>'+match.comparisons.map(r=>'<path data-curve="'+r.type+'" d="'+r.points.map((p,i)=>(i?'L':'M')+map(p).map(v=>v.toFixed(1)).join(' ')).join(' ')+'" fill="none" stroke="'+SHOTS[r.type].color+'" stroke-width="'+(r.type===chosen?'2.5':'1.7')+'" opacity="'+(r.type===chosen?'1':'.6')+'"/>' ).join('');}
 function updateComparison(){const panel=$('comparison-panel');panel.hidden=match.mode!=='compare';if(panel.hidden)return;const complete=match.state==='review';$('comparison-title').textContent=complete?'네 타구 비교 완료':(match.comparisons.length+1)+'/4 · '+shotNames[match.selectedShot]+' 받기';$('comparison-note').textContent=complete?'타구를 골라 궤적과 착지점을 비교하세요.':'같은 공 · 중앙 코스 · 세기 고정';$('comparison-restart').hidden=!complete;$('comparison-results').innerHTML=match.comparisons.map(r=>'<button class="comparison-result" data-result="'+r.type+'" aria-pressed="'+(r.type===chosen)+'" style="--result-color:'+SHOTS[r.type].color+'"><b>'+shotNames[r.type]+'</b><span>최고 '+r.peak.toFixed(1)+'m · '+r.flight.toFixed(1)+'초</span><small>'+Math.round(r.speed)+'km/h · '+(r.landing.z<2?'네트 앞':'코트 뒤쪽')+'</small></button>').join('');for(const b of document.querySelectorAll('[data-result]'))b.addEventListener('click',()=>setShot(b.dataset.result));updateComparisonChart();}
 $('comparison-restart').addEventListener('click',()=>{document.querySelector('[name=mode][value=compare]').checked=true;start();});
-function launchMatch(mode,difficulty,venue=selectedVenue()){const aiStyle=mode==='tournament'?tournament.current.aiStyle:document.querySelector('[name=ai-style]:checked').value;match.selectShot(chosen);match.start({mode,difficulty,aiStyle,venue,athlete:mode==='tournament'?tournament.athleteId||selectedAthlete:selectedAthlete});$('pause').textContent='Ⅱ';$('pause').setAttribute('aria-label','일시정지');canvas.focus({preventScroll:true});}
+function cupFinal(mode){return mode==='tournament'&&tournament.round===ROUND_NAMES.length-1;}
+function launchMatch(mode,difficulty,venue=selectedVenue()){
+ const aiStyle=mode==='tournament'?tournament.current.aiStyle:document.querySelector('[name=ai-style]:checked').value;
+ match.selectShot(chosen);
+ match.start({mode,difficulty,aiStyle,venue:cupFinal(mode)?'indoor':venue,athlete:mode==='tournament'?tournament.athleteId||selectedAthlete:selectedAthlete});
+ $('pause').textContent='Ⅱ';$('pause').setAttribute('aria-label','일시정지');canvas.focus({preventScroll:true});
+}
 function start(){if(online?.room)online.leave();const mode=document.querySelector('[name=mode]:checked').value,difficulty=document.querySelector('[name=difficulty]:checked').value;if(mode==='tournament'){tournament.start(difficulty);tournament.athleteId=selectedAthlete;launchMatch(mode,tournament.current.difficulty);}else{tournament.status='idle';launchMatch(mode,difficulty);}}
 function continueOrRestart(){if(online?.active){online.showRoom();return;}if(match.mode==='tournament'&&tournament.advance())launchMatch('tournament',tournament.current.difficulty,match.venue);else start();}
 function canContinueMatch(){return online?.active?match.state!=='over':match.state==='paused';}
@@ -300,13 +311,31 @@ function rect(x,y,w,h,r,color,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);c
 function worldLine(a,b,color,width=1){line(project(a),project(b),color,width);}
 function courtBackground(){
  const floor=Math.min(H*.31+42,project({x:3.34,z:7.07}).y-7);
- const outdoor=match.venue==='outdoor',draw=outdoor?drawOutdoorVenue:drawVenue;
- if(outdoor)loadOutdoorArt();
- draw(ctx,{width:W,height:H,floor,project,palette:ART,tone,compact:!wideView,wallArt,outdoorArt});
+ const outdoor=match.venue==='outdoor',draw=outdoor?drawOutdoorVenue:drawVenue,final=renderedArena==='final';
+ if(outdoor){loadArt(outdoorArt);loadArt(propsArt);}
+ if(final)loadArt(finalArt);
+ let displayMinY=0;
+ if(final&&!wideView){
+  const bounds=canvas.getBoundingClientRect(),rallyStrip=document.querySelector('.rally-strip');
+  displayMinY=(rallyStrip.getBoundingClientRect().bottom-bounds.top+22)*W/bounds.width;
+ }
+ finalDisplay=draw(ctx,{width:W,height:H,floor,project,palette:ART,tone,compact:!wideView,wallArt,outdoorArt,propsArt,finalArt:final?finalArt:null,displayMinY})||null;
  const stripe=(a,b)=>worldLine(a,b,ART.paint,1.3);
  for(const x of [-3.05,-CFG.halfWidth,CFG.halfWidth,3.05])stripe({x,z:-6.7},{x,z:6.7});
  for(const z of [-6.7,-5.94,-1.98,1.98,5.94,6.7])stripe({x:-3.05,z},{x:3.05,z});
  stripe({x:0,z:-6.7},{x:0,z:-1.98});stripe({x:0,z:1.98},{x:0,z:6.7});
+}
+function drawFinalScore(){
+ if(!finalDisplay||director.call)return;
+ const {centers,y,height}=finalDisplay;
+ ctx.save();
+ ctx.textAlign='center';ctx.textBaseline='middle';
+ ctx.font='750 '+Math.min(39,height*.68)+'px "Court Condensed",Arial';
+ centers.forEach((x,side)=>{
+  ctx.fillStyle=side===0?ART.player:ART.paint;
+  ctx.fillText(String(match.score[side]).padStart(2,'0'),x,y);
+ });
+ ctx.restore();
 }
 function drawNet(){
  const corners=[{x:-3.05,z:0},{x:3.05,z:0},{x:3.05,y:CFG.netHeight,z:0},{x:-3.05,y:CFG.netHeight,z:0}];
@@ -336,8 +365,14 @@ function racketPose(p,side,contact=match.contact){
  const pose={spot,scale,dir,age,impact,jump,type,kind,profile,tilt,stroke,handSign,dive,shoulder,elbow:motion.elbow,turn};
  return Object.assign(pose,racketAt(pose,point));
 }
+const kitColumns={jun:0,nara:1,eden:2,haru:3};
+function drawKit(id,row,x,y,width,height){
+ const tileWidth=athletesArt.naturalWidth/4,tileHeight=athletesArt.naturalHeight/3;
+ ctx.drawImage(athletesArt,kitColumns[id]*tileWidth,row*tileHeight,tileWidth,tileHeight,x,y,width,height);
+}
 function athlete(p,side,variant=null){
  const identity=variant?.identity||(online?.active?online.identity(side):match.athlete),pose=variant?.pose||poses[side],{spot,scale}=pose,isBack=side===0,s=scale*.85,shirt=online?.active?ART.kits[identity.id]:isBack?ART.kits[identity.id]:ART.opponent,skin=isBack?'#b68b6d':'#c6a18a',hair='#263134',racketSide=pose.handSign;
+ const kitReady=isBack&&athletesArt.naturalWidth>0&&Object.hasOwn(kitColumns,identity.id);
  const speed=Math.hypot(p.vx,p.vz),step=reduced||p.dive?0:Math.sin(p.steps)*Math.min(9,speed*1.35),ready=reduced?0:Math.sin(Math.PI*clamp(1-p.split/CFG.splitDuration,0,1))*4;
  const dive=pose.dive,pelvis=dive.hip||{x:0,y:-88};
  const feet=[-1,1].map(side=>dive.hip?(side===dive.lead?dive.leadFoot:dive.trailFoot):{x:side*(16+ready-step),y:-10});
@@ -379,9 +414,14 @@ function athlete(p,side,variant=null){
   line({x:knee.x-1.6,y:knee.y+1},{x:ankle.x-1.6,y:ankle.y-14},tone(skin,.19)+'a8',1.6);
   line({x:ankle.x,y:ankle.y-12},ankle,ART.paint,7);
   line({x:ankle.x-2.6,y:ankle.y-10},{x:ankle.x+2.6,y:ankle.y-10},tone(shirt,-.31),1.4);
-  path([{x:ankle.x-5,y:ankle.y-1},{x:ankle.x+4,y:ankle.y-1},{x:ankle.x+9,y:ankle.y+5},{x:ankle.x+8,y:ankle.y+9},{x:ankle.x-7,y:ankle.y+9},{x:ankle.x-7,y:ankle.y+4}],ART.paint,tone(ART.paint,-.38),.7);
-  line({x:ankle.x-5,y:ankle.y+6},{x:ankle.x+7,y:ankle.y+5},tone(ART.paint,-.24),1.4);
-  line({x:ankle.x-6,y:ankle.y+9},{x:ankle.x+8,y:ankle.y+9},tone(ART.roof,.18),1.5);
+  if(kitReady){
+   ctx.save();ctx.translate(ankle.x,ankle.y);ctx.scale(side,1);
+   drawKit(identity.id,2,-8,-2,17,12);ctx.restore();
+  }else{
+   path([{x:ankle.x-5,y:ankle.y-1},{x:ankle.x+4,y:ankle.y-1},{x:ankle.x+9,y:ankle.y+5},{x:ankle.x+8,y:ankle.y+9},{x:ankle.x-7,y:ankle.y+9},{x:ankle.x-7,y:ankle.y+4}],ART.paint,tone(ART.paint,-.38),.7);
+   line({x:ankle.x-5,y:ankle.y+6},{x:ankle.x+7,y:ankle.y+5},tone(ART.paint,-.24),1.4);
+   line({x:ankle.x-6,y:ankle.y+9},{x:ankle.x+8,y:ankle.y+9},tone(ART.roof,.18),1.5);
+  }
  };
  leg(-1,step,feet[0]);leg(1,-step,feet[1]);
  ctx.save();ctx.translate(pelvis.x,pelvis.y);ctx.rotate(dive.angle);ctx.translate(0,88);ctx.transform(1,0,pose.turn,1,pose.turn*88,0);
@@ -395,24 +435,32 @@ function athlete(p,side,variant=null){
  rect(-5,-145,10,15,2,skin);
  const fabric=gradient(ctx,-24,-135,24,-91,[[0,tone(shirt,.28)],[.28,tone(shirt,.13)],[.55,shirt],[1,tone(shirt,-.27)]]);
  path([{x:-13,y:-138},{x:13,y:-138},{x:24,y:-129},{x:21,y:-116},{x:16,y:-119},{x:16,y:-88},{x:-16,y:-88},{x:-16,y:-119},{x:-22,y:-116},{x:-25,y:-129}],fabric,ART.roof+'70',1.15);
- const trim=tone(shirt,-.38);
- path([{x:-13,y:-137},{x:-22,y:-128},{x:-18,y:-118},{x:-13,y:-91},{x:-8,y:-91},{x:-12,y:-120}],tone(shirt,-.18));
- path([{x:-13,y:-129},{x:-8,y:-133},{x:6,y:-130},{x:0,y:-127}],tone(shirt,.37)+'85');
- path([{x:-13,y:-105},{x:-8,y:-97},{x:0,y:-94},{x:-9,y:-95}],tone(shirt,-.29)+'b0');
- path([{x:3,y:-93},{x:13,y:-99},{x:15,y:-94},{x:14,y:-91}],tone(shirt,-.30)+'ab');
- line({x:-7,y:-96},{x:-2,y:-94},tone(shirt,.31)+'aa',1.15);
- line({x:5,y:-93},{x:12,y:-97},tone(shirt,.29)+'9c',.9);
- line({x:-23,y:-121},{x:-17,y:-124},trim,2.4);
- line({x:23,y:-121},{x:17,y:-124},trim,2.4);
- line({x:-9,y:-137},{x:0,y:-132},trim,2.1);line({x:0,y:-132},{x:9,y:-137},trim,2.1);
- line({x:-14,y:-90},{x:14,y:-90},trim,1);
- line({x:10,y:-115},{x:12,y:-97},tone(shirt,.22)+'91',.9);
- line({x:-19,y:-129},{x:-10,y:-134},tone(shirt,.27)+'ad',.9);
- line({x:19,y:-129},{x:10,y:-134},tone(shirt,.21)+'ad',.9);
- line({x:-13,y:-106},{x:-9,y:-94},tone(shirt,-.31)+'70',1.1);
+ if(kitReady){
+  ctx.save();ctx.clip();ctx.globalAlpha*=.9;
+  drawKit(identity.id,1,-25,-137,49,50);ctx.restore();
+ }else{
+  const trim=tone(shirt,-.38);
+  path([{x:-13,y:-137},{x:-22,y:-128},{x:-18,y:-118},{x:-13,y:-91},{x:-8,y:-91},{x:-12,y:-120}],tone(shirt,-.18));
+  path([{x:-13,y:-129},{x:-8,y:-133},{x:6,y:-130},{x:0,y:-127}],tone(shirt,.37)+'85');
+  path([{x:-13,y:-105},{x:-8,y:-97},{x:0,y:-94},{x:-9,y:-95}],tone(shirt,-.29)+'b0');
+  path([{x:3,y:-93},{x:13,y:-99},{x:15,y:-94},{x:14,y:-91}],tone(shirt,-.30)+'ab');
+  line({x:-7,y:-96},{x:-2,y:-94},tone(shirt,.31)+'aa',1.15);
+  line({x:5,y:-93},{x:12,y:-97},tone(shirt,.29)+'9c',.9);
+  line({x:-23,y:-121},{x:-17,y:-124},trim,2.4);
+  line({x:23,y:-121},{x:17,y:-124},trim,2.4);
+  line({x:-9,y:-137},{x:0,y:-132},trim,2.1);line({x:0,y:-132},{x:9,y:-137},trim,2.1);
+  line({x:-14,y:-90},{x:14,y:-90},trim,1);
+  line({x:10,y:-115},{x:12,y:-97},tone(shirt,.22)+'91',.9);
+  line({x:-19,y:-129},{x:-10,y:-134},tone(shirt,.27)+'ad',.9);
+  line({x:19,y:-129},{x:10,y:-134},tone(shirt,.21)+'ad',.9);
+  line({x:-13,y:-106},{x:-9,y:-94},tone(shirt,-.31)+'70',1.1);
+ }
  ctx.textAlign='center';ctx.font='750 18px "Court Condensed",Arial';ctx.fillStyle=tone(ART.roof,-.05);ctx.fillText(isBack||online?.active?identity.number:'02',0,-105);
  ctx.save();ctx.translate(0,-159);ctx.rotate(pose.dive.headTilt||0);ctx.translate(0,159);ellipse(0,-159,14,17,skin);ellipse(isBack?12:-12,-158,3,4.5,tone(skin,-.06));
- if(isBack){if(identity.hair==='tied'){ellipse(-14,-151,5,12,hair);line({x:-11,y:-159},{x:-18,y:-143},hair,6);}path([{x:-14,y:-156},{x:-14,y:-166},{x:-8,y:-175},{x:7,y:-176},{x:14,y:-168},{x:14,y:-155},{x:8,y:-148},{x:-8,y:-149}],hair);line({x:-9,y:-166},{x:7,y:-169},tone(hair,.13),1);if(identity.hair==='sweep'){path([{x:-13,y:-165},{x:-4,y:-178},{x:12,y:-171},{x:13,y:-161},{x:2,y:-169}],tone(hair,.2));line({x:-13,y:-159},{x:12,y:-159},ART.paint,2.5);}}
+ if(kitReady){
+  if(identity.hair==='tied')drawKit(identity.id,0,-17,-178,34,36);
+  else drawKit(identity.id,0,-14.8,-177,29.6,28);
+ }else if(isBack){if(identity.hair==='tied'){ellipse(-14,-151,5,12,hair);line({x:-11,y:-159},{x:-18,y:-143},hair,6);}path([{x:-14,y:-156},{x:-14,y:-166},{x:-8,y:-175},{x:7,y:-176},{x:14,y:-168},{x:14,y:-155},{x:8,y:-148},{x:-8,y:-149}],hair);line({x:-9,y:-166},{x:7,y:-169},tone(hair,.13),1);if(identity.hair==='sweep'){path([{x:-13,y:-165},{x:-4,y:-178},{x:12,y:-171},{x:13,y:-161},{x:2,y:-169}],tone(hair,.2));line({x:-13,y:-159},{x:12,y:-159},ART.paint,2.5);}}
  else{path([{x:-14,y:-159},{x:-13,y:-169},{x:-6,y:-176},{x:7,y:-174},{x:14,y:-166},{x:12,y:-156},{x:7,y:-164},{x:-6,y:-164}],hair);line({x:-7,y:-158},{x:-4,y:-158},hair,1.2);line({x:4,y:-158},{x:7,y:-158},hair,1.2);line({x:0,y:-156},{x:-1,y:-150},tone(skin,-.2),.8);line({x:-3,y:-147},{x:3,y:-147},tone(skin,-.22),.8);}
  ctx.restore();ctx.restore();
  if(dive.hip){
@@ -507,9 +555,11 @@ function frame(t){
  director.update(dt,{state:match.state,mode:match.mode,ball:match.ball,lastHit:match.lastHit,contactT:match.contact?.t,ballScreen:{x:baseBall.x/W,y:baseBall.y/H},focus:focus?{x:focus.x/W,y:focus.y/H}:null,frozen:['paused','countdown'].includes(match.state)||!$('menu').hidden||$('help-dialog').open||$('controls-dialog').open});
  if(hadCall&&!director.call){$('line-call').hidden=true;if(pendingFinish){showMatchEnd(pendingFinish);pendingFinish=null;}else if(match.state==='point')$('point-banner').hidden=false;}
  poses=match.players.map((p,side)=>racketPose(p,side,online?.active?online.contactFor(p.id):match.contact));if(feedbackTimer>0){feedbackTimer-=dt;if(feedbackTimer<=0)hideFeedback();}
- if(renderedVenue!==match.venue){
-  renderedVenue=match.venue;
-  $('stage').dataset.venue=renderedVenue;
+ const arena=cupFinal(match.mode)?'final':match.venue;
+ if(renderedArena!==arena){
+  renderedArena=arena;
+  $('stage').dataset.venue=match.venue;
+  $('stage').dataset.arena=arena;
   staticLayer=null;
  }
  const wind=match.wind;
@@ -522,6 +572,7 @@ function frame(t){
  if(!staticLayer){courtBackground();staticLayer=document.createElement('canvas');staticLayer.width=canvas.width;staticLayer.height=canvas.height;staticLayer.getContext('2d').drawImage(canvas,0,0);}
  ctx.fillStyle=ART.roof;ctx.fillRect(0,0,W,H);ctx.save();applyView();
  ctx.drawImage(staticLayer,0,0,W,H);
+ drawFinalScore();
  if(match.state==='rally'){trail.push({x:match.ball.x,y:match.ball.y,z:match.ball.z});if(trail.length>18)trail.shift();}
  const detail=director.detailWeight;drawComparisons();if(!director.call){drawServiceCourt();drawShotZone();drawLanding();}ctx.save();ctx.globalAlpha=1-detail;if(wind)drawWindFlags(ctx,project,ART,wind,reduced?0:match.time);drawTeam(1);ctx.restore();if(match.ball.z>0)drawShuttle();ctx.save();ctx.globalAlpha=1-detail;drawNet();drawTeam(0);ctx.restore();if(match.ball.z<=0)drawShuttle();drawTiming();drawDebug();drawNetContact();drawLineCall();
  for(let i=particles.length-1;i>=0;i--){const p=particles[i];if(!['paused','countdown'].includes(match.state)){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;}if(p.life<=0){particles.splice(i,1);continue;}ctx.globalAlpha=p.life/.22;ellipse(p.x,p.y,2,2,p.color);}ctx.globalAlpha=1;ctx.restore();drawLineView();drawGesture();requestAnimationFrame(frame);
