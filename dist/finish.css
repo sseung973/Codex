@@ -8,13 +8,14 @@
   --control-highlight: inset 0 1px var(--enamel-highlight);
 }
 
-#title-enter, .primary, .lobby-actions .secondary {
+#title-enter, .primary, .lobby-actions .secondary, #lobby-friends-panel button.room-primary {
   border-radius: 4px;
   background-image: linear-gradient(to bottom, var(--enamel-highlight), transparent 58%);
   box-shadow: var(--control-highlight), 0 3px var(--enamel-shadow);
 }
 
-#title-enter:active, .primary:active, .lobby-actions .secondary:active {
+#title-enter:active, .primary:active, .lobby-actions .secondary:active,
+#lobby-friends-panel button.room-primary:active:not(:disabled) {
   box-shadow: var(--control-highlight);
 }
 
@@ -115,24 +116,6 @@
   box-shadow: inset 0 3px var(--primary), 0 12px 32px var(--enamel-shadow);
 }
 
-.lobby fieldset input:checked + span {
-  box-shadow: var(--control-highlight), inset 3px 0 var(--primary);
-}
-
-.lobby .athlete-options input:checked + span {
-  box-shadow: var(--control-highlight), inset 0 -3px var(--kit, var(--primary));
-}
-
-#lobby-friends-panel button.room-primary {
-  border-color: var(--court);
-  border-radius: 4px;
-  box-shadow: var(--control-highlight), 0 2px color-mix(in srgb, var(--court) 65%, var(--bg));
-}
-
-#lobby-friends-panel button.room-primary:active:not(:disabled) {
-  box-shadow: var(--control-highlight);
-}
-
 @media (forced-colors: active) {
   #title-enter, .primary, .lobby-actions .secondary,
   .arena-top .square-button, .lobby-tools button, .lobby-court-athlete button,
@@ -152,7 +135,6 @@
     box-shadow: none;
   }
   #score-you, #score-ai { color: CanvasText; }
-  .lobby fieldset input:checked + span, .lobby .athlete-options input:checked + span { box-shadow: none; }
   .arena-top .square-button[aria-pressed="true"], .serve-selector button[aria-pressed="true"],
   .shot-selector button[aria-pressed="true"], .shot-selector.is-free button[aria-pressed="true"] {
     background: Highlight;

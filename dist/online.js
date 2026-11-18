@@ -51,8 +51,39 @@ class Client{
  }$('online-series').hidden=false;write('online-series',s.bestOf===3?s.setNumber+'세트 · 세트 '+this.match.series.sets.join(' : ')+' · 3판 2선승':Competition.RULES.points+'점 · 한 세트');
  $('online-set-break').hidden=s.state!=='setbreak'||!$('line-call').hidden;if(s.state==='setbreak'){const h=this.match.series.history.at(-1);write('online-set-result',h.number+'세트 '+(h.winner===0?'우리 팀 승리':'상대 팀 승리')+' · '+h.score.join(' : '));write('online-set-timer',Math.ceil(s.setBreakRemaining)+'초');$('point-banner').hidden=true;}
  if(s.state==='over'){$('pause-title').textContent=this.match.series.winner===0?'우리 팀 승리!':'상대 팀 승리';$('resume').textContent='대기방으로';const text=Competition.resultText(this.match.series);if(text)write('pause-copy',text);}this.drawFormation();}
+ createRosterSeat(room,player,id){
+  const seat=document.createElement('li'),team=Math.floor(id/(room.doubles?2:1));
+  seat.dataset.team=team;
+  if(player?.bot)seat.dataset.bot='true';
+
+  const athlete=player&&ShuttlePhysics.ATHLETES[ShuttlePhysics.normalizeAthlete(player.athlete)];
+  const portrait=document.createElement(athlete?'img':'span');
+  portrait.className='room-avatar';
+  if(athlete){
+   portrait.src=$('lobby-portrait-'+athlete.id).src;
+   portrait.alt='';portrait.width=40;portrait.height=40;portrait.loading='lazy';portrait.decoding='async';
+  }else portrait.setAttribute('aria-hidden','true');
+
+  const identity=document.createElement('div');
+  const name=document.createElement('strong'),role=document.createElement('span');
+  name.textContent=player?player.name+(id===this.seat?' (나)':''):'친구 대기';
+  const details=[team===0?'A팀':'B팀'];
+  if(room.doubles)details.push(Competition.FORMATIONS[room.formations[team].type].roles[Competition.role(room.formations[team],id)]);
+  if(athlete)details.push(athlete.name);
+  role.textContent=details.join(' · ');
+  identity.append(name,role);
+
+  const status=document.createElement('span');
+  status.className='room-player-state';
+  const state=!player?'empty':player.bot?'bot':!player.connected?'offline':player.ready?'ready':'waiting';
+  status.dataset.state=state;
+  status.textContent={empty:'빈 자리',bot:'자동 플레이',offline:'재접속 대기',ready:'준비 완료',waiting:'준비 중'}[state];
+  seat.append(portrait,identity,status);
+  return seat;
+ }
  drawRoom(){const r=this.room;if(r?.phase==='waiting'&&this.active){this.endMatch();this.setView('friends');}if(r?.phase==='waiting'&&this.nextProfile){this.send({type:'profile',...this.nextProfile});this.nextProfile=null;}this.busy(false);$('room-entry').hidden=!!r;$('room-waiting').hidden=!r;if(!r)return;$('room-number').textContent=r.code;const lineup=r.lineup||'four',usesAI=lineup!=='four';
- $('room-kind').textContent=(usesAI?Competition.DOUBLES_LINEUPS[lineup].label:r.doubles?'2 vs 2 복식':'1 vs 1 단식')+' · '+Competition.FORMATS[r.bestOf||1].label;$('room-roster').replaceChildren(...r.players.map((p,id)=>{const li=document.createElement('li'),team=Math.floor(id/(r.doubles?2:1));li.dataset.team=team;if(p?.bot)li.dataset.bot='true';const name=document.createElement('strong');name.textContent=p?p.name+(id===this.seat?' (나)':''):'친구를 기다리는 중';const info=document.createElement('span');info.textContent=(team===0?'A팀':'B팀')+' · '+(p?ShuttlePhysics.ATHLETES[p.athlete].name+(r.doubles?' · '+Competition.FORMATIONS[r.formations[team].type].roles[Competition.role(r.formations[team],id)]:'')+' · '+(p.bot?'자동 플레이':!p.connected?'재접속 대기':p.ready?'준비 완료':'준비 중'):'빈 자리');li.append(name,info);return li;}));$('room-return').hidden=!this.active||r.phase==='waiting';$('room-teams').hidden=!r.doubles||usesAI||r.phase!=='waiting';$('room-ready').disabled=r.phase!=='waiting';$('room-ready').textContent=r.players[this.seat]?.ready?'준비 취소':'준비 완료';$('room-ready').setAttribute('aria-pressed',String(!!r.players[this.seat]?.ready));$('room-start').hidden=r.host!==this.seat;$('room-start').textContent=r.phase==='over'?'다음 경기 준비':'경기 시작';$('room-start').disabled=r.phase==='playing'||r.phase==='waiting'&&r.players.some(p=>!p?.connected||!p.ready);this.drawFormation();this.status(r.phase==='playing'?'경기 중 · 연결이 끊기면 모두 일시정지돼요.':r.phase==='over'?'경기 종료 · 방장이 다음 경기를 준비할 수 있어요.':r.players.some(p=>!p)?(usesAI?'친구 한 명에게 방 코드나 초대 링크를 보내세요.':'방 코드나 초대 링크를 친구에게 알려주세요.'):'친구끼리 준비 완료를 누르면 방장이 시작할 수 있어요.');}
+ $('room-kind').textContent=(usesAI?Competition.DOUBLES_LINEUPS[lineup].label:r.doubles?'2 vs 2 복식':'1 vs 1 단식')+' · '+Competition.FORMATS[r.bestOf||1].label;$('room-roster').replaceChildren(...r.players.map((player,id)=>this.createRosterSeat(r,player,id)));
+ $('room-return').hidden=!this.active||r.phase==='waiting';$('room-teams').hidden=!r.doubles||usesAI||r.phase!=='waiting';$('room-ready').disabled=r.phase!=='waiting';$('room-ready').textContent=r.players[this.seat]?.ready?'준비 취소':'준비 완료';$('room-ready').setAttribute('aria-pressed',String(!!r.players[this.seat]?.ready));$('room-start').hidden=r.host!==this.seat;$('room-start').textContent=r.phase==='over'?'다음 경기 준비':'경기 시작';$('room-start').disabled=r.phase==='playing'||r.phase==='waiting'&&r.players.some(p=>!p?.connected||!p.ready);this.drawFormation();this.status(r.phase==='playing'?'경기 중 · 연결이 끊기면 모두 일시정지돼요.':r.phase==='over'?'경기 종료 · 방장이 다음 경기를 준비할 수 있어요.':r.players.some(p=>!p)?(usesAI?'친구 한 명에게 방 코드나 초대 링크를 보내세요.':'방 코드나 초대 링크를 친구에게 알려주세요.'):'친구끼리 준비 완료를 누르면 방장이 시작할 수 있어요.');}
  chooseFormation(value){if(this.formationBusy||this.ws?.readyState!==1)return;this.formationBusy=true;this.drawFormation();this.status('우리 팀 포메이션을 적용하는 중이에요…');this.send({type:'formation',...value});}
  drawFormation(){const r=this.room,show=!!r?.doubles;$('room-formation').hidden=!show;if(!show)return;const team=this.team(),f=(this.latest?.formations&&r.phase!=='waiting'?this.latest.formations:r.formations)[team],spec=Competition.FORMATIONS[f.type],editable=!this.formationBusy&&this.ws?.readyState===1&&(r.phase==='waiting'||r.phase==='playing'&&['serve','point','setbreak','paused'].includes(this.latest?.state));$('room-formation').setAttribute('aria-busy',String(!!this.formationBusy));for(const button of document.querySelectorAll('[data-formation]')){button.disabled=!editable;button.setAttribute('aria-pressed',String(button.dataset.formation===f.type));}$('room-swap-role').disabled=!editable;write('room-roles',spec.roles.map((label,index)=>label+' '+(r.players[f.lead===team*2?team*2+index:team*2+1-index]?.name||'친구 대기')).join(' · '));write('room-formation-note',r.phase==='waiting'?'바꾸면 우리 팀은 준비 완료를 다시 눌러주세요.':editable?'포메이션과 역할을 바꾼 뒤 경기로 돌아가세요.':'서브 준비·세트 휴식·일시정지 때 바꿀 수 있어요.');}
  adjustInput(input){if(!this.active||performance.now()-(this.lastAdjust||0)<33)return;this.lastAdjust=performance.now();this.send({type:'adjust',input:{...input,shot:this.match.selectedShot}});}

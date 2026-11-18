@@ -57,9 +57,12 @@ async function run() {
       await guest.waitForFunction(() => shuttleRush.snapshot.online.room);
       assert.equal((await snapshot(guest)).online.room.lineup, lineup);
       assert.equal(await guest.locator('#room-roster [data-bot]').count(), 2);
+      assert.equal(await guest.locator('#room-roster img.room-avatar').count(),4);
+      assert.equal(await guest.locator('#room-roster [data-state=bot]').count(),2);
       assert.ok(await guest.locator('#room-teams').isHidden());
       assert.ok(await host.locator('#room-start').isDisabled());
       for (const page of [host, guest]) await page.locator('#room-ready').click();
+      await host.waitForFunction(()=>document.querySelectorAll('#room-roster [data-state=ready]').length===2);
       await host.locator('#room-start').click();
       await guest.waitForFunction(() => shuttleRush.snapshot.state === 'serve');
       assert.deepEqual((await snapshot(guest)).online.players.map(p => p.bot),
