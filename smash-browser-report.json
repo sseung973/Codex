@@ -1,0 +1,16 @@
+{
+  "base": "http://127.0.0.1:42805",
+  "passed": 1,
+  "scenario": "independent tablet strong-swipe smash and phone native weak-swipe defensive block",
+  "inputPower": 0.6964533820843191,
+  "flight": 0.5782127970749409,
+  "speedKmh": 82.97060449797932,
+  "smashOrigin": {
+    "x": -0.13671967696942292,
+    "y": 3.2184429318017362,
+    "z": 4.476049552511746
+  },
+  "rally": 4,
+  "rtt": 1,
+  "errors": []
+}

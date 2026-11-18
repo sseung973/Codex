@@ -247,3 +247,10 @@ Render verification also exposed an online-only early dive: a physically reachab
 The held-touch multiplayer harness isolates each human in its own Chromium process, so one emulated device cannot share the browser’s native input stream with another. A targeted live check repeated held-finger serve/counter/five-contact rallies three times at 181–187ms RTT. These are browser touch checks, not hardware iOS/Safari verification.
 
 Final live verification at production commit bda92d7: six independent-browser first-counter scenarios passed at 180–185ms RTT, including five-contact singles/doubles, phone held/fresh touch, tablet touch, PC keys and explicit low-smash rejection. The existing four online room/reconnect/forfeit scenarios also passed; HTTPS validation matched the index and all 13 runtime assets. online-return-live-report.json records this deployed runtime, while subsequent harness-only commits do not change its assets.
+
+
+## Smash balance · 2026-11-18
+
+The user requested a modest smash nerf. CFG.smash now owns base flight 0.56s (+80ms), power-dependent time 0.06s, and follow-through/recovery 0.28s (previously 0.18s). Rally.hit applies these to both human and AI strokes; OnlineMatch copies the solver’s recovery rather than maintaining a separate duration. Across 36 front/mid/back athlete/power cases, initial smash speed fell 13.8–15.9%. A neutral centre full-power smash went from 92.5 to 78.4km/h and 0.48s to 0.56s. It remains descending and faster than drive. A controlled defender’s 400–450ms block now returns the central full-power smash; 500ms still misses. This is a deterministic reaction test, not a human win-rate claim.
+
+Stamina cost, height limits, athlete stat totals, other shots and rendering are unchanged. The existing shared physics and camera/impact/sound events remain canonical. server/smash-balance.test.cjs covers legal trajectories, athlete identity, mirrored singles/doubles late defense, follow-through and unchanged fatigue. tests/smash-balance-browser.cjs plays a tablet strong-swipe smash and a phone weak-swipe block through two independent browsers and accepts LIVE_ORIGIN for deployed verification.

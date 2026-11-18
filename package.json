@@ -1,1 +1,1 @@
-{"name":"shuttle-rush-online","version":"1.0.0","private":true,"engines":{"node":">=22"},"scripts":{"start":"node server/index.cjs","test":"node server/online.test.cjs && node server/rooms.test.cjs && node server/return-drop.test.cjs"},"dependencies":{"ws":"8.23.0"}}
+{"name":"shuttle-rush-online","version":"1.0.0","private":true,"engines":{"node":">=22"},"scripts":{"start":"node server/index.cjs","test":"node server/online.test.cjs && node server/rooms.test.cjs && node server/return-drop.test.cjs && node server/smash-balance.test.cjs"},"dependencies":{"ws":"8.23.0"}}
