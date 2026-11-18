@@ -302,8 +302,11 @@ function drawLineView(){
   polygon([{x:-call.halfWidth,z:end},{x:call.halfWidth,z:end},{x:call.halfWidth,z:start},{x:-call.halfWidth,z:start}],ART.paint);
  }
  const next=lp({x:call.landing.x+match.ball.vx*.02,z:call.landing.z+match.ball.vz*.02}),direction=Math.hypot(match.ball.vx,match.ball.vz)>.01?Math.atan2(next.y-point.y,next.x-point.x):-.65;
+ const shuttleScale=.00345;
  ctx.save();ctx.translate(point.x,point.y);ctx.rotate(direction);ctx.scale(scale,scale);ellipse(-.023,.006,.043,.017,'#17252c55');
- ctx.scale(.00345,.00345);drawShuttleMaterial();ctx.restore();
+ ctx.scale(shuttleScale,shuttleScale);
+ drawShuttleMaterial(SHUTTLE_OUTLINE_PX*W/(canvas.getBoundingClientRect().width*scale*shuttleScale));
+ ctx.restore();
  ctx.setLineDash([3,4]);line(edge,point,ART.out,1.3);ctx.setLineDash([]);ellipse(point.x,point.y,CFG.lineTolerance*scale+5,CFG.lineTolerance*scale+5,null,ART.out,1.8);
  ctx.restore();
 }
@@ -517,17 +520,32 @@ function drawEquipment(tile,x,y,width,height){
  const w=equipmentArt.naturalWidth/2,h=equipmentArt.naturalHeight;
  ctx.drawImage(equipmentArt,tile*w,0,w,h,x,y,width,height);
 }
-const shuttleSkirt=[{x:-.6,y:-2.4},{x:-19.4,y:-7.9},{x:-21.2,y:-6.7},{x:-21.2,y:6.7},{x:-19.4,y:7.9},{x:-.6,y:2.4}];
-function drawShuttleMaterial(){
+const SHUTTLE_OUTLINE_PX=.75;
+// Trace the outer alpha contour of the shuttle tile, including the cork.
+const shuttleSilhouette=new Path2D(`
+ M -19.66,-7.85 L -16.35,-7.15 -10.13,-4.49 -4.39,-2.59 -3.80,-2.53 -3.61,-2.91 -1.18,-2.91
+ C .35,-2.88 1.52,-2.45 2.13,-1.65 C 3.10,-.70 3.08,.65 2.46,1.52
+ C 1.76,2.67 .44,3.04 -.40,3.10 L -3.71,3.10 -3.90,2.78 -4.68,2.91 -10.22,4.68
+ L -15.38,6.77 -17.61,7.47 -19.75,7.85 -20.24,7.59 -20.14,7.09 -20.63,6.58 -20.34,5.76
+ L -20.82,5.25 -20.63,3.86 -21.12,3.10 -20.82,1.65 -21.21,1.01 -20.92,-.57 -21.31,-1.65
+ L -20.73,-2.59 -21.02,-3.23 -21.02,-4.11 -20.53,-4.68 -20.73,-5.82 -20.14,-6.39 -20.24,-7.21 -19.75,-7.40 Z
+`);
+function drawShuttleMaterial(outlineWidth){
  if(equipmentArt.naturalWidth){
   drawEquipment(1,-21.7,-8.1,24.9,16.2);
-  return;
+ }else{
+  ctx.save();ctx.clip(shuttleSilhouette);
+  ctx.fillStyle=gradient(ctx,-19,-6,-6,6,[[0,'#f7f3e4'],[.55,'#e9e4d5'],[1,'#b6b9ac']]);
+  ctx.fill(shuttleSilhouette);
+  for(let i=-2;i<=2;i++)line({x:-19,y:i*3.1},{x:-1.8,y:i*.88},'#8f978e8c',.55);
+  const cork=gradient(ctx,2,-3,-3,3,[[0,'#ead5af'],[.55,'#d2b28a'],[1,'#a5835e']]);
+  ellipse(-.15,0,3.9,3.3,cork);
+  ctx.restore();
  }
- const feather=gradient(ctx,-19,-6,-6,6,[[0,'#f7f3e4'],[.55,'#e9e4d5'],[1,'#b6b9ac']]);
- const cork=gradient(ctx,2,-3,-3,3,[[0,'#ead5af'],[.55,'#d2b28a'],[1,'#a5835e']]);
- path(shuttleSkirt,feather,'#60584959',.55);
- for(let i=-2;i<=2;i++)line({x:-19,y:i*3.1},{x:-1.8,y:i*.88},'#8f978e8c',.55);
- ellipse(0,0,3.9,3.9,cork,'#6a574966',.52);
+ ctx.save();
+ ctx.strokeStyle='#fff';ctx.lineWidth=outlineWidth;ctx.lineJoin='round';
+ ctx.stroke(shuttleSilhouette);
+ ctx.restore();
 }
 function drawShuttle(){
  const b=match.ball,p=project(b),shadow=project({x:b.x,z:b.z});
@@ -559,7 +577,7 @@ function drawShuttle(){
  ctx.rotate((flying||landed)&&moving?Math.atan2(next.y-p.y,next.x-p.x):-.8);
  const aspect=flying ? .66+.34*Math.hypot(b.vx,b.vy)/speed : 1;
  ctx.scale(scale*aspect,scale);
- drawShuttleMaterial();
+ drawShuttleMaterial(SHUTTLE_OUTLINE_PX*pixel/(scale*director.view.zoom));
  ctx.restore();
 }
 function drawLanding(){
