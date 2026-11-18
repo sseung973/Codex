@@ -13,8 +13,8 @@ test('low, stalled and steep contacts stay faults; fast swept grazes cannot tunn
 test('tape response is fixed-step independent at 30, 60 and 120Hz',()=>{
  const run=fps=>{const m=atNet();for(let i=0;i<fps*.5;i++)m.update(1/fps);return m;};const a=run(30),b=run(60),c=run(120);assert.equal(a.netCords,1);for(const key of Object.keys(a.ball)){assert.ok(Math.abs(a.ball[key]-b.ball[key])<1e-8);assert.ok(Math.abs(a.ball[key]-c.ball[key])<1e-8);}
 });
-test('an ordinary drop trajectory can graze the tape without injecting a collision result',()=>{
- const m=new Rally(()=>{},()=>.5);m.start();m.ball={x:0,y:2.6,z:-4.2,vx:0,vy:0,vz:0};m.hit(0,{shot:'drop',power:0},'perfect');m.aiWait=100;advance(m,1.6);assert.equal(m.netCords,1);assert.equal(m.pointCount,1);assert.equal(m.summary.netFaults,0);assert.equal(m.score[0],1);assert.ok(m.ball.z>0&&m.ball.z<2);
+test('a drop aimed at tape height can graze it through the flight solver and real collision',()=>{
+ const m=new Rally(()=>{},()=>.5);m.start();m.ball={x:0,y:2.6,z:-4.2,vx:0,vy:0,vz:0};const clearance=CFG.drop.clearance;try{CFG.drop.clearance=.02;m.hit(0,{shot:'drop',power:0},'perfect');}finally{CFG.drop.clearance=clearance;}m.aiWait=100;advance(m,1.85);assert.equal(m.netCords,1);assert.equal(m.pointCount,1);assert.equal(m.summary.netFaults,0);assert.equal(m.score[0],1);assert.ok(m.ball.z>0&&m.ball.z<2);
 });
 test('consecutive perfect returns build combo; serves, AI, comparison and early buffering do not fake it',()=>{
  const m=new Rally(()=>{},()=>.5);m.start();const hit=q=>{m.ball={x:0,y:2.3,z:-4.4,vx:0,vy:0,vz:0};m.hit(0,{shot:'clear',power:.5},q);};

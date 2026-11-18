@@ -1,0 +1,69 @@
+{
+  "base": "http://127.0.0.1:43647",
+  "passed": 6,
+  "results": [
+    {
+      "mode": "singles",
+      "shot": "drive",
+      "held": false,
+      "width": 390,
+      "height": 844,
+      "rally": 5,
+      "firstCounter": "drive",
+      "kind": "swipe",
+      "contactHeight": 1.559506050769996,
+      "rtt": 1
+    },
+    {
+      "mode": "singles",
+      "shot": "drop",
+      "held": true,
+      "width": 390,
+      "height": 844,
+      "rally": 5,
+      "firstCounter": "drop",
+      "kind": "swipe",
+      "contactHeight": 1.474482613718536,
+      "rtt": 2
+    },
+    {
+      "mode": "singles",
+      "shot": "drop",
+      "held": false,
+      "width": 834,
+      "height": 1194,
+      "rally": 5,
+      "firstCounter": "drop",
+      "kind": "swipe",
+      "contactHeight": 1.4677197339601307,
+      "rtt": 2
+    },
+    {
+      "mode": "singles",
+      "shot": "clear",
+      "held": false,
+      "width": 1280,
+      "height": 900,
+      "touch": false,
+      "rally": 5,
+      "firstCounter": "clear",
+      "kind": "keyboard",
+      "contactHeight": 1.4972742493206874,
+      "rtt": 1
+    },
+    {
+      "mode": "singles",
+      "rejected": "low smash",
+      "reason": "height",
+      "noFalseAcceptance": true
+    },
+    {
+      "mode": "doubles",
+      "clients": 4,
+      "rally": 5,
+      "firstCounter": "drop",
+      "rtt": 3
+    }
+  ],
+  "errors": []
+}
