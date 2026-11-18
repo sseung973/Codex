@@ -20,7 +20,39 @@ const snap=p=>p.evaluate(()=>{const s=shuttleRush.snapshot;return {state:s.state
   {
    const a=await player(0),b=await player(1,{touch:false});await room([a,b]);await a.locator('[data-shot=smash]').click();const f=await finger(a);await f.swing();await hit(b,1);await ready(b);await b.keyboard.press('Space');await hit(a,2);await f.swing({held:true,delay:15});await a.waitForFunction(()=>document.getElementById('status').textContent.includes('낮은 공'));assert.ok(a.acks.some(q=>!q.accepted&&q.reason==='height'));const rejected=await snap(a);assert.equal(rejected.pending,null);assert.equal(rejected.input.fired,false);assert.equal(rejected.rally,2);results.push({mode:'singles',rejected:'low smash',reason:'height',noFalseAcceptance:true});await a.screenshot({path:'/workspace/shared/downloads/shuttle-low-smash-feedback.png'});await f.end();await a.context().close();await a.qaBrowser.close();await b.context().close();await b.qaBrowser.close();
   }
-  const group=[];for(let i=0;i<4;i++)group.push(await player(i,{touch:i===0||i===2}));await room(group,true);await group[0].locator('[data-shot=drop]').click();const a=await finger(group[0]),b=await finger(group[2]);await a.swing();await hit(group[2],1);await ready(group[2]);await b.swing();await hit(group[0],2);await ready(group[0]);await a.swing({delay:180});const third=await hit(group[0],3);assert.equal(third.shot.type,'drop');assert.equal(third.lastHit,0);assert.deepEqual(third.score,[0,0]);await group[2].locator('[data-shot=clear]').click();await ready(group[2]);await b.swing();await hit(group[0],4);await group[0].locator('[data-shot=clear]').click();await ready(group[0]);await a.swing();const fifth=await hit(group[0],5);assert.deepEqual(fifth.score,[0,0]);results.push({mode:'doubles',clients:4,rally:fifth.rally,firstCounter:third.shot.type,rtt:third.rtt});await group[0].screenshot({path:'/workspace/shared/downloads/shuttle-return-doubles.png'});await a.end();await b.end();
+  const group=[];
+  for(let i=0;i<4;i++)group.push(await player(i,{touch:i===0||i===2}));
+  await room(group,true);
+  const server=group[0],receiver=group[2];
+  await server.locator('[data-shot=drop]').click();
+  const serverFinger=await finger(server),receiverFinger=await finger(receiver);
+  await serverFinger.swing();
+  await hit(receiver,1);
+  await ready(receiver);
+  await receiverFinger.swing();
+  await hit(server,2);
+  await Promise.all([
+   receiver.locator('[data-shot=clear]').click(),
+   (async()=>{await ready(server);await serverFinger.swing({delay:180});})()
+  ]);
+  const third=await hit(server,3);
+  assert.equal(third.shot.type,'drop');
+  assert.equal(third.lastHit,0);
+  assert.deepEqual(third.score,[0,0]);
+  await Promise.all([
+   server.locator('[data-shot=clear]').click(),
+   (async()=>{await ready(receiver);await receiverFinger.swing();})()
+  ]);
+  await hit(server,4);
+  await ready(server);
+  await serverFinger.swing();
+  const fifth=await hit(server,5);
+  assert.deepEqual(fifth.score,[0,0]);
+  for(const page of [server,receiver])assert.ok(page.acks.every(q=>q.accepted),JSON.stringify(page.acks));
+  results.push({mode:'doubles',clients:4,rally:fifth.rally,firstCounter:third.shot.type,rtt:third.rtt});
+  await server.screenshot({path:'/workspace/shared/downloads/shuttle-return-doubles.png'});
+  await serverFinger.end();
+  await receiverFinger.end();
   assert.deepEqual(errors,[]);const report={base,passed:results.length,results,errors};fs.writeFileSync(process.env.LIVE_ORIGIN?'/workspace/shared/downloads/shuttle-return-live-report.json':path.join(__dirname,'../online-return-report.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
  }finally{for(const c of allContexts)await c.close().catch(()=>{});for(const b of browsers)await b.close();if(local)await local.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
