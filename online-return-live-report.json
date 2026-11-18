@@ -1,0 +1,72 @@
+{
+  "base": "https://shuttle-rush-online-sseung973.onrender.com",
+  "passed": 6,
+  "results": [
+    {
+      "mode": "singles",
+      "shot": "drive",
+      "held": false,
+      "width": 390,
+      "height": 844,
+      "rally": 5,
+      "firstCounter": "drive",
+      "kind": "swipe",
+      "contactHeight": 1.530758262643521,
+      "rtt": 180
+    },
+    {
+      "mode": "singles",
+      "shot": "drop",
+      "held": true,
+      "width": 390,
+      "height": 844,
+      "rally": 5,
+      "firstCounter": "drop",
+      "kind": "swipe",
+      "contactHeight": 1.4748252634615961,
+      "rtt": 183
+    },
+    {
+      "mode": "singles",
+      "shot": "drop",
+      "held": false,
+      "width": 834,
+      "height": 1194,
+      "rally": 5,
+      "firstCounter": "drop",
+      "kind": "swipe",
+      "contactHeight": 1.4988643288365056,
+      "rtt": 184
+    },
+    {
+      "mode": "singles",
+      "shot": "clear",
+      "held": false,
+      "width": 1280,
+      "height": 900,
+      "touch": false,
+      "rally": 5,
+      "firstCounter": "clear",
+      "kind": "keyboard",
+      "contactHeight": 1.4660639933304498,
+      "rtt": 183
+    },
+    {
+      "mode": "singles",
+      "rejected": "low smash",
+      "reason": "height",
+      "noFalseAcceptance": true
+    },
+    {
+      "mode": "doubles",
+      "clients": 4,
+      "rally": 5,
+      "firstCounter": "drop",
+      "rtt": 185
+    }
+  ],
+  "errors": [],
+  "productionCommit": "bda92d79099f66e878bcf42f3b6b8501cabc2258",
+  "deployId": "dep-dbuf8egjo6nc739tt0t0",
+  "browserIsolation": "one Chromium process per human seat"
+}

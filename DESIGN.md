@@ -242,3 +242,8 @@ Verification: server/return-drop.test.cjs covers 72 mirrored low/front/back traj
 
 
 Render verification also exposed an online-only early dive: a physically reachable flat reply triggered a dive while the shuttle was still across the net; a later normal swipe arrived during get-up and was rejected. The solo run-versus-dive predicate is now shared as physics.js needsDive, with CFG.dive.runWindow / runMargin and identical solo values. Online Match uses the receiving athlete’s actual speed. The server regression replays the measured 1.53m return and delayed 400ms input on both sides; normal running must succeed with no dive. Browser coverage now continues through five contacts, so a successful third hit cannot conceal a broken fourth reception.
+
+
+The held-touch multiplayer harness isolates each human in its own Chromium process, so one emulated device cannot share the browser’s native input stream with another. A targeted live check repeated held-finger serve/counter/five-contact rallies three times at 181–187ms RTT. These are browser touch checks, not hardware iOS/Safari verification.
+
+Final live verification at production commit bda92d7: six independent-browser first-counter scenarios passed at 180–185ms RTT, including five-contact singles/doubles, phone held/fresh touch, tablet touch, PC keys and explicit low-smash rejection. The existing four online room/reconnect/forfeit scenarios also passed; HTTPS validation matched the index and all 13 runtime assets. online-return-live-report.json records this deployed runtime, while subsequent harness-only commits do not change its assets.
