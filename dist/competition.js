@@ -5,7 +5,7 @@ const FORMATIONS={
  'front-back':{label:'앞뒤 공격형',roles:['앞코트','뒤코트'],homes:[{x:0,z:-2.2},{x:0,z:-4.7}]},
  'side-side':{label:'좌우 수비형',roles:['왼쪽','오른쪽'],homes:[{x:-1.35,z:-3.7},{x:1.35,z:-3.7}]}
 };
-const RULES={points:11,cap:15,setBreak:8,frontDepth:3.3,rolePenalty:.9,spacing:1.1,coverLane:1};
+const RULES={doublesHalfWidth:3.05,points:11,cap:15,setBreak:8,frontDepth:3.3,rolePenalty:.9,spacing:1.1,coverLane:1};
 function bestOf(value,fallback=3){return value===1||value===3?value:fallback;}
 function formation(value,team){return {type:Object.hasOwn(FORMATIONS,value?.type)?value.type:'front-back',lead:[team*2,team*2+1].includes(value?.lead)?value.lead:team*2};}
 function role(value,id){return id===value.lead?0:1;}

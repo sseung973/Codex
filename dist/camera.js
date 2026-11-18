@@ -4,11 +4,11 @@ const CAM={nearMargin:.28,closeDuration:1.05,closeIn:.20,closeOut:.27,closeZoom:
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),mix=(a,b,t)=>a+(b-a)*t,smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
 const STRENGTHS={normal:1,subtle:.4,fixed:0};
 const neutral=()=>({zoom:1,x:0,y:0,roll:0});
-function classifyNearOut({reason,landing,lastHit},cfg){
+function classifyNearOut({reason,landing,lastHit},cfg,halfWidth=cfg.halfWidth){
  if(reason!=='out'||!landing||Math.abs(landing.y??0)>.001||![0,1].includes(lastHit)||![landing.x,landing.y??0,landing.z].every(Number.isFinite))return null;
- const tolerance=cfg.lineTolerance??.03,dx=Math.max(0,Math.abs(landing.x)-cfg.halfWidth-tolerance),dz=Math.max(0,Math.abs(landing.z)-cfg.halfLength-tolerance),gap=Math.hypot(dx,dz);
+ const tolerance=cfg.lineTolerance??.03,dx=Math.max(0,Math.abs(landing.x)-halfWidth-tolerance),dz=Math.max(0,Math.abs(landing.z)-cfg.halfLength-tolerance),gap=Math.hypot(dx,dz);
  if(gap<=1e-8||gap>CAM.nearMargin+1e-8)return null;
- return {landing:{x:landing.x,y:0,z:landing.z},edge:{x:clamp(landing.x,-cfg.halfWidth,cfg.halfWidth),y:0,z:clamp(landing.z,-cfg.halfLength,cfg.halfLength)},gap,lastHit};
+ return {halfWidth,landing:{x:landing.x,y:0,z:landing.z},edge:{x:clamp(landing.x,-halfWidth,halfWidth),y:0,z:clamp(landing.z,-cfg.halfLength,cfg.halfLength)},gap,lastHit};
 }
 function transformPoint(p,view,width,height){const x=(p.x-width/2)*view.zoom,y=(p.y-height/2)*view.zoom,c=Math.cos(view.roll),s=Math.sin(view.roll);return {...p,x:width/2+view.x*width+x*c-y*s,y:height/2+view.y*height+x*s+y*c,s:p.s===undefined?undefined:p.s*view.zoom};}
 function lineViewPoint(p,call,width,height){
@@ -22,7 +22,7 @@ class CameraDirector{
  setStrength(value){this.strength=Number.isFinite(value)?clamp(value,0,1):1;if(this.call){this.call.strength=this.strength;this.call.start={...this.view};}if(this.reduced){this.view=neutral();this.kick=0;}}
  reset(){this.view=neutral();this.call=null;this.lastCall=null;this.kick=0;this.mode='wide';}
  hit(data,mode){if(mode!=='compare')this.kick=Math.min(1,(data.type==='smash'?1:.45)+(data.power||0)*.25);}
- point(data){const call=classifyNearOut(data,this.cfg);if(!call)return null;this.call={...call,age:0,strength:this.strength,start:{...this.view}};this.lastCall={...call};this.mode='line-call';return this.call;}
+ point(data,halfWidth){const call=classifyNearOut(data,this.cfg,halfWidth);if(!call)return null;this.call={...call,age:0,strength:this.strength,start:{...this.view}};this.lastCall={...call};this.mode='line-call';return this.call;}
  update(dt,frame={}){
   if(frame.frozen)return;dt=clamp(dt,0,.1);this.kick*=Math.exp(-7*dt);
   if(this.call){
