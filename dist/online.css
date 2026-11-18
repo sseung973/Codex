@@ -24,3 +24,5 @@
 .online-set-break{position:absolute;top:180px;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);padding:16px 20px;text-align:center;pointer-events:none;z-index:4;background:var(--surface);border:1px solid var(--line)}
 .online-set-break strong,.online-set-break small{display:block}.online-set-break strong{font-size:14px}.online-set-break small{font-size:11px;color:var(--muted);margin-top:6px}#online-set-timer{display:block;margin-top:8px;font:700 28px var(--score);color:var(--primary)}
 @media(max-width:700px){.is-online .rally-strip{gap:5px}.is-online #speed{display:none}#online-condition{font-size:8px}}
+
+.lobby #room-lineup{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
