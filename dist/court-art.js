@@ -230,6 +230,64 @@
     if (view.wallArt?.naturalWidth) windowLight(ctx, view);
   }
 
+  function drawOutdoorVenue(ctx, view) {
+    const {width, height, floor, project, palette, tone} = view;
+    const sky = tone(palette.opponent, .28), haze = tone(palette.paint, -.05);
+    fill(ctx, gradient(ctx, 0, 0, 0, floor, [[0, sky], [.82, haze]]), 0, 0, width, floor);
+    for (const [x, y, span] of [[.19, .28, .19], [.66, .19, .24], [.91, .42, .14]]) {
+      oval(ctx, x * width, y * floor, span * width, floor * .027, palette.paint + '79');
+      oval(ctx, (x - span * .34) * width, (y + .02) * floor, span * width * .66, floor * .018, palette.paint + '53');
+    }
+    const ridge = [[0,.72],[.12,.56],[.24,.66],[.36,.57],[.51,.71],[.66,.52],[.76,.61],[.89,.51],[1,.63],[1,1],[0,1]];
+    polygon(ctx, ridge.map(([x,y])=>({x:x*width,y:y*floor})), tone(palette.court,.37));
+    fill(ctx, tone(palette.court,-.06), 0, floor*.92, width, floor*.08);
+    for (let i = 0; i <= 32; i++) {
+      const x = width * i / 32, size = floor * (.08 + seed(i + 44) * .16);
+      const y = floor * (.9 - seed(i + 51) * .07);
+      oval(ctx,x,y+size*.35,size*.65,size*.55,tone(palette.court,-.16+seed(i+13)*.23));
+      oval(ctx,x-size*.22,y,size*.45,size*.52,tone(palette.court,-.07+seed(i+23)*.19));
+    }
+    const fenceTop = floor - Math.min(44,floor*.24), fence = tone(palette.roof,.31);
+    fill(ctx, palette.roof + '23', 0, fenceTop, width, floor - fenceTop);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, fenceTop, width, floor - fenceTop);
+    ctx.clip();
+    for (let x = -48; x <= width + 48; x += 10) {
+      for (const direction of [-1,1]) {
+        stroke(ctx,{x,y:fenceTop},{x:x+(floor-fenceTop)*direction,y:floor},fence+'5e',.65);
+      }
+    }
+    ctx.restore();
+    for (let x = 0; x < width; x += width/8) stroke(ctx,{x,y:fenceTop-3},{x,y:floor},fence,1.8);
+    stroke(ctx,{x:0,y:fenceTop},{x:width,y:fenceTop},fence,1.5);
+    fill(ctx, gradient(ctx, 0, floor, 0, height, [
+      [0, tone(palette.muted, -.14)], [.65, tone(palette.muted, -.31)], [1, tone(palette.court, -.4)]
+    ]), 0, floor, width, height-floor);
+    for (const z of [-7.4, -3.7, 0, 3.7, 7.4]) {
+      const a=project({x:-14,z}),b=project({x:14,z});
+      if(a.y>floor)stroke(ctx,a,b,palette.roof+'2d',1);
+    }
+    mat(ctx, view);
+    surfaceGrain(ctx, width, height, .13);
+  }
+
+  function drawWindFlags(ctx, project, palette, wind, time) {
+    const z = 3.55;
+    for (const x of [-3.74,3.74]) {
+      const foot=project({x,z}), top=project({x,y:2.45,z});
+      const scale=top.s, length=Math.sign(wind)*(.44+.45*Math.abs(wind))*scale;
+      const wave=Math.sin(time*7+x*.7)*scale*.045;
+      const mid={x:top.x+length*.53,y:top.y+scale*.027+wave*.4};
+      const tip={x:top.x+length,y:top.y+scale*.095+wave};
+      oval(ctx,foot.x+3,foot.y+1,scale*.14,scale*.036,palette.roof+'66');
+      stroke(ctx,foot,top,palette.roof,2.1);
+      stroke(ctx,{x:foot.x+.65,y:foot.y},{x:top.x+.65,y:top.y},palette.paint+'86',.75);
+      polygon(ctx,[top,mid,tip,{x:mid.x,y:mid.y+scale*.145},{x:top.x,y:top.y+scale*.21}],palette.player);
+      stroke(ctx,mid,{x:mid.x,y:mid.y+scale*.145},palette.roof+'58',.8);
+    }
+  }
+
   function drawTape(ctx, corners, palette, tone, scale = 1) {
     const [left, right, upperRight, upperLeft] = corners;
     polygon(ctx, corners, palette.roof + '47');
@@ -251,5 +309,5 @@
     stroke(ctx, {x:upperLeft.x,y:upperLeft.y-.65*scale}, {x:upperRight.x,y:upperRight.y-.65*scale}, palette.paint, 2.2 * scale);
   }
 
-  window.ShuttleCourtArt = {drawVenue, drawTape, gradient, surfaceGrain};
+  window.ShuttleCourtArt = {drawVenue, drawOutdoorVenue, drawWindFlags, drawTape, gradient, surfaceGrain};
 })();

@@ -1,13 +1,13 @@
 'use strict';
 const {randomBytes,randomInt}=require('node:crypto');
 const {OnlineMatch}=require('./match.cjs');
-const {CFG,normalizeAthlete}=require('../dist/physics.js');
+const {CFG,normalizeAthlete,normalizeVenue}=require('../dist/physics.js');
 const Competition=require('../dist/competition.js');
 const CODE='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const RUNNING_STATES=['serve','rally','point','setbreak','countdown'];
 class Rooms{
  constructor({now=Date.now,send=(peer,data)=>peer.ws?.readyState===1&&peer.ws.send(JSON.stringify(data)),maxRooms=128}={}){this.rooms=new Map();this.now=now;this.send=send;this.maxRooms=maxRooms;}
- public(room){return {code:room.code,doubles:room.doubles,lineup:room.lineup,bestOf:room.bestOf,formations:room.formations,phase:room.phase,host:room.host,players:room.members.map((m,id)=>m?{id,name:m.name,athlete:m.athlete,team:Math.floor(id/(room.doubles?2:1)),ready:m.ready,connected:!!(m.peer||m.bot),bot:!!m.bot}:null)};}
+ public(room){return {code:room.code,doubles:room.doubles,venue:room.venue,lineup:room.lineup,bestOf:room.bestOf,formations:room.formations,phase:room.phase,host:room.host,players:room.members.map((m,id)=>m?{id,name:m.name,athlete:m.athlete,team:Math.floor(id/(room.doubles?2:1)),ready:m.ready,connected:!!(m.peer||m.bot),bot:!!m.bot}:null)};}
  broadcast(room,data){for(const m of room.members)if(m?.peer)this.send(m.peer,data);}
  lobby(room){room.updated=this.now();this.broadcast(room,{type:'room',room:this.public(room)});}
  snapshot(room){return {...room.match.snapshot(),waitingForCourt:room.members.some(m=>m?.away),resumeRequested:!!room.resumeRequested};}
@@ -27,7 +27,7 @@ class Rooms{
   Competition.DOUBLES_LINEUPS[lineup].aiSeats.forEach((id,index)=>{
    members[id]={bot:true,name:'AI '+(index+1),athlete:'haru',ready:true};
   });
-  const room={code,doubles,lineup,bestOf:Competition.bestOf(info.bestOf,1),formations:[0,1].map(team=>Competition.formation(null,team)),phase:'waiting',host:0,members,updated:this.now(),match:null,events:[],accumulator:0};
+  const room={code,doubles,venue:normalizeVenue(info.venue),lineup,bestOf:Competition.bestOf(info.bestOf,1),formations:[0,1].map(team=>Competition.formation(null,team)),phase:'waiting',host:0,members,updated:this.now(),match:null,events:[],accumulator:0};
   this.rooms.set(code,room);
   this.attach(peer,room,0);
   return room;
@@ -53,7 +53,7 @@ class Rooms{
  require(peer){if(!peer.room||peer.room.members[peer.seat]?.peer!==peer)throw Error('먼저 방에 입장해 주세요.');return peer.room;}
  profile(peer,q){const r=this.require(peer);if(r.phase!=='waiting')return;const m=r.members[peer.seat],update=this.member(q);m.name=update.name;m.athlete=update.athlete;m.ready=false;this.lobby(r);}
  team(peer,q){const r=this.require(peer);if(!r.doubles||r.lineup!=='four'||r.phase!=='waiting'||![0,1].includes(q.team))return;const index=r.members.findIndex((m,id)=>!m&&Math.floor(id/2)===q.team);if(index<0)throw Error('그 팀은 이미 두 명이에요.');const old=peer.seat,m=r.members[old];r.members[index]=m;r.members[old]=null;if(r.host===old)r.host=index;peer.seat=index;m.ready=false;this.send(peer,{type:'seat',seat:index});this.lobby(r);}
- start(peer){const r=this.require(peer);if(r.host!==peer.seat)throw Error('방장만 경기를 시작할 수 있어요.');if(r.phase!=='waiting'||r.members.some(m=>!(m?.peer||m?.bot)||!m.ready))throw Error('모든 선수가 입장하고 준비해야 해요.');r.phase='playing';r.events=[];r.resumeRequested=false;for(const m of r.members)m.away=false;r.match=new OnlineMatch(r.members,{doubles:r.doubles,bestOf:r.bestOf,formations:r.formations,onEvent:(type,data)=>{r.events.push({type,data});if(type==='point'&&data.over){r.phase='over';this.lobby(r);}}});this.broadcast(r,{type:'start',snapshot:this.snapshot(r)});r.events=[];this.lobby(r);}
+ start(peer){const r=this.require(peer);if(r.host!==peer.seat)throw Error('방장만 경기를 시작할 수 있어요.');if(r.phase!=='waiting'||r.members.some(m=>!(m?.peer||m?.bot)||!m.ready))throw Error('모든 선수가 입장하고 준비해야 해요.');r.phase='playing';r.events=[];r.resumeRequested=false;for(const m of r.members)m.away=false;r.match=new OnlineMatch(r.members,{doubles:r.doubles,venue:r.venue,bestOf:r.bestOf,formations:r.formations,onEvent:(type,data)=>{r.events.push({type,data});if(type==='point'&&data.over){r.phase='over';this.lobby(r);}}});this.broadcast(r,{type:'start',snapshot:this.snapshot(r)});r.events=[];this.lobby(r);}
  reset(peer){const r=this.require(peer);if(r.host!==peer.seat||r.phase!=='over')return;r.match=null;r.phase='waiting';r.resumeRequested=false;for(const m of r.members)if(m&&!m.bot)m.ready=false;this.lobby(r);}
  formation(peer,q){const r=this.require(peer);if(!r.doubles||r.phase==='over')throw Error('복식 경기에서 포메이션을 고를 수 있어요.');const team=Math.floor(peer.seat/2);if(q.typeName!==undefined&&!Object.hasOwn(Competition.FORMATIONS,q.typeName))throw Error('포메이션을 다시 골라주세요.');if(q.lead!==undefined&&![team*2,team*2+1].includes(q.lead))throw Error('우리 팀 안에서 역할을 골라주세요.');const next={...r.formations[team],...(q.typeName?{type:q.typeName}:{}),...(q.lead!==undefined?{lead:q.lead}:{})};if(next.type===r.formations[team].type&&next.lead===r.formations[team].lead){this.send(peer,{type:'formation',formation:next});return;}if(r.match&&!r.match.setFormation(team,next))throw Error('서브 준비·세트 휴식·일시정지 때 변경할 수 있어요.');r.formations[team]=Competition.formation(next,team);if(r.phase==='waiting')for(const m of r.members.slice(team*2,team*2+2))if(m&&!m.bot)m.ready=false;this.lobby(r);this.send(peer,{type:'formation',formation:r.formations[team]});}
  forfeit(r,id){if(!r.match||r.phase!=='playing')return;const winner=1-r.match.team(id);r.match.score[winner]=15;r.match.state='over';r.match.matchWinner=winner;r.match.forfeit=true;r.match.setBreakRemaining=0;r.match.pending.fill(null);r.phase='over';r.events.push({type:'point',data:{winner,reason:'forfeit',over:true,rally:r.match.rally}});}

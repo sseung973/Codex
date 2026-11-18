@@ -17,6 +17,8 @@ body.is-lobby{overflow:hidden}
 .lobby-showcase{position:relative;min-height:460px;overflow:hidden;background:var(--surface);isolation:isolate}
 .lobby-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .lobby-court-art{object-position:50% 65%}
+#lobby-outdoor-art{object-position:50% 51%}
+.lobby #lobby-venue{margin:0 0 16px}
 .lobby-portrait{object-position:50% 14%}
 .lobby-showcase::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,color-mix(in srgb,var(--bg) 96%,transparent),color-mix(in srgb,var(--bg) 48%,transparent) 24%,transparent 54%);pointer-events:none}
 .lobby-art-caption{position:absolute;z-index:1;left:clamp(18px,2.5vw,36px);right:18px;bottom:clamp(16px,3vw,36px);color:var(--text)}

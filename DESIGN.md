@@ -1,7 +1,7 @@
 ---
 version: alpha
 name: Shuttle Rush
-description: A swipe badminton game set in a restrained indoor club court.
+description: A swipe badminton game set at an illustrated club and outdoor court.
 colors:
   primary: "#dcb44e"
   background: "#17252c"
@@ -89,6 +89,8 @@ Court geometry uses a separate perspective transform from metric world coordinat
 
 During rallies the world camera stays level and follows flight with bounded pan and a short hit push. Motion settles as the player's contact window approaches. HUD and the pointer gesture guide stay in screen coordinates. Comparison mode keeps a steady view. Random screen shake is replaced by the shot-directed camera impulse.
 
+The outdoor venue keeps the court geometry and uses a daytime sky, a chain-link fence and a concrete run-off. Two ochre flags beyond the sidelines point downwind and hold their direction for the rally. Reduced motion holds the cloth still. Existing surface colors back the telemetry over the lighter sky.
+
 A confirmed ground out within 28cm of the tolerated court boundary triggers a 1.05s line call. It transitions to a dedicated oblique view from above, framing the real court edge and cork landing together; this is not just magnification of the rally angle. Its ground geometry uses world coordinates, an inward 4cm court-line strip, and the same cork tolerance as scoring. Score is already awarded before the presentation. The camera returns before the next practice feed; a final match overlay waits until the call finishes. Pause freezes the presentation. Large outs, legal line contacts and airborne exits do not trigger it. Reduced motion keeps the main camera still and supplies a static line-detail diagram.
 
 ## Shapes
@@ -106,6 +108,7 @@ Athletes have small heads, fitted shirts, long legs, narrower limbs, socks and c
 | Shot-button positions | layout.js Editor, existing native shot buttons and control dialog | normalized browser-local desktop / touch-portrait / touch-landscape profiles | default / edit draft / saved / storage unavailable | layout.test.cjs / layout-browser.cjs |
 | Modal | Native dialog + game-dialog structure | help and control handlers | help / controls | browser.cjs / controls-browser.cjs / design-browser.cjs |
 | Court rendering | Canvas courtBackground / athlete / drawShuttle | style.css material tokens → game.js ART / tone | wide / portrait / oblique line view | art-browser.cjs / design-browser.cjs --compare / improvements-browser.cjs |
+| Outdoor court | Lobby radio fieldsets and court-art.js scenery and flags | physics.js VENUES and rally wind / server-owned room snapshot | calm clubhouse / outdoor crosswind | wind.test.cjs / wind-browser.cjs |
 | Typography | Local Court Condensed @font-face and Korean system sans | style.css roles / bundled font + OFL | loaded / font failure fallback | art-browser.cjs |
 | Camera / line call | CameraDirector + lineViewPoint | camera.js CAM and STRENGTHS, physical ground result | normal / subtle / fixed / oblique line call / steady comparison / reduced motion | camera.test.cjs / camera-browser.cjs / risk-stats.test.cjs |
 | Match records | Existing pause compact-card, native table and bounded summary scroller | physics.js Rally.summary / game.js renderMatchSummary | match finished only / short landscape | risk-stats.test.cjs / risk-summary-browser.cjs |

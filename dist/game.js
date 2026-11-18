@@ -1,11 +1,11 @@
 (()=>{
 'use strict';
-const $=id=>document.getElementById(id),canvas=$('court'),{Rally,CFG,SHOTS,SERVES,AI_STYLES,ATHLETES,normalizeAthlete,strokeSide,COMPARE_ORDER,predict,integrate,collideNet,Tournament,ROUND_NAMES}=ShuttlePhysics;
+const $=id=>document.getElementById(id),canvas=$('court'),{Rally,CFG,VENUES,normalizeVenue,SHOTS,SERVES,AI_STYLES,ATHLETES,normalizeAthlete,strokeSide,COMPARE_ORDER,predict,integrate,collideNet,Tournament,ROUND_NAMES}=ShuttlePhysics;
 let ctx=canvas.getContext('2d');
 const artStyle=getComputedStyle(document.documentElement),artToken=name=>artStyle.getPropertyValue('--'+name).trim();
 const ART={roof:artToken('bg'),wall:artToken('surface'),court:artToken('court'),wood:artToken('wood'),player:artToken('player'),opponent:artToken('opponent'),paint:artToken('text'),muted:artToken('muted'),out:artToken('out'),kits:Object.fromEntries(Object.keys(ATHLETES).map(id=>[id,artToken('kit-'+id)]))};
 function tone(hex,amount){const value=parseInt(hex.slice(1),16),target=amount>0?255:0,t=Math.abs(amount);return '#'+[value>>16&255,value>>8&255,value&255].map(n=>Math.round(n+(target-n)*t).toString(16).padStart(2,'0')).join('');}
-const {drawVenue,drawTape,gradient,surfaceGrain}=ShuttleCourtArt;
+const {drawVenue,drawOutdoorVenue,drawWindFlags,drawTape,gradient,surfaceGrain}=ShuttleCourtArt;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const director=new ShuttleCamera.CameraDirector(CFG,{reduced});let pendingFinish=null;
 let W=720,H=1060,cameraScale=1,wideView=false,chosen='drive',debug=false,audio=false,ac=null,last=0,gesture=null,feedbackTimer=0,particles=[],trail=[],best=0,staticLayer=null,helpWasRunning=false;
@@ -14,7 +14,8 @@ wallArt.addEventListener('load',()=>{staticLayer=null;});
 try{best=Number(localStorage.getItem('shuttle-rush-best'))||0;}catch{}$('best').textContent=best;
 const shotNames=Object.fromEntries(Object.entries(SHOTS).map(([key,value])=>[key,value.label]));
 let controls=ShuttleInput.preferences(),controlsStorage=true,savedControls=null;try{savedControls=localStorage.getItem('shuttle-rush-controls-v1');}catch{controlsStorage=false;}try{controls=ShuttleInput.preferences(JSON.parse(savedControls));}catch{}
-let online=null;
+let online=null,renderedVenue=null,renderedWind=0;
+function selectedVenue(){return normalizeVenue(document.querySelector('[name=venue]:checked').value);}
 let selectedAthlete='jun',athleteStorage=true,lobbyTab='play';
 try{selectedAthlete=normalizeAthlete(localStorage.getItem('shuttle-rush-athlete-v1'));}catch{athleteStorage=false;}
 function selectLobbyTab(tab,focus=false){
@@ -31,13 +32,14 @@ function updateLobbyReady(){
  const mode=modeInput.value,level=document.querySelector('[name=difficulty]:checked').value,names={match:'AI 단식',tournament:'토너먼트',practice:'타격 연습',compare:'타구 비교'},levels={easy:'쉬움',normal:'보통',hard:'어려움'};
  const isCompare=mode==='compare';
  $('lobby-ready').textContent=ATHLETES[selectedAthlete].name+' · '+names[mode]+(isCompare?'':' · '+levels[level]);
+ $('lobby-venue-label').textContent=VENUES[isCompare?'indoor':selectedVenue()].label;
  $('lobby-match-mode').textContent=names[mode];
  $('lobby-match-format').textContent=modeInput.labels[0].querySelector('small').textContent;
  $('lobby-match-level').textContent=levels[level];
  $('lobby-match-level').hidden=isCompare;
  const hints={tournament:'8강부터 결승까지, 3연승에 도전하세요.',compare:'같은 공으로 네 타구의 궤적을 비교해요.',practice:'점수 없이 편하게 랠리를 이어가세요.'};
  const levelHints={easy:'높은 공으로 랠리부터 시작해요.',normal:'코스와 타이밍으로 빈틈을 노려요.',hard:'빠른 타구와 스매시에 대비하세요.'};
- $('setup-hint').textContent=hints[mode]||'11점 경기 · '+levelHints[level];
+ $('setup-hint').textContent=!isCompare&&selectedVenue()==='outdoor'?'깃발이 가리키는 쪽으로 셔틀이 밀려요.':hints[mode]||'11점 경기 · '+levelHints[level];
  $('start').firstChild.textContent=($('menu-resume').hidden?{match:'경기 시작',tournament:'대회 시작',practice:'연습 시작',compare:'비교 시작'}[mode]:'새 경기 시작')+' ';
 }
 for(const button of document.querySelectorAll('[data-lobby-tab]'))button.addEventListener('click',()=>selectLobbyTab(button.dataset.lobbyTab,button.getAttribute('role')!=='tab'));
@@ -45,12 +47,17 @@ for(const button of document.querySelectorAll('.lobby-tabs [role=tab]'))button.a
 function syncLobbyArtwork(){
  const showPortrait=lobbyTab==='athlete',showCourt=lobbyTab==='play';
  $('lobby-showcase').dataset.art=lobbyTab;
- $('lobby-court-art').hidden=!showCourt;
- $('lobby-friends-art').hidden=lobbyTab!=='friends';
+ const friends=lobbyTab==='friends';
+ const roomVenue=online?.room?.venue||document.querySelector('[name=room-venue]:checked').value;
+ const outdoor=friends?roomVenue==='outdoor':showCourt&&selectedVenue()==='outdoor'&&!document.querySelector('[name=mode][value=compare]').checked;
+ $('lobby-court-art').hidden=!showCourt||outdoor;
+ $('lobby-outdoor-art').hidden=!outdoor;
+ $('lobby-friends-art').hidden=!friends||outdoor;
  $('lobby-court-caption').hidden=!showCourt;
  $('lobby-athlete-caption').hidden=!showPortrait;
  for(const athlete of Object.values(ATHLETES))$('lobby-portrait-'+athlete.id).hidden=!showPortrait||athlete.id!==selectedAthlete;
 }
+for(const radio of document.querySelectorAll('[name=room-venue]'))radio.addEventListener('change',syncLobbyArtwork);
 function renderAthleteChoice(){
  const a=ATHLETES[selectedAthlete];
  $('lobby-hero-name').textContent=a.name;
@@ -140,9 +147,9 @@ for(const b of document.querySelectorAll('[data-serve]'))b.addEventListener('cli
 function updateComparisonChart(){const chart=$('comparison-chart');const empty=match.comparisons.length===0;chart.toggleAttribute('hidden',empty);if(empty)return;const map=p=>[12+(p.z+6.7)/13.4*236,116-Math.max(0,p.y)/8*100];chart.innerHTML='<path d="M12 116H248M130 116V96" fill="none" stroke="#91a7ae" stroke-width="1"/><text x="6" y="12" fill="#b3c1c4" font-size="9">높이</text><text x="132" y="93" fill="#b3c1c4" font-size="9">네트</text><text x="17" y="133" fill="#b3c1c4" font-size="9">나</text><text x="206" y="133" fill="#b3c1c4" font-size="9">상대 뒤</text>'+match.comparisons.map(r=>'<path data-curve="'+r.type+'" d="'+r.points.map((p,i)=>(i?'L':'M')+map(p).map(v=>v.toFixed(1)).join(' ')).join(' ')+'" fill="none" stroke="'+SHOTS[r.type].color+'" stroke-width="'+(r.type===chosen?'2.5':'1.7')+'" opacity="'+(r.type===chosen?'1':'.6')+'"/>' ).join('');}
 function updateComparison(){const panel=$('comparison-panel');panel.hidden=match.mode!=='compare';if(panel.hidden)return;const complete=match.state==='review';$('comparison-title').textContent=complete?'네 타구 비교 완료':(match.comparisons.length+1)+'/4 · '+shotNames[match.selectedShot]+' 받기';$('comparison-note').textContent=complete?'타구를 골라 궤적과 착지점을 비교하세요.':'같은 공 · 중앙 코스 · 세기 고정';$('comparison-restart').hidden=!complete;$('comparison-results').innerHTML=match.comparisons.map(r=>'<button class="comparison-result" data-result="'+r.type+'" aria-pressed="'+(r.type===chosen)+'" style="--result-color:'+SHOTS[r.type].color+'"><b>'+shotNames[r.type]+'</b><span>최고 '+r.peak.toFixed(1)+'m · '+r.flight.toFixed(1)+'초</span><small>'+Math.round(r.speed)+'km/h · '+(r.landing.z<2?'네트 앞':'코트 뒤쪽')+'</small></button>').join('');for(const b of document.querySelectorAll('[data-result]'))b.addEventListener('click',()=>setShot(b.dataset.result));updateComparisonChart();}
 $('comparison-restart').addEventListener('click',()=>{document.querySelector('[name=mode][value=compare]').checked=true;start();});
-function launchMatch(mode,difficulty){const aiStyle=mode==='tournament'?tournament.current.aiStyle:document.querySelector('[name=ai-style]:checked').value;match.selectShot(chosen);match.start({mode,difficulty,aiStyle,athlete:mode==='tournament'?tournament.athleteId||selectedAthlete:selectedAthlete});$('pause').textContent='Ⅱ';$('pause').setAttribute('aria-label','일시정지');canvas.focus({preventScroll:true});}
+function launchMatch(mode,difficulty,venue=selectedVenue()){const aiStyle=mode==='tournament'?tournament.current.aiStyle:document.querySelector('[name=ai-style]:checked').value;match.selectShot(chosen);match.start({mode,difficulty,aiStyle,venue,athlete:mode==='tournament'?tournament.athleteId||selectedAthlete:selectedAthlete});$('pause').textContent='Ⅱ';$('pause').setAttribute('aria-label','일시정지');canvas.focus({preventScroll:true});}
 function start(){if(online?.room)online.leave();const mode=document.querySelector('[name=mode]:checked').value,difficulty=document.querySelector('[name=difficulty]:checked').value;if(mode==='tournament'){tournament.start(difficulty);tournament.athleteId=selectedAthlete;launchMatch(mode,tournament.current.difficulty);}else{tournament.status='idle';launchMatch(mode,difficulty);}}
-function continueOrRestart(){if(online?.active){online.showRoom();return;}if(match.mode==='tournament'&&tournament.advance())launchMatch('tournament',tournament.current.difficulty);else start();}
+function continueOrRestart(){if(online?.active){online.showRoom();return;}if(match.mode==='tournament'&&tournament.advance())launchMatch('tournament',tournament.current.difficulty,match.venue);else start();}
 function canContinueMatch(){return online?.active?match.state!=='over':match.state==='paused';}
 function openMenu(){
  document.body.classList.remove('is-playing');
@@ -182,9 +189,9 @@ function handleBindingKey(e){
 for(const b of document.querySelectorAll('[data-shot]'))b.addEventListener('click',e=>{setShot(b.dataset.shot);if(e.detail>0)canvas.focus({preventScroll:true});});
 for(const b of document.querySelectorAll('[data-bind]')){b.addEventListener('click',()=>{bindingShot=b.dataset.bind;renderKeys();$('key-binding-note').textContent=SHOTS[bindingShot].label+'에 사용할 키를 누르세요. Escape로 취소합니다.';});b.addEventListener('blur',()=>{if(bindingShot===b.dataset.bind){finishBinding();$('key-binding-note').textContent='키 변경을 취소했어요.';}});}
 function toggleDebug(){debug=!debug;$('debug-panel').hidden=!debug;$('debug-toggle').setAttribute('aria-pressed',debug);$('debug-toggle').textContent=debug?'궤적 분석 닫기':'궤적 분석 보기';}
-$('debug-toggle').addEventListener('click',toggleDebug);function setupHint(){const mode=document.querySelector('[name=mode]:checked').value,style=document.querySelector('[name=ai-style]:checked').value,hideOpponent=mode==='compare'||mode==='tournament';$('ai-style-options').hidden=hideOpponent;$('lobby-opponent').hidden=hideOpponent;$('lobby-difficulty').hidden=mode==='compare';$('lobby-style-summary').textContent=AI_STYLES[style].label;updateLobbyReady();}
+$('debug-toggle').addEventListener('click',toggleDebug);function setupHint(){const mode=document.querySelector('[name=mode]:checked').value,style=document.querySelector('[name=ai-style]:checked').value,hideOpponent=mode==='compare'||mode==='tournament';$('ai-style-options').hidden=hideOpponent;$('lobby-opponent').hidden=hideOpponent;$('lobby-venue').hidden=$('lobby-venue').disabled=mode==='compare';$('lobby-difficulty').hidden=mode==='compare';$('lobby-style-summary').textContent=AI_STYLES[style].label;syncLobbyArtwork();updateLobbyReady();}
 for(const radio of document.querySelectorAll('[name=ai-style]')){radio.nextElementSibling.textContent=AI_STYLES[radio.value].label;radio.nextElementSibling.title=AI_STYLES[radio.value].hint;}
-for(const radio of document.querySelectorAll('[name=mode],[name=difficulty],[name=ai-style]'))radio.addEventListener('change',setupHint);setupHint();
+for(const radio of document.querySelectorAll('[name=mode],[name=difficulty],[name=ai-style],[name=venue]'))radio.addEventListener('change',setupHint);setupHint();
 function openHelp(){helpWasRunning=['serve','rally','point','setbreak','countdown'].includes(match.state);if(helpWasRunning&&!online?.active)match.pause();$('help-dialog').showModal();online?.syncCourt();}$('help').addEventListener('click',openHelp);$('court-help').addEventListener('click',openHelp);document.querySelector('[data-lobby-help]').addEventListener('click',openHelp);function resumeAfterHelp(){const resume=helpWasRunning;helpWasRunning=false;resumeAfterDialog(resume);}function closeHelp(){$('help-dialog').close();resumeAfterHelp();}for(const id of ['help-close','help-done'])$(id).addEventListener('click',closeHelp);$('help-dialog').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeHelp();}});$('help-dialog').addEventListener('cancel',e=>{e.preventDefault();closeHelp();});$('help-dialog').addEventListener('close',resumeAfterHelp);
 
 function renderControls(persist=false){
@@ -290,7 +297,8 @@ function rect(x,y,w,h,r,color,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);c
 function worldLine(a,b,color,width=1){line(project(a),project(b),color,width);}
 function courtBackground(){
  const floor=Math.min(H*.31+42,project({x:3.34,z:7.07}).y-7);
- drawVenue(ctx,{width:W,height:H,floor,project,palette:ART,tone,compact:!wideView,wallArt});
+ const draw=match.venue==='outdoor'?drawOutdoorVenue:drawVenue;
+ draw(ctx,{width:W,height:H,floor,project,palette:ART,tone,compact:!wideView,wallArt});
  const stripe=(a,b)=>worldLine(a,b,ART.paint,1.3);
  for(const x of [-3.05,-CFG.halfWidth,CFG.halfWidth,3.05])stripe({x,z:-6.7},{x,z:6.7});
  for(const z of [-6.7,-5.94,-1.98,1.98,5.94,6.7])stripe({x:-3.05,z},{x:3.05,z});
@@ -459,7 +467,7 @@ function drawTiming(){if(match.state!=='rally'||match.lastHit!==1||!match.contac
 function drawComparisons(){if(match.mode!=='compare')return;const pixel=W/canvas.getBoundingClientRect().width;for(const result of match.comparisons){ctx.save();ctx.globalAlpha=match.state==='review'?(chosen===result.type?.95:.35):.4;let previous=null;for(const point of result.points){const p=project(point);if(previous)line(previous,p,SHOTS[result.type].color,(chosen===result.type?2.5:1.3)*pixel);previous=p;}const landing=project(result.landing);ellipse(landing.x,landing.y,10*pixel,3.5*pixel,SHOTS[result.type].color+'30',SHOTS[result.type].color,1.3*pixel);ctx.font='bold '+(10*pixel)+'px Arial';ctx.fillStyle=SHOTS[result.type].color;ctx.textAlign='left';ctx.fillText(shotNames[result.type],landing.x+12*pixel,landing.y-6*pixel);ctx.restore();}}
 function drawGesture(){if(!gesture)return;const g=gesture,r=canvas.getBoundingClientRect(),toWorld=p=>({x:(p.x-r.left)/r.width*W,y:(p.y-r.top)/r.height*H}),start=toWorld(g.start),end=toWorld(g.last);ctx.save();ctx.setLineDash([4,6]);line(start,end,'#d3dfd299',2);ctx.setLineDash([]);ellipse(end.x,end.y,14+g.power*8,14+g.power*8,'#f1f1e81a',ART.paint,1.4);line(end,{x:end.x+(g.last.x-g.lowest.x)*1.2,y:end.y-65},ART.paint,2);ctx.font='bold 12px Arial';ctx.textAlign='center';ctx.fillStyle=ART.paint;ctx.fillText(g.fired?(match.pending&&(Math.abs(match.pending.aim)>.85||chosen==='clear'&&match.pending.power>.9)?'라인 공략':online?.active?(match.pending?(match.pending.acknowledged?'타격 대기':'스윙 전송 중'):'스윙 완료'):'스와이프 인식 ✓'):g.phase==='ready'?'준비 '+Math.round(g.power*100)+'%':'위로 밀기',end.x,end.y+36);ctx.restore();}
 function drawShotZone(){if(match.state==='serve'&&match.service||shotPreview<=0&&!gesture)return;const depth=chosen==='drop'?CFG.drop.minDepth+CFG.drop.depthRange*.55:chosen==='clear'?5.7:4.7,color=SHOTS[chosen].color;const points=[{x:-2.05,z:depth-.35},{x:2.05,z:depth-.35},{x:2.05,z:depth+.35},{x:-2.05,z:depth+.35}].map(project);path(points,color+'24',color+'70',1);const p=project({x:0,z:depth});ctx.font='bold 11px Arial';ctx.fillStyle=color;ctx.textAlign='center';ctx.fillText(chosen==='drop'?'네트 바로 뒤':chosen==='clear'?'코트 맨 뒤':chosen==='smash'?'빠르게 내려찍기':'낮고 빠르게',p.x,p.y-12);}
-function drawDebug(){if(!debug)return;const b={...match.ball};ctx.save();ctx.setLineDash([3,5]);let prev=project(b);for(let i=0;i<350;i++){const before={...b};integrate(b);const net=collideNet(b,before);if(net&&!net.over)break;if(i%5===0){const p=project(b);line(prev,p,'#c4d2c899',1);prev=p;}if(b.y<0)break;}ctx.setLineDash([]);if(match.contact){const p=project(match.contact);ellipse(p.x,p.y,6,6,null,ART.player,2);}ctx.restore();$('debug-panel').textContent='PHYSICS 120 Hz · QUADRATIC DRAG\nx '+match.ball.x.toFixed(2)+'  y '+match.ball.y.toFixed(2)+'  z '+match.ball.z.toFixed(2)+' m\nv '+Math.hypot(match.ball.vx,match.ball.vy,match.ball.vz).toFixed(2)+' m/s  k '+CFG.drag+'\ncontact '+(match.contact?match.contact.t.toFixed(2)+' s':'—')+'  state '+match.state+'\nAI read '+match.adaptation.samples+' · '+(match.adaptation.shot||'—')+' / '+match.adaptation.lateral+' / '+match.adaptation.depth+'\ncover x '+match.adaptation.cover.x.toFixed(2)+'  z '+match.adaptation.cover.z.toFixed(2)+' m';}
+function drawDebug(){if(!debug)return;const b={...match.ball};ctx.save();ctx.setLineDash([3,5]);let prev=project(b);for(let i=0;i<350;i++){const before={...b};integrate(b,CFG.step,match.wind);const net=collideNet(b,before,CFG.step,match.wind);if(net&&!net.over)break;if(i%5===0){const p=project(b);line(prev,p,'#c4d2c899',1);prev=p;}if(b.y<0)break;}ctx.setLineDash([]);if(match.contact){const p=project(match.contact);ellipse(p.x,p.y,6,6,null,ART.player,2);}ctx.restore();$('debug-panel').textContent='PHYSICS 120 Hz · QUADRATIC DRAG\nx '+match.ball.x.toFixed(2)+'  y '+match.ball.y.toFixed(2)+'  z '+match.ball.z.toFixed(2)+' m\nv '+Math.hypot(match.ball.vx,match.ball.vy,match.ball.vz).toFixed(2)+' m/s  k '+CFG.drag+'\ncontact '+(match.contact?match.contact.t.toFixed(2)+' s':'—')+'  state '+match.state+'\nAI read '+match.adaptation.samples+' · '+(match.adaptation.shot||'—')+' / '+match.adaptation.lateral+' / '+match.adaptation.depth+'\ncover x '+match.adaptation.cover.x.toFixed(2)+'  z '+match.adaptation.cover.z.toFixed(2)+' m';}
 function resize(){const r=canvas.getBoundingClientRect();H=Math.round(r.height/r.width*W);wideView=r.width/r.height>1.05;cameraScale=wideView?Math.min(1,Math.max(.5,H/1060*1.55)):1;const dpr=Math.min(devicePixelRatio||1,2),renderScale=r.width/W*dpr;canvas.width=Math.round(r.width*dpr);canvas.height=Math.round(r.height*dpr);ctx.setTransform(renderScale,0,0,renderScale,0,0);staticLayer=null;}
 new ResizeObserver(resize).observe(canvas);resize();
 function drawNetContact(){const hit=match.lastNetCord;if(!hit||match.time-hit.time>.45)return;const p=project(hit.point),age=(match.time-hit.time)/.45;ctx.save();ctx.globalAlpha=1-age;ellipse(p.x,p.y,9+(reduced?0:age*14),4+(reduced?0:age*6),null,ART.player,1.5);ctx.restore();}
@@ -469,14 +477,26 @@ function frame(t){
  director.update(dt,{state:match.state,mode:match.mode,ball:match.ball,lastHit:match.lastHit,contactT:match.contact?.t,ballScreen:{x:baseBall.x/W,y:baseBall.y/H},focus:focus?{x:focus.x/W,y:focus.y/H}:null,frozen:['paused','countdown'].includes(match.state)||!$('menu').hidden||$('help-dialog').open||$('controls-dialog').open});
  if(hadCall&&!director.call){$('line-call').hidden=true;if(pendingFinish){showMatchEnd(pendingFinish);pendingFinish=null;}else if(match.state==='point')$('point-banner').hidden=false;}
  poses=match.players.map((p,side)=>racketPose(p,side,online?.active?online.contactFor(p.id):match.contact));if(feedbackTimer>0){feedbackTimer-=dt;if(feedbackTimer<=0)hideFeedback();}
+ if(renderedVenue!==match.venue){
+  renderedVenue=match.venue;
+  $('stage').dataset.venue=renderedVenue;
+  staticLayer=null;
+ }
+ const wind=match.wind;
+ if(renderedWind!==wind){
+  renderedWind=wind;
+  const status=$('wind-status');
+  status.hidden=!wind;
+  status.textContent=wind?'셔틀이 '+(wind>0?'오른쪽':'왼쪽')+'으로 밀려요.':'';
+ }
  if(!staticLayer){courtBackground();staticLayer=document.createElement('canvas');staticLayer.width=canvas.width;staticLayer.height=canvas.height;staticLayer.getContext('2d').drawImage(canvas,0,0);}
  ctx.fillStyle=ART.roof;ctx.fillRect(0,0,W,H);ctx.save();applyView();
  ctx.drawImage(staticLayer,0,0,W,H);
  if(match.state==='rally'){trail.push({x:match.ball.x,y:match.ball.y,z:match.ball.z});if(trail.length>18)trail.shift();}
- const detail=director.detailWeight;drawComparisons();if(!director.call){drawServiceCourt();drawShotZone();drawLanding();}ctx.save();ctx.globalAlpha=1-detail;drawTeam(1);ctx.restore();if(match.ball.z>0)drawShuttle();ctx.save();ctx.globalAlpha=1-detail;drawNet();drawTeam(0);ctx.restore();if(match.ball.z<=0)drawShuttle();drawTiming();drawDebug();drawNetContact();drawLineCall();
+ const detail=director.detailWeight;drawComparisons();if(!director.call){drawServiceCourt();drawShotZone();drawLanding();}ctx.save();ctx.globalAlpha=1-detail;if(wind)drawWindFlags(ctx,project,ART,wind,reduced?0:match.time);drawTeam(1);ctx.restore();if(match.ball.z>0)drawShuttle();ctx.save();ctx.globalAlpha=1-detail;drawNet();drawTeam(0);ctx.restore();if(match.ball.z<=0)drawShuttle();drawTiming();drawDebug();drawNetContact();drawLineCall();
  for(let i=particles.length-1;i>=0;i--){const p=particles[i];if(!['paused','countdown'].includes(match.state)){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;}if(p.life<=0){particles.splice(i,1);continue;}ctx.globalAlpha=p.life/.22;ellipse(p.x,p.y,2,2,p.color);}ctx.globalAlpha=1;ctx.restore();drawLineView();drawGesture();requestAnimationFrame(frame);
 }
-online=new ShuttleOnline.Client({match,updateServeOptions,
+online=new ShuttleOnline.Client({match,updateServeOptions,onRoomChange:syncLobbyArtwork,
  isOnCourt:()=>$('menu').hidden&&$('title-screen').hidden&&!document.hidden&&!$('help-dialog').open&&!$('controls-dialog').open&&!layoutSession,
  getAthlete:()=>selectedAthlete,emit:(event,data)=>match.emit(event,data),focusCourt:()=>canvas.focus({preventScroll:true}),clearInput:clearGesture,setView:view=>{if(view==='game'){$('menu').hidden=true;$('title-screen').hidden=true;document.body.classList.add('is-playing');$('pause-overlay').hidden=!['paused','over'].includes(match.state);}else{document.body.classList.remove('is-playing');$('title-screen').hidden=true;$('menu').hidden=false;$('pause-overlay').hidden=true;selectLobbyTab('friends');$('menu-resume').hidden=true;}syncLobby();updateServeOptions();}});
 setShot(chosen);
@@ -489,5 +509,5 @@ function lobbyArtwork(){
  return {athlete:selectedAthlete,width:Math.round(width),height:Math.round(height)};
 }
 // Read-only diagnostics support repeatable QA without changing normal gameplay.
-window.shuttleRush={get snapshot(){return {online:online?.snapshot,screen:!$('title-screen').hidden?'title':!$('menu').hidden?'lobby':'game',lobby:{tab:lobbyTab,preview:lobbyArtwork()},inputState:gesture?{pointerId:gesture.id,phase:gesture.phase,fired:gesture.fired,accepted:!!gesture.accepted}:null,athleteId:match.athleteId,athlete:JSON.parse(JSON.stringify(match.athlete)),athleteModifiers:{...match.athleteModifiers},nextAthlete:selectedAthlete,layout:layoutEditor.snapshot,art:{theme:'club-court',palette:{...ART}},combo:match.combo,condition:match.condition,conditions:[...match.conditions],crowd:{level:crowdLevel,remaining:crowdFx},netCord:match.lastNetCord?JSON.parse(JSON.stringify(match.lastNetCord)):null,tournament:tournament.snapshot,stats:match.summary,camera:director.snapshot,controls:{...controls,keys:{...controls.keys}},aiStyle:match.aiStyle||'balanced',adaptation:JSON.parse(JSON.stringify(match.adaptation)),service:match.service?{...match.service}:null,activeServe:match.activeServe?{...match.activeServe}:null,selectedServe:match.selectedServe,resumeRemaining:match.resumeRemaining,lastSound:lastSound?{...lastSound}:null,state:match.state,mode:match.mode,server:match.server,score:[...match.score],ball:{...match.ball},rally:match.rally,contact:match.contact?{...match.contact}:null,players:JSON.parse(JSON.stringify(match.players)),lastHit:match.lastHit,pointCount:match.pointCount,pending:match.pending?{...match.pending}:null,lastInput:lastInput?{...lastInput}:null,comparisons:JSON.parse(JSON.stringify(match.comparisons)),selectedShot:match.selectedShot,lastDecision:match.lastDecision?{...match.lastDecision}:null,visual:{rackets:poses.map(p=>({x:viewPoint(p.point).x,y:viewPoint(p.point).y,scale:p.scale*director.view.zoom,age:p.age,type:p.type,variant:p.kind==='block'?'block':null,stroke:p.stroke,handSign:p.handSign,turn:p.turn,dive:JSON.parse(JSON.stringify(p.dive)),shoulder:{...p.shoulder},shoulderScreen:viewPoint({x:p.spot.x+p.shoulder.x*p.scale*.85,y:p.spot.y+p.shoulder.y*p.scale*.85}),jump:p.jump,tilt:p.tilt,impact:p.impact?screenPoint(p.impact.point):null})),impact:lastImpactFx?{...lastImpactFx,screen:screenPoint(lastImpactFx.point)}:null,ball:screenPoint(match.ball),ground:screenPoint({x:match.ball.x,z:match.ball.z}),ring:match.contact&&match.lastHit===1&&poses[0]?{x:viewPoint(poses[0].point).x,y:viewPoint(poses[0].point).y}:null},lastShot:match.shotHistory.length?JSON.parse(JSON.stringify(match.shotHistory.at(-1))):null};}};
+window.shuttleRush={get snapshot(){return {online:online?.snapshot,screen:!$('title-screen').hidden?'title':!$('menu').hidden?'lobby':'game',lobby:{tab:lobbyTab,preview:lobbyArtwork()},inputState:gesture?{pointerId:gesture.id,phase:gesture.phase,fired:gesture.fired,accepted:!!gesture.accepted}:null,athleteId:match.athleteId,athlete:JSON.parse(JSON.stringify(match.athlete)),athleteModifiers:{...match.athleteModifiers},nextAthlete:selectedAthlete,layout:layoutEditor.snapshot,art:{theme:'club-court',palette:{...ART}},combo:match.combo,condition:match.condition,conditions:[...match.conditions],crowd:{level:crowdLevel,remaining:crowdFx},netCord:match.lastNetCord?JSON.parse(JSON.stringify(match.lastNetCord)):null,tournament:tournament.snapshot,stats:match.summary,camera:director.snapshot,controls:{...controls,keys:{...controls.keys}},aiStyle:match.aiStyle||'balanced',adaptation:JSON.parse(JSON.stringify(match.adaptation)),service:match.service?{...match.service}:null,activeServe:match.activeServe?{...match.activeServe}:null,selectedServe:match.selectedServe,resumeRemaining:match.resumeRemaining,lastSound:lastSound?{...lastSound}:null,state:match.state,mode:match.mode,venue:match.venue,wind:match.wind,server:match.server,score:[...match.score],ball:{...match.ball},rally:match.rally,contact:match.contact?{...match.contact}:null,players:JSON.parse(JSON.stringify(match.players)),lastHit:match.lastHit,pointCount:match.pointCount,pending:match.pending?{...match.pending}:null,lastInput:lastInput?{...lastInput}:null,comparisons:JSON.parse(JSON.stringify(match.comparisons)),selectedShot:match.selectedShot,lastDecision:match.lastDecision?{...match.lastDecision}:null,visual:{rackets:poses.map(p=>({x:viewPoint(p.point).x,y:viewPoint(p.point).y,scale:p.scale*director.view.zoom,age:p.age,type:p.type,variant:p.kind==='block'?'block':null,stroke:p.stroke,handSign:p.handSign,turn:p.turn,dive:JSON.parse(JSON.stringify(p.dive)),shoulder:{...p.shoulder},shoulderScreen:viewPoint({x:p.spot.x+p.shoulder.x*p.scale*.85,y:p.spot.y+p.shoulder.y*p.scale*.85}),jump:p.jump,tilt:p.tilt,impact:p.impact?screenPoint(p.impact.point):null})),impact:lastImpactFx?{...lastImpactFx,screen:screenPoint(lastImpactFx.point)}:null,ball:screenPoint(match.ball),ground:screenPoint({x:match.ball.x,z:match.ball.z}),ring:match.contact&&match.lastHit===1&&poses[0]?{x:viewPoint(poses[0].point).x,y:viewPoint(poses[0].point).y}:null},lastShot:match.shotHistory.length?JSON.parse(JSON.stringify(match.shotHistory.at(-1))):null};}};
 })();
