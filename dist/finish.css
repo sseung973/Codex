@@ -1,0 +1,165 @@
+/* Shared finish for the court controls, their dialogs and the lobby actions. */
+:root {
+  --enamel: color-mix(in srgb, var(--court) 23%, var(--surface));
+  --enamel-hover: color-mix(in srgb, var(--court) 43%, var(--surface));
+  --enamel-edge: color-mix(in srgb, var(--muted) 36%, var(--court));
+  --enamel-highlight: color-mix(in srgb, var(--text) 17%, transparent);
+  --enamel-shadow: color-mix(in srgb, var(--bg) 82%, black);
+  --control-highlight: inset 0 1px var(--enamel-highlight);
+}
+
+#title-enter, .primary, .lobby-actions .secondary {
+  border-radius: 4px;
+  background-image: linear-gradient(to bottom, var(--enamel-highlight), transparent 58%);
+  box-shadow: var(--control-highlight), 0 3px var(--enamel-shadow);
+}
+
+#title-enter:active, .primary:active, .lobby-actions .secondary:active {
+  box-shadow: var(--control-highlight);
+}
+
+.arena-top .square-button,
+.lobby-tools button,
+.lobby-court-athlete button,
+.compact-card .secondary,
+.dialog-close,
+.key-bindings button,
+.sound-previews button {
+  background-color: var(--enamel);
+  border-color: var(--enamel-edge);
+  box-shadow: var(--control-highlight), 0 2px var(--enamel-shadow);
+  color: var(--text);
+}
+
+.arena-top .square-button:hover:not(:disabled),
+.lobby-tools button:hover,
+.lobby-court-athlete button:hover,
+.compact-card .secondary:hover,
+.dialog-close:hover,
+.key-bindings button:hover,
+.sound-previews button:hover {
+  background-color: var(--enamel-hover);
+  border-color: var(--muted);
+}
+
+.arena-top .square-button:active:not(:disabled),
+.lobby-tools button:active,
+.lobby-court-athlete button:active {
+  box-shadow: var(--control-highlight);
+}
+
+.arena-top .square-button[aria-pressed="true"] {
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: var(--control-highlight), inset 0 -2px var(--primary);
+}
+
+.scoreboard {
+  background-color: var(--enamel);
+  border-color: var(--enamel-edge);
+  box-shadow: var(--control-highlight), 0 3px var(--enamel-shadow);
+}
+
+.scoreboard .score b {
+  background-color: var(--bg);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px var(--line), inset 0 2px var(--enamel-shadow);
+}
+
+#score-you { color: var(--primary); }
+#score-ai { color: var(--text); }
+
+.shot-selector:not(.is-free),
+.serve-selector {
+  border-color: var(--enamel-edge);
+  background-color: var(--bg);
+  box-shadow: inset 0 1px var(--enamel-highlight), 0 2px var(--enamel-shadow);
+}
+
+.shot-selector button, .shot-selector.is-free button, .serve-selector button {
+  background-color: var(--enamel);
+  border-color: var(--enamel-edge);
+  border-radius: 4px;
+  box-shadow: var(--control-highlight);
+  color: var(--text);
+}
+
+.shot-selector button:is(:hover,:focus-visible),
+.shot-selector.is-free button:is(:hover,:focus-visible), .serve-selector button:hover {
+  background-color: var(--enamel-hover);
+  border-color: var(--muted);
+}
+
+.shot-selector .shot-name { font-weight: 700; }
+.shot-selector button small { opacity: .9; }
+.shot-selector button svg { stroke-width: 2; }
+
+.shot-selector button[aria-pressed="true"], .shot-selector.is-free button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--shot-color) 16%, var(--bg));
+  border-color: var(--shot-color);
+  box-shadow: var(--control-highlight), inset 0 -3px var(--shot-color);
+  color: var(--shot-color);
+}
+
+.serve-selector button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--primary) 16%, var(--bg));
+  border-color: var(--primary);
+  box-shadow: var(--control-highlight), inset 0 -2px var(--primary);
+  color: var(--primary);
+}
+
+#pause-overlay .compact-card,
+.game-dialog, #controls-dialog.game-dialog {
+  background-color: var(--enamel);
+  border-color: var(--enamel-edge);
+  box-shadow: inset 0 3px var(--primary), 0 12px 32px var(--enamel-shadow);
+}
+
+.lobby fieldset input:checked + span {
+  box-shadow: var(--control-highlight), inset 3px 0 var(--primary);
+}
+
+.lobby .athlete-options input:checked + span {
+  box-shadow: var(--control-highlight), inset 0 -3px var(--kit, var(--primary));
+}
+
+#lobby-friends-panel button.room-primary {
+  border-color: var(--court);
+  border-radius: 4px;
+  box-shadow: var(--control-highlight), 0 2px color-mix(in srgb, var(--court) 65%, var(--bg));
+}
+
+#lobby-friends-panel button.room-primary:active:not(:disabled) {
+  box-shadow: var(--control-highlight);
+}
+
+@media (forced-colors: active) {
+  #title-enter, .primary, .lobby-actions .secondary,
+  .arena-top .square-button, .lobby-tools button, .lobby-court-athlete button,
+  .compact-card .secondary, .dialog-close, .key-bindings button, .sound-previews button,
+  #lobby-friends-panel button.room-primary,
+  .serve-selector button, .shot-selector button, .shot-selector.is-free button {
+    background: ButtonFace;
+    color: ButtonText;
+    border-color: ButtonText;
+    box-shadow: none;
+  }
+  .scoreboard, .scoreboard .score b, .shot-selector:not(.is-free),
+  .serve-selector, #pause-overlay .compact-card, .game-dialog, #controls-dialog.game-dialog {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+  }
+  #score-you, #score-ai { color: CanvasText; }
+  .lobby fieldset input:checked + span, .lobby .athlete-options input:checked + span { box-shadow: none; }
+  .arena-top .square-button[aria-pressed="true"], .serve-selector button[aria-pressed="true"],
+  .shot-selector button[aria-pressed="true"], .shot-selector.is-free button[aria-pressed="true"] {
+    background: Highlight;
+    color: HighlightText;
+    border-color: Highlight;
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+    box-shadow: none;
+  }
+}

@@ -64,11 +64,23 @@
     ctx.restore();
   }
 
-  function mezzanine(ctx, {width, floor, palette, tone, compact}) {
-    const stand = Math.min(compact ? 67 : 79, floor * .48);
-    const base = floor - stand;
+  function upperWall(ctx, {width, palette, tone, compact, wallArt}, base) {
+    if (wallArt?.naturalWidth) {
+      const scale = Math.max(width / wallArt.naturalWidth, base / wallArt.naturalHeight);
+      const cropWidth = width / scale;
+      const cropHeight = base / scale;
+      const x = (wallArt.naturalWidth - cropWidth) * .53;
+      const y = (wallArt.naturalHeight - cropHeight) * .47;
+      ctx.drawImage(wallArt, x, y, cropWidth, cropHeight, 0, 0, width, base);
+      const shade = gradient(ctx, 0, 0, 0, base, [
+        [0, palette.roof + '9c'], [.42, palette.roof + '61'], [.82, palette.roof + '71'], [1, palette.roof + 'c4'],
+      ]);
+      fill(ctx, shade, 0, 0, width, base);
+      return;
+    }
+
     const wallLight = tone(palette.wall, .065);
-    fill(ctx, gradient(ctx, 0, 0, 0, floor, [[0, palette.roof], [.54, wallLight], [1, palette.wall]]), 0, 0, width, floor);
+    fill(ctx, gradient(ctx, 0, 0, 0, base, [[0, palette.roof], [.54, wallLight], [1, palette.wall]]), 0, 0, width, base);
 
     // Painted steel members sit above the dark balcony opening.
     for (let i = -1; i <= 6; i++) {
@@ -91,6 +103,13 @@
       fill(ctx, palette.paint, x - length / 2 + 1, y + 3.2, length - 2, 1.2);
     }
 
+  }
+
+  function mezzanine(ctx, view) {
+    const {width, floor, palette, tone, compact} = view;
+    const stand = Math.min(compact ? 67 : 79, floor * .48);
+    const base = floor - stand;
+    upperWall(ctx, view, base);
     fill(ctx, tone(palette.roof, -.19), 0, base, width, stand);
     const rowHeight = stand * .32;
     const gap = Math.max(14, width / (compact ? 24 : 37));
@@ -128,7 +147,7 @@
     }
 
     const fascia = base + stand * .68;
-    fill(ctx, gradient(ctx, 0, fascia, 0, floor, [[0, tone(palette.wall,-.18)], [1, tone(palette.wall,.07)]]), 0, fascia, width, floor - fascia);
+    fill(ctx, gradient(ctx, 0, fascia, 0, floor, [[0, tone(palette.wood, -.63)], [1, tone(palette.wood, -.47)]]), 0, fascia, width, floor - fascia);
     for (let x = width * .09; x < width; x += width * .164) {
       stroke(ctx, {x,y:fascia}, {x,y:floor}, palette.roof + 'aa');
       stroke(ctx, {x:x+1,y:fascia + 1}, {x:x+1,y:floor}, palette.paint + '10');
@@ -187,10 +206,28 @@
     ctx.restore();
   }
 
+  function windowLight(ctx, {width, height, floor, project, palette}) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, floor, width, height - floor);
+    ctx.clip();
+    const wash = gradient(ctx, width * .76, floor, width * .31, height, [
+      [0, palette.paint + '24'], [.48, palette.paint + '1c'], [1, palette.paint + '00'],
+    ]);
+    for (const x of [2.05, 3.37, 4.69]) {
+      polygon(ctx, [
+        {x, z:6.95}, {x:x + 1.12, z:6.95},
+        {x:x - 3.8, z:-3.9}, {x:x - 4.92, z:-3.9},
+      ].map(project), wash);
+    }
+    ctx.restore();
+  }
+
   function drawVenue(ctx, view) {
     mezzanine(ctx, view);
     timber(ctx, view);
     mat(ctx, view);
+    if (view.wallArt?.naturalWidth) windowLight(ctx, view);
   }
 
   function drawTape(ctx, corners, palette, tone, scale = 1) {

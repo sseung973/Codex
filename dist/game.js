@@ -9,6 +9,8 @@ const {drawVenue,drawTape,gradient,surfaceGrain}=ShuttleCourtArt;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const director=new ShuttleCamera.CameraDirector(CFG,{reduced});let pendingFinish=null;
 let W=720,H=1060,cameraScale=1,wideView=false,chosen='drive',debug=false,audio=false,ac=null,last=0,gesture=null,feedbackTimer=0,particles=[],trail=[],best=0,staticLayer=null,helpWasRunning=false;
+const wallArt=$('arena-wall-art');
+wallArt.addEventListener('load',()=>{staticLayer=null;});
 try{best=Number(localStorage.getItem('shuttle-rush-best'))||0;}catch{}$('best').textContent=best;
 const shotNames=Object.fromEntries(Object.entries(SHOTS).map(([key,value])=>[key,value.label]));
 let controls=ShuttleInput.preferences(),controlsStorage=true,savedControls=null;try{savedControls=localStorage.getItem('shuttle-rush-controls-v1');}catch{controlsStorage=false;}try{controls=ShuttleInput.preferences(JSON.parse(savedControls));}catch{}
@@ -264,7 +266,7 @@ function rect(x,y,w,h,r,color,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);c
 function worldLine(a,b,color,width=1){line(project(a),project(b),color,width);}
 function courtBackground(){
  const floor=Math.min(H*.31+42,project({x:3.34,z:7.07}).y-7);
- drawVenue(ctx,{width:W,height:H,floor,project,palette:ART,tone,compact:!wideView});
+ drawVenue(ctx,{width:W,height:H,floor,project,palette:ART,tone,compact:!wideView,wallArt});
  const stripe=(a,b)=>worldLine(a,b,ART.paint,1.3);
  for(const x of [-3.05,-CFG.halfWidth,CFG.halfWidth,3.05])stripe({x,z:-6.7},{x,z:6.7});
  for(const z of [-6.7,-5.94,-1.98,1.98,5.94,6.7])stripe({x:-3.05,z},{x:3.05,z});
@@ -349,6 +351,9 @@ function athlete(p,side,variant=null){
  line({x:-9,y:-137},{x:0,y:-132},trim,2.1);line({x:0,y:-132},{x:9,y:-137},trim,2.1);
  line({x:-14,y:-90},{x:14,y:-90},trim,1);
  line({x:10,y:-115},{x:12,y:-97},tone(shirt,.22)+'91',.9);
+ line({x:-19,y:-129},{x:-10,y:-134},tone(shirt,.27)+'ad',.9);
+ line({x:19,y:-129},{x:10,y:-134},tone(shirt,.21)+'ad',.9);
+ line({x:-13,y:-106},{x:-9,y:-94},tone(shirt,-.31)+'70',1.1);
  ctx.textAlign='center';ctx.font='750 18px "Court Condensed",Arial';ctx.fillStyle=tone(ART.roof,-.05);ctx.fillText(isBack||online?.active?identity.number:'02',0,-105);
  ctx.save();ctx.translate(0,-159);ctx.rotate(pose.dive.headTilt||0);ctx.translate(0,159);ellipse(0,-159,14,17,skin);ellipse(isBack?12:-12,-158,3,4.5,tone(skin,-.06));
  if(isBack){if(identity.hair==='tied'){ellipse(-14,-151,5,12,hair);line({x:-11,y:-159},{x:-18,y:-143},hair,6);}path([{x:-14,y:-156},{x:-14,y:-166},{x:-8,y:-175},{x:7,y:-176},{x:14,y:-168},{x:14,y:-155},{x:8,y:-148},{x:-8,y:-149}],hair);line({x:-9,y:-166},{x:7,y:-169},tone(hair,.13),1);if(identity.hair==='sweep'){path([{x:-13,y:-165},{x:-4,y:-178},{x:12,y:-171},{x:13,y:-161},{x:2,y:-169}],tone(hair,.2));line({x:-13,y:-159},{x:12,y:-159},ART.paint,2.5);}}
@@ -389,7 +394,7 @@ function drawTeam(side){
 function drawShuttle(){
  const b=match.ball,p=project(b),shadow=project({x:b.x,z:b.z});
  const pixel=W/canvas.getBoundingClientRect().width;
- const scale=Math.max(.57*pixel,p.s/(director.call&&!director.reduced?140:200));
+ const scale=Math.max(.62*pixel,p.s/(director.call&&!director.reduced?140:200));
  ctx.save();ctx.globalAlpha=.56/(1+b.y*.2);
  ellipse(shadow.x,shadow.y,(7+Math.min(7,b.y)*1.65)*scale,3.1*scale,ART.roof);
  ctx.restore();
@@ -426,7 +431,7 @@ function drawLanding(){
  ellipse(q.x,q.y,radius,radius*.32,ART.roof+'28',color+'d8',1.6);
  ellipse(q.x,q.y,2.2,1.1,color);
 }
-function drawTiming(){if(match.state!=='rally'||match.lastHit!==1||!match.contact)return;const pose=poses[0],t=match.contact.t;if(t<-.35||t>1.3)return;const factor=1+Math.max(0,t)*2,color=t<.17?ART.player:t<.34?ART.paint:ART.muted;ctx.save();ctx.globalAlpha=Math.min(.9,1.5-t);ellipse(pose.point.x,pose.point.y,14*.85*pose.scale*factor,22*.85*pose.scale*factor,null,color,2);ellipse(pose.point.x,pose.point.y,14*.85*pose.scale,22*.85*pose.scale,null,color+'60',1);ctx.restore();}
+function drawTiming(){if(match.state!=='rally'||match.lastHit!==1||!match.contact)return;const pose=poses[0],t=match.contact.t;if(t<-.35||t>1.3)return;const factor=1+Math.max(0,t)*2,color=t<.17?ART.player:t<.34?ART.paint:ART.muted;ctx.save();ctx.globalAlpha=Math.min(.9,1.5-t);const ringX=14*.85*pose.scale*factor,ringY=22*.85*pose.scale*factor;ellipse(pose.point.x,pose.point.y,ringX,ringY,null,ART.roof+'b8',3.5);ellipse(pose.point.x,pose.point.y,ringX,ringY,null,color,1.7);ellipse(pose.point.x,pose.point.y,14*.85*pose.scale,22*.85*pose.scale,null,color+'60',1);ctx.restore();}
 function drawComparisons(){if(match.mode!=='compare')return;const pixel=W/canvas.getBoundingClientRect().width;for(const result of match.comparisons){ctx.save();ctx.globalAlpha=match.state==='review'?(chosen===result.type?.95:.35):.4;let previous=null;for(const point of result.points){const p=project(point);if(previous)line(previous,p,SHOTS[result.type].color,(chosen===result.type?2.5:1.3)*pixel);previous=p;}const landing=project(result.landing);ellipse(landing.x,landing.y,10*pixel,3.5*pixel,SHOTS[result.type].color+'30',SHOTS[result.type].color,1.3*pixel);ctx.font='bold '+(10*pixel)+'px Arial';ctx.fillStyle=SHOTS[result.type].color;ctx.textAlign='left';ctx.fillText(shotNames[result.type],landing.x+12*pixel,landing.y-6*pixel);ctx.restore();}}
 function drawGesture(){if(!gesture)return;const g=gesture,r=canvas.getBoundingClientRect(),toWorld=p=>({x:(p.x-r.left)/r.width*W,y:(p.y-r.top)/r.height*H}),start=toWorld(g.start),end=toWorld(g.last);ctx.save();ctx.setLineDash([4,6]);line(start,end,'#d3dfd299',2);ctx.setLineDash([]);ellipse(end.x,end.y,14+g.power*8,14+g.power*8,'#f1f1e81a',ART.paint,1.4);line(end,{x:end.x+(g.last.x-g.lowest.x)*1.2,y:end.y-65},ART.paint,2);ctx.font='bold 12px Arial';ctx.textAlign='center';ctx.fillStyle=ART.paint;ctx.fillText(g.fired?(match.pending&&(Math.abs(match.pending.aim)>.85||chosen==='clear'&&match.pending.power>.9)?'라인 공략':online?.active?(match.pending?(match.pending.acknowledged?'타격 대기':'스윙 전송 중'):'스윙 완료'):'스와이프 인식 ✓'):g.phase==='ready'?'준비 '+Math.round(g.power*100)+'%':'위로 밀기',end.x,end.y+36);ctx.restore();}
 function drawShotZone(){if(match.state==='serve'&&match.service||shotPreview<=0&&!gesture)return;const depth=chosen==='drop'?CFG.drop.minDepth+CFG.drop.depthRange*.55:chosen==='clear'?5.7:4.7,color=SHOTS[chosen].color;const points=[{x:-2.05,z:depth-.35},{x:2.05,z:depth-.35},{x:2.05,z:depth+.35},{x:-2.05,z:depth+.35}].map(project);path(points,color+'24',color+'70',1);const p=project({x:0,z:depth});ctx.font='bold 11px Arial';ctx.fillStyle=color;ctx.textAlign='center';ctx.fillText(chosen==='drop'?'네트 바로 뒤':chosen==='clear'?'코트 맨 뒤':chosen==='smash'?'빠르게 내려찍기':'낮고 빠르게',p.x,p.y-12);}
