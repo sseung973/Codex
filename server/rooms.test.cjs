@@ -7,3 +7,36 @@ test('leaving an active match awards a forfeit and allows a fresh lobby with an 
 test('actual HTTP and WebSocket service serves local art, validates origin/payloads and shares a match',async()=>{const app=createApp();await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));const base='http://127.0.0.1:'+app.server.address().port,ws=[];try{assert.equal((await fetch(base+'/healthz')).status,200);assert.equal((await fetch(base+'/assets/title-court.webp')).headers.get('content-type'),'image/webp');assert.equal((await fetch(base+'/../server/index.cjs')).status,404);const open=async()=>{const s=new WebSocket(base.replace('http','ws')+'/ws');ws.push(s);s.messages=[];s.on('message',q=>s.messages.push(JSON.parse(q)));await new Promise((resolve,reject)=>{s.on('open',resolve);s.on('error',reject);});return s;},wait=async(s,type)=>{for(let i=0;i<100;i++){const q=s.messages.find(q=>q.type===type);if(q)return q;await new Promise(resolve=>setTimeout(resolve,10));}throw Error('missing '+type);};const rejected=await new Promise((resolve,reject)=>{const bad=new WebSocket(base.replace('http','ws')+'/ws',{origin:'https://unrelated.invalid'});bad.on('unexpected-response',(_,response)=>{response.resume();resolve(response.statusCode);});bad.on('open',()=>{bad.close();reject(Error('cross-origin connection accepted'));});bad.on('error',()=>{});});assert.equal(rejected,403);const a=await open(),b=await open();a.send(JSON.stringify({type:'create',name:'A'}));const welcome=await wait(a,'welcome');b.send(JSON.stringify({type:'join',code:welcome.room.code,name:'B'}));await wait(b,'welcome');a.send('{');assert.ok((await wait(a,'error')).message);for(const p of [a,b])p.send(JSON.stringify({type:'ready'}));await new Promise(resolve=>setTimeout(resolve,30));a.send(JSON.stringify({type:'start'}));await wait(a,'start');await wait(b,'start');a.send(JSON.stringify({type:'strike',input:{shot:'clear',aim:0,power:.5}}));await new Promise(resolve=>setTimeout(resolve,100));assert.equal(app.rooms.rooms.get(welcome.room.code).match.lastHit,0);}finally{for(const s of ws)s.close();await app.close();}});
 
 test('simultaneous pause and resume commands are idempotent across human clients',()=>{const r=make(),a=peer(),b=peer(),room=r.create(a,{});r.join(b,{code:room.code});r.ready(a);r.ready(b);r.start(a);r.message(a,{type:'pause'});r.message(b,{type:'pause'});assert.equal(room.match.state,'paused');r.message(a,{type:'resume'});r.message(b,{type:'resume'});assert.equal(room.match.state,'countdown');r.message(a,{type:'pause'});r.message(b,{type:'pause'});assert.equal(room.match.state,'paused');});
+
+test('four humans cannot resume from settings until the last one returns to court',()=>{
+ const rooms=make(),players=Array.from({length:4},peer);
+ const room=rooms.create(players[0],{doubles:true});
+ for(const player of players.slice(1))rooms.join(player,{code:room.code});
+ for(const player of players)rooms.ready(player);
+ rooms.start(players[0]);
+ rooms.message(players[0],{type:'strike',input:{shot:'clear',aim:0,power:.5}});
+ const match=room.match;
+ assert.equal(match.state,'rally');
+ rooms.message(players[1],{type:'court',present:false});
+ rooms.message(players[2],{type:'court',present:false});
+ rooms.message(players[0],{type:'resume'});
+ assert.equal(match.state,'paused');
+ assert.equal(rooms.snapshot(room).resumeRequested,true);
+ const frozen={ball:{...match.ball},time:match.time,score:[...match.score]};
+ rooms.message(players[1],{type:'court',present:true});
+ for(let i=0;i<180;i++)rooms.advance(1/30);
+ assert.equal(match.state,'paused');
+ assert.deepEqual({ball:match.ball,time:match.time,score:match.score},frozen);
+
+ rooms.message(players[2],{type:'court',present:true});
+ assert.equal(match.state,'countdown');
+ assert.equal(rooms.snapshot(room).resumeRequested,false);
+ rooms.message(players[3],{type:'court',present:false});
+ assert.equal(match.state,'paused');
+ rooms.message(players[0],{type:'resume'});
+ rooms.message(players[3],{type:'court',present:true});
+ assert.equal(match.state,'countdown');
+ for(let i=0;i<91;i++)rooms.advance(1/30);
+ assert.equal(match.state,'rally');
+ assert.deepEqual(match.score,frozen.score);
+});

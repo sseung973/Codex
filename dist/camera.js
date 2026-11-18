@@ -42,7 +42,6 @@ class CameraDirector{
    target.zoom=1+( .06+clamp(speed/35,0,1)*.035-high*.035+this.kick*.035)*weight*this.strength;
    target.x=-clamp(screen.x-.5,-.5,.5)*.055*weight*this.strength;
    target.y=-clamp(screen.y-.45,-.4,.4)*.055*weight*this.strength;
-   target.roll=clamp((b.vx||0)/16,-1,1)*.007*weight*this.strength;
    if(settle>.35)rate=CAM.settleRate;this.mode=settle>.65?'settle':'follow';
   }else this.mode='wide';
   const a=1-Math.exp(-rate*dt);for(const key of Object.keys(target))this.view[key]=mix(this.view[key],target[key],a);

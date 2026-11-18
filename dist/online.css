@@ -31,6 +31,7 @@
  border-radius:4px;background:var(--text);color:var(--bg)
 }
 .room-code-entry{display:flex;gap:7px}
+.room-code-error{margin:7px 0 0;color:var(--bg);font-size:12px;font-weight:700;line-height:1.55}
 .lobby .room-code-entry input{
  min-width:0;border-color:var(--court);background:transparent;color:var(--bg);
  text-transform:uppercase;letter-spacing:2px
@@ -98,7 +99,7 @@
  .lobby .room-code-entry input,.lobby input:not([type=radio]){
   background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none
  }
- .room-invite strong,.room-invite span,.room-invite small,.room-roster span,.room-roster strong{color:CanvasText}
+ .room-invite strong,.room-invite span,.room-invite small,.room-roster span,.room-roster strong,.room-code-error{color:CanvasText}
  .lobby .room-code-entry input::placeholder,.lobby input::placeholder{color:GrayText}
  #lobby-friends-panel button,#lobby-friends-panel #room-join{
   background:ButtonFace;color:ButtonText;border-color:ButtonText;box-shadow:none

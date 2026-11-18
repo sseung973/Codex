@@ -22,7 +22,7 @@ function selectLobbyTab(tab,focus=false){
  for(const name of ['play','athlete','friends']){const selected=name===lobbyTab,button=$('lobby-'+name+'-tab');button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;$('lobby-'+name+'-panel').hidden=!selected;}
  $('start').hidden=lobbyTab==='friends';syncLobbyArtwork();updateLobbyReady();if(focus)$('lobby-'+lobbyTab+'-tab').focus({preventScroll:true});
 }
-function syncLobby(){const title=!$('title-screen').hidden,visible=!$('menu').hidden;document.body.classList.toggle('is-title',title);document.body.classList.toggle('is-lobby',visible);document.querySelector('.game-layout').inert=title;document.querySelector('.app-header').inert=title;$('menu').classList.toggle('is-resumable',visible&&match.state==='paused');for(const child of $('stage').children)if(child.id!=='menu')child.inert=visible||title;}
+function syncLobby(){const title=!$('title-screen').hidden,visible=!$('menu').hidden;document.body.classList.toggle('is-title',title);document.body.classList.toggle('is-lobby',visible);document.querySelector('.game-layout').inert=title;document.querySelector('.app-header').inert=title;$('menu').classList.toggle('is-resumable',visible&&canContinueMatch());for(const child of $('stage').children)if(child.id!=='menu')child.inert=visible||title;online?.syncCourt();}
 $('title-enter').addEventListener('click',()=>{$('title-screen').hidden=true;$('menu').hidden=false;syncLobby();updateLobbyReady();if(online?.invited||online?.saved){online.invited=false;selectLobbyTab('friends');if(online.saved)online.reconnect();}$('lobby-'+lobbyTab+'-tab').focus({preventScroll:true});});
 $('title-return').addEventListener('click',()=>{clearGesture();$('menu').hidden=true;$('title-screen').hidden=false;syncLobby();$('title-enter').focus({preventScroll:true});});
 function updateLobbyReady(){
@@ -96,14 +96,21 @@ function renderTournament(){
  const snap=tournament.snapshot;el.innerHTML=ROUND_NAMES.map((label,index)=>'<div class="bracket-round"><h3>'+label+'</h3><ul>'+Array.from({length:2**(2-index)},(_,i)=>{const g=snap.bracket[index]?.[i];return '<li'+(g&&(g.a===0||g.b===0)?' class="player-fixture"':'')+'><span>'+(g?snap.names[g.a]+' · '+snap.names[g.b]:'승자 · 승자')+'</span><b>'+(g?.score?g.score.join(' : '):'—')+'</b></li>';}).join('')+'</ul></div>').join('');
 }
 function showMatchEnd(data){
- renderMatchSummary();$('point-banner').hidden=true;$('pause').disabled=true;$('pause-eyebrow').textContent='MATCH FINISHED';$('pause-title').textContent=data.winner===0?'멋진 승리!':'한 번 더 도전!';$('pause-copy').textContent=ShuttleCompetition.resultText(online?.active?match.series:null)||match.score[0]+' : '+match.score[1]+' · 이번 경기 최고 '+match.best+'회 랠리';$('resume').innerHTML='다시 경기 <span>↗</span>';
+ const friendMatch=online?.active,won=data.winner===0,series=friendMatch?match.series:null;
+ renderMatchSummary();
+ $('point-banner').hidden=true;$('resume-countdown').hidden=true;$('pause').disabled=true;
+ $('pause-eyebrow').textContent='MATCH FINISHED';
+ $('pause-title').textContent=friendMatch?(won?'우리 팀 승리!':'상대 팀 승리'):(won?'멋진 승리!':'한 번 더 도전!');
+ $('pause-copy').textContent=ShuttleCompetition.resultText(series)||match.score.join(' : ')+' · '+(series?.forfeit?'기권 종료':'이번 경기 최고 '+match.best+'회 랠리');
+ $('resume').innerHTML=friendMatch?'대기방으로 <span>↗</span>':'다시 경기 <span>↗</span>';
  if(match.mode==='tournament'){
   const status=tournament.status;$('pause-eyebrow').textContent='SHUTTLE CUP / '+ROUND_NAMES[tournament.round];$('pause-title').textContent=status==='champion'?'대회 우승!':status==='between'?ROUND_NAMES[tournament.round]+' 통과!':'다음 대회에서 다시!';
   $('pause-copy').textContent=match.score.join(' : ')+' · '+(status==='between'?'다음 경기 시작 시 체력 100% 회복':status==='champion'?'3연승으로 트로피를 차지했어요':ROUND_NAMES[tournament.round]+'에서 도전을 마쳤어요');$('resume').innerHTML=(status==='between'?ROUND_NAMES[tournament.round+1]+' 시작':'대회 다시 도전')+' <span>↗</span>';
  }
- $('pause-overlay').hidden=false;$('resume').focus({preventScroll:true});say('경기 종료. '+$('pause-title').textContent+' '+$('pause-copy').textContent);
+ $('pause-overlay').hidden=false;if($('menu').hidden&&$('title-screen').hidden)$('resume').focus({preventScroll:true});say('경기 종료. '+$('pause-title').textContent+' '+$('pause-copy').textContent);
 }
 const match=new Rally((event,data)=>{
+ if(event==='matchEnd')showMatchEnd(data);
  if(event==='start'){$('player-name').textContent=match.athlete.name;$('player-role').textContent=match.athlete.role;document.body.style.setProperty('--active-kit',ART.kits[match.athleteId]);crowdFx=0;crowdLevel=0;$('resume-countdown').hidden=true;resetMatchSummary();director.reset();pendingFinish=null;$('line-call').hidden=true;hideFeedback();document.body.classList.add('is-playing');$('menu').hidden=true;syncLobby();$('pause-overlay').hidden=true;$('point-banner').hidden=true;$('pause').disabled=false;$('opponent-name').textContent=match.mode==='tournament'?tournament.current.opponent:'클럽 AI';$('condition').hidden=!match.scored;$('mode-label').textContent=match.mode==='tournament'?'SHUTTLE CUP / '+tournament.current.label:match.mode==='compare'?'SHOT LAB / COURT 01':match.mode==='practice'?'PRACTICE / COURT 01':'SINGLES / COURT 01';$('difficulty-label').textContent=AI_STYLES[match.aiStyle].label+' · '+match.difficulty.toUpperCase();$('score-you').textContent=$('score-ai').textContent='0';$('rally').textContent='0';$('speed').textContent='— km/h';trail=[];particles=[];clearGesture();lastInput=null;$('last-shot').textContent='타구를 고르면 아래에서 특징을 볼 수 있어요';lastImpactFx=null;if(match.mode==='compare')setShot('clear');updateComparison();}
  if(event==='serve'){director.reset();$('line-call').hidden=true;updateComparison();trail=[];$('point-banner').hidden=true;$('gesture-guide').style.opacity='1';say(data===0?serveInstruction():match.mode==='practice'?'연습 공급 · 돌아오는 셔틀콕을 준비하세요':(online?.active?'상대 서브 · ':'AI 서브 · ')+(match.service?.right?'오른쪽':'왼쪽')+' → 대각선');}
  if(event==='hit'){if(data.side===1&&gesture?.fired){gesture.reset(gesture.last,performance.now());gesture.accepted=false;}const hitName=data.variant==='block'?'블록 수비':shotNames[data.type],hitHint=data.variant==='block'?'힘을 빼고 네트 앞에 짧게':SHOTS[data.type].hint;director.hit(data,match.mode);lastImpactFx={point:{...data.point},time:data.time,side:data.side};if(data.side===0)lastShotColor=SHOTS[data.type].color;beep(data.variant==='block'?'block':data.type,false,data.combo);if(data.side===0&&!data.teammate&&data.combo>=2){crowdFx=.7;crowdLevel=data.combo;if(audio&&ac)try{ShuttleFeel.cheer(ac,data.combo);}catch{}}burst(data.point,data.side===0?ART.player:ART.opponent);$('rally').textContent=match.rally;$('speed').textContent=Math.round(data.speed)+' km/h';trail=[];if(match.best>best){best=match.best;$('best').textContent=best;try{localStorage.setItem('shuttle-rush-best',best);}catch{}}if(data.teammate){
@@ -136,10 +143,21 @@ $('comparison-restart').addEventListener('click',()=>{document.querySelector('[n
 function launchMatch(mode,difficulty){const aiStyle=mode==='tournament'?tournament.current.aiStyle:document.querySelector('[name=ai-style]:checked').value;match.selectShot(chosen);match.start({mode,difficulty,aiStyle,athlete:mode==='tournament'?tournament.athleteId||selectedAthlete:selectedAthlete});$('pause').textContent='Ⅱ';$('pause').setAttribute('aria-label','일시정지');canvas.focus({preventScroll:true});}
 function start(){if(online?.room)online.leave();const mode=document.querySelector('[name=mode]:checked').value,difficulty=document.querySelector('[name=difficulty]:checked').value;if(mode==='tournament'){tournament.start(difficulty);tournament.athleteId=selectedAthlete;launchMatch(mode,tournament.current.difficulty);}else{tournament.status='idle';launchMatch(mode,difficulty);}}
 function continueOrRestart(){if(online?.active){online.showRoom();return;}if(match.mode==='tournament'&&tournament.advance())launchMatch('tournament',tournament.current.difficulty);else start();}
-function openMenu(){document.body.classList.remove('is-playing');if(['serve','rally','point','setbreak','countdown'].includes(match.state))match.pause();$('pause-overlay').hidden=true;$('menu').hidden=false;syncLobby();selectLobbyTab('play');updateServeOptions();$('menu-resume').hidden=match.state!=='paused';updateLobbyReady();(match.state==='paused'?$('menu-resume'):$('start')).focus({preventScroll:true});}
+function canContinueMatch(){return online?.active?match.state!=='over':match.state==='paused';}
+function openMenu(){
+ document.body.classList.remove('is-playing');
+ if(!online?.active&&['serve','rally','point','setbreak','countdown'].includes(match.state))match.pause();
+ $('pause-overlay').hidden=true;$('menu').hidden=false;syncLobby();selectLobbyTab('play');updateServeOptions();
+ const canContinue=canContinueMatch();
+ $('menu-resume').hidden=!canContinue;updateLobbyReady();
+ (canContinue?$('menu-resume'):$('start')).focus({preventScroll:true});
+}
 $('start').addEventListener('click',start);$('pause').addEventListener('click',()=>match.pause());$('resume').addEventListener('click',()=>{if(match.state==='over')continueOrRestart();else{match.pause();canvas.focus({preventScroll:true});}});$('settings').addEventListener('click',openMenu);
 async function toggleFullscreen(){try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{say('전체 화면을 켜지 못했어요 · 현재 화면에서 계속 플레이할 수 있어요');}}
-$('fullscreen').hidden=!document.fullscreenEnabled||typeof document.documentElement.requestFullscreen!=='function';$('fullscreen').addEventListener('click',toggleFullscreen);document.addEventListener('fullscreenchange',()=>{const active=!!document.fullscreenElement;$('fullscreen').setAttribute('aria-pressed',String(active));$('fullscreen').setAttribute('aria-label',active?'전체 화면 종료':'전체 화면');$('fullscreen').title=active?'전체 화면 종료 (F)':'전체 화면 (F)';});$('new-game').addEventListener('click',openMenu);$('menu-resume').addEventListener('click',()=>{$('menu').hidden=true;syncLobby();match.pause();canvas.focus({preventScroll:true});});
+$('fullscreen').hidden=!document.fullscreenEnabled||typeof document.documentElement.requestFullscreen!=='function';$('fullscreen').addEventListener('click',toggleFullscreen);document.addEventListener('fullscreenchange',()=>{const active=!!document.fullscreenElement;$('fullscreen').setAttribute('aria-pressed',String(active));$('fullscreen').setAttribute('aria-label',active?'전체 화면 종료':'전체 화면');$('fullscreen').title=active?'전체 화면 종료 (F)':'전체 화면 (F)';});$('new-game').addEventListener('click',openMenu);$('menu-resume').addEventListener('click',()=>{
+ if(online?.active){online.returnToCourt(true);return;}
+ $('menu').hidden=true;syncLobby();match.pause();canvas.focus({preventScroll:true});
+});
 $('sound').addEventListener('click',e=>{audio=!audio;$('sound').setAttribute('aria-pressed',audio);$('sound').setAttribute('aria-label',audio?'소리 끄기':'소리 켜기');$('sound').title=audio?'소리 끄기':'소리 켜기';$('sound-slash').hidden=audio;if(audio)beep('hit');if(e.detail>0&&$('menu').hidden)canvas.focus({preventScroll:true});});
 function setShot(shot){chosen=shot;if(match.mode==='compare')updateComparisonChart();for(const b of document.querySelectorAll('[data-result]'))b.setAttribute('aria-pressed',b.dataset.result===shot);match.selectShot(shot);shotPreview=2.5;$('shot-detail').textContent=SHOTS[shot].label+' · '+SHOTS[shot].hint;$('shot-detail').style.color=SHOTS[shot].color;for(const b of document.querySelectorAll('[data-shot]')){b.setAttribute('aria-pressed',b.dataset.shot===shot);b.style.setProperty('--shot-color',SHOTS[b.dataset.shot].color);}}
 const shotKeys=Object.create(null);let bindingShot=null;
@@ -167,7 +185,7 @@ function toggleDebug(){debug=!debug;$('debug-panel').hidden=!debug;$('debug-togg
 $('debug-toggle').addEventListener('click',toggleDebug);function setupHint(){const mode=document.querySelector('[name=mode]:checked').value,style=document.querySelector('[name=ai-style]:checked').value,hideOpponent=mode==='compare'||mode==='tournament';$('ai-style-options').hidden=hideOpponent;$('lobby-opponent').hidden=hideOpponent;$('lobby-difficulty').hidden=mode==='compare';$('lobby-style-summary').textContent=AI_STYLES[style].label;updateLobbyReady();}
 for(const radio of document.querySelectorAll('[name=ai-style]')){radio.nextElementSibling.textContent=AI_STYLES[radio.value].label;radio.nextElementSibling.title=AI_STYLES[radio.value].hint;}
 for(const radio of document.querySelectorAll('[name=mode],[name=difficulty],[name=ai-style]'))radio.addEventListener('change',setupHint);setupHint();
-function openHelp(){helpWasRunning=['serve','rally','point','setbreak','countdown'].includes(match.state);if(helpWasRunning)match.pause();$('help-dialog').showModal();}$('help').addEventListener('click',openHelp);$('court-help').addEventListener('click',openHelp);document.querySelector('[data-lobby-help]').addEventListener('click',openHelp);function resumeAfterHelp(){const resume=helpWasRunning;helpWasRunning=false;if(resume&&match.state==='paused')match.pause();}function closeHelp(){resumeAfterHelp();$('help-dialog').close();}for(const id of ['help-close','help-done'])$(id).addEventListener('click',closeHelp);$('help-dialog').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeHelp();}});$('help-dialog').addEventListener('cancel',e=>{e.preventDefault();closeHelp();});$('help-dialog').addEventListener('close',resumeAfterHelp);
+function openHelp(){helpWasRunning=['serve','rally','point','setbreak','countdown'].includes(match.state);if(helpWasRunning&&!online?.active)match.pause();$('help-dialog').showModal();online?.syncCourt();}$('help').addEventListener('click',openHelp);$('court-help').addEventListener('click',openHelp);document.querySelector('[data-lobby-help]').addEventListener('click',openHelp);function resumeAfterHelp(){const resume=helpWasRunning;helpWasRunning=false;resumeAfterDialog(resume);}function closeHelp(){$('help-dialog').close();resumeAfterHelp();}for(const id of ['help-close','help-done'])$(id).addEventListener('click',closeHelp);$('help-dialog').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeHelp();}});$('help-dialog').addEventListener('cancel',e=>{e.preventDefault();closeHelp();});$('help-dialog').addEventListener('close',resumeAfterHelp);
 
 function renderControls(persist=false){
  renderKeys();
@@ -179,8 +197,14 @@ function renderControls(persist=false){
  $('controls-persistence').textContent=controlsStorage?'변경한 설정은 바로 적용되고 이 기기에 저장돼요.':'이 브라우저에서는 저장할 수 없어 이번 실행에만 적용돼요.';
 }
 let controlsWasRunning=false;
-function openControls(){controlsWasRunning=['serve','rally','point','setbreak','countdown'].includes(match.state);if(controlsWasRunning)match.pause();$('controls-dialog').showModal();$('controls-sensitivity').focus({preventScroll:true});}
-function resumeAfterControls(){const resume=controlsWasRunning;controlsWasRunning=false;if(resume&&match.state==='paused')match.pause();}
+function openControls(){controlsWasRunning=['serve','rally','point','setbreak','countdown'].includes(match.state);if(controlsWasRunning&&!online?.active)match.pause();$('controls-dialog').showModal();online?.syncCourt();$('controls-sensitivity').focus({preventScroll:true});}
+function resumeAfterDialog(resume){
+ online?.syncCourt();
+ if(!resume)return;
+ if(online?.active)online.requestResume();
+ else if(match.state==='paused')match.pause();
+}
+function resumeAfterControls(){const resume=controlsWasRunning;controlsWasRunning=false;resumeAfterDialog(resume);}
 function closeControls(){finishBinding();$('controls-dialog').close();resumeAfterControls(); }
 $('controls-open').addEventListener('click',openControls);for(const b of document.querySelectorAll('[data-controls]'))b.addEventListener('click',openControls);
 for(const id of ['controls-close','controls-done'])$(id).addEventListener('click',closeControls);
@@ -221,8 +245,8 @@ window.addEventListener('keydown',e=>{
  if(k==='p'||k==='escape'){e.preventDefault();if(!e.repeat&&$('menu').hidden)match.pause();return;}
  if(k===' '&&$('menu').hidden&&match.state!=='over'){e.preventDefault();if(!e.repeat)match.state==='paused'?match.pause():match.strike({shot:chosen,kind:'keyboard',power:.55,aim:0,block:e.shiftKey&&chosen==='drive'});}
 });
-function suspend(){clearGesture();if(['serve','rally','point','setbreak','countdown'].includes(match.state))match.pause();}window.addEventListener('blur',suspend);document.addEventListener('visibilitychange',()=>{if(document.hidden)suspend();});
-function project(p){const z=p.z??0,s=1000/(z+15)*cameraScale,far=1/21.7,near=1/8.3,t=(1/(z+15)-far)/(near-far),height=p.y||0,elevation=height>4?4+(height-4)*.55:height;return {x:W/2+p.x*s+t*40-22,y:H*(wideView?.43:.34)+H*(wideView?.40:.44)*t-elevation*s*(wideView?.78:.85)-p.x*s*.045,s};}
+function suspend(){clearGesture();if(['serve','rally','point','setbreak','countdown'].includes(match.state))match.pause();}window.addEventListener('blur',suspend);document.addEventListener('visibilitychange',()=>{if(online?.active){clearGesture();online.syncCourt();}else if(document.hidden)suspend();});
+function project(p){const z=p.z??0,s=1000/(z+15)*cameraScale,far=1/21.7,near=1/8.3,t=(1/(z+15)-far)/(near-far),height=p.y||0,elevation=height>4?4+(height-4)*.55:height;return {x:W/2+p.x*s,y:H*(wideView?.43:.34)+H*(wideView?.40:.44)*t-elevation*s*(wideView?.78:.85),s};}
 function viewPoint(p){return ShuttleCamera.transformPoint(p,director.view,W,H);}
 function screenPoint(p){const base=viewPoint(project(p));if(director.call&&!director.reduced){const close=ShuttleCamera.lineViewPoint(p,director.call,W,H),a=director.detailWeight;return {...base,x:mix(base.x,close.x,a),y:mix(base.y,close.y,a),s:mix(base.s,close.s,a)};}return base;}
 function showLineCall(call){
@@ -452,7 +476,9 @@ function frame(t){
  const detail=director.detailWeight;drawComparisons();if(!director.call){drawServiceCourt();drawShotZone();drawLanding();}ctx.save();ctx.globalAlpha=1-detail;drawTeam(1);ctx.restore();if(match.ball.z>0)drawShuttle();ctx.save();ctx.globalAlpha=1-detail;drawNet();drawTeam(0);ctx.restore();if(match.ball.z<=0)drawShuttle();drawTiming();drawDebug();drawNetContact();drawLineCall();
  for(let i=particles.length-1;i>=0;i--){const p=particles[i];if(!['paused','countdown'].includes(match.state)){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;}if(p.life<=0){particles.splice(i,1);continue;}ctx.globalAlpha=p.life/.22;ellipse(p.x,p.y,2,2,p.color);}ctx.globalAlpha=1;ctx.restore();drawLineView();drawGesture();requestAnimationFrame(frame);
 }
-online=new ShuttleOnline.Client({match,updateServeOptions,getAthlete:()=>selectedAthlete,emit:(event,data)=>match.emit(event,data),focusCourt:()=>canvas.focus({preventScroll:true}),clearInput:clearGesture,setView:view=>{if(view==='game'){$('menu').hidden=true;$('title-screen').hidden=true;document.body.classList.add('is-playing');$('pause-overlay').hidden=!['paused','over'].includes(match.state);}else{document.body.classList.remove('is-playing');$('title-screen').hidden=true;$('menu').hidden=false;$('pause-overlay').hidden=true;selectLobbyTab('friends');$('menu-resume').hidden=true;}syncLobby();updateServeOptions();}});
+online=new ShuttleOnline.Client({match,updateServeOptions,
+ isOnCourt:()=>$('menu').hidden&&$('title-screen').hidden&&!document.hidden&&!$('help-dialog').open&&!$('controls-dialog').open&&!layoutSession,
+ getAthlete:()=>selectedAthlete,emit:(event,data)=>match.emit(event,data),focusCourt:()=>canvas.focus({preventScroll:true}),clearInput:clearGesture,setView:view=>{if(view==='game'){$('menu').hidden=true;$('title-screen').hidden=true;document.body.classList.add('is-playing');$('pause-overlay').hidden=!['paused','over'].includes(match.state);}else{document.body.classList.remove('is-playing');$('title-screen').hidden=true;$('menu').hidden=false;$('pause-overlay').hidden=true;selectLobbyTab('friends');$('menu-resume').hidden=true;}syncLobby();updateServeOptions();}});
 setShot(chosen);
 if(document.fonts)document.fonts.ready.then(()=>{staticLayer=null;});
 selectLobbyTab('play');syncLobby();$('title-enter').focus({preventScroll:true});

@@ -7,28 +7,95 @@ const NET={initialCueLead:.15,maxCueLead:.6};
 const copy=x=>JSON.parse(JSON.stringify(x)),$=id=>document.getElementById(id),clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 function transform(p,dir){if(!p)return null;const q={...p};for(const k of ['x','z','vx','vz','startX','startZ'])if(Number.isFinite(q[k]))q[k]*=dir;if(q.direction)q.direction*=dir;for(const k of ['point','incoming','outgoing'])if(q[k])q[k]=transform(q[k],dir);return q;}
 class Client{
- constructor({match,getAthlete,setView,emit,focusCourt,clearInput,updateServeOptions}){Object.assign(this,{match,getAthlete,setView,emit,focusCourt,clearInput,updateServeOptions});this.room=null;this.seat=0;this.active=false;this.running=false;this.ws=null;this.retry=0;this.latest=null;this.previous=null;this.seq=0;this.rendered=null;this.rtt=null;this.saved=null;try{const saved=JSON.parse(sessionStorage.getItem('shuttle-rush-room-v1'));if(saved&&/^[A-Z2-9]{6}$/.test(saved.code)&&typeof saved.token==='string')this.saved=saved;}catch{}this.original={};for(const key of ['update','strike','selectShot','selectServe','cancelSwing','pause'])this.original[key]=match[key].bind(match);this.originalStart=match.start.bind(match);match.update=dt=>this.active?this.update(dt):this.original.update(dt);match.strike=q=>{if(!this.active)return this.original.strike(q);if(!['serve','rally'].includes(match.state))return false;if(this.ws?.readyState!==1){this.emit('inputRejected',{reason:'connection'});return false;}const inputId=++this.seq;match.pending={...q,ttl:2.6,inputId,acknowledged:false};this.send({type:'strike',input:q,inputId});return true;};match.selectShot=shot=>{if(!this.active)return this.original.selectShot(shot);match.selectedShot=shot;this.send({type:'shot',shot});};match.selectServe=serve=>{if(!this.active)return this.original.selectServe(serve);if(match.state!=='serve'||match.server!==0)return false;match.selectedServe=serve;this.send({type:'serve',serve});return true;};match.cancelSwing=()=>{if(!this.active)return this.original.cancelSwing();match.pending=null;this.send({type:'cancel'});};match.pause=()=>{if(!this.active)return this.original.pause();const resuming=match.state==='paused';this.send({type:resuming?'resume':'pause'});if(!resuming&&['serve','rally','point','setbreak','countdown'].includes(match.state)){match.state='paused';this.emit('pause');}};
+ constructor({match,getAthlete,setView,emit,focusCourt,clearInput,updateServeOptions,isOnCourt}){Object.assign(this,{match,getAthlete,setView,emit,focusCourt,clearInput,updateServeOptions,isOnCourt});this.room=null;this.seat=0;this.active=false;this.running=false;this.ws=null;this.retry=0;this.latest=null;this.previous=null;this.seq=0;this.rendered=null;this.rtt=null;this.saved=null;try{const saved=JSON.parse(sessionStorage.getItem('shuttle-rush-room-v1'));if(saved&&/^[A-Z2-9]{6}$/.test(saved.code)&&typeof saved.token==='string')this.saved=saved;}catch{}this.original={};for(const key of ['update','strike','selectShot','selectServe','cancelSwing','pause'])this.original[key]=match[key].bind(match);this.originalStart=match.start.bind(match);match.update=dt=>this.active?this.update(dt):this.original.update(dt);match.strike=q=>{if(!this.active)return this.original.strike(q);if(!['serve','rally'].includes(match.state))return false;if(this.ws?.readyState!==1){this.emit('inputRejected',{reason:'connection'});return false;}const inputId=++this.seq;match.pending={...q,ttl:2.6,inputId,acknowledged:false};this.send({type:'strike',input:q,inputId});return true;};match.selectShot=shot=>{if(!this.active)return this.original.selectShot(shot);match.selectedShot=shot;this.send({type:'shot',shot});};match.selectServe=serve=>{if(!this.active)return this.original.selectServe(serve);if(match.state!=='serve'||match.server!==0)return false;match.selectedServe=serve;this.send({type:'serve',serve});return true;};match.cancelSwing=()=>{if(!this.active)return this.original.cancelSwing();match.pending=null;this.send({type:'cancel'});};match.pause=()=>{if(!this.active)return this.original.pause();const resuming=match.state==='paused';if(resuming)this.requestResume();else this.send({type:'pause'});if(!resuming&&['serve','rally','point','setbreak','countdown'].includes(match.state)){match.state='paused';this.emit('pause');}};
  const updateLineup=()=>{
   const doubles=document.querySelector('[name=room-type]:checked').value==='doubles';
   $('room-lineup').hidden=$('room-lineup').disabled=!doubles;
  };
  for(const input of document.querySelectorAll('[name=room-type]'))input.addEventListener('change',updateLineup);
  updateLineup();
- $('room-create').onclick=()=>this.connect({
-  type:'create',
-  doubles:!$('room-lineup').disabled,
-  lineup:document.querySelector('[name=room-lineup]:checked').value,
-  bestOf:Number(document.querySelector('[name=room-format]:checked').value),
-  ...this.profile()
- });$('room-join-form').onsubmit=e=>{e.preventDefault();const input=$('room-code-input'),code=input.value.toUpperCase().replace(/\s/g,'');if(!/^[A-Z2-9]{6}$/.test(code)){input.setAttribute('aria-invalid','true');return this.status('영문과 숫자로 된 방 코드 6자리를 입력해 주세요.');}input.removeAttribute('aria-invalid');this.connect({type:'join',code,...this.profile()});};$('room-code-input').oninput=()=>{$('room-code-input').removeAttribute('aria-invalid');};$('room-return').onclick=()=>{this.setView('game');this.focusCourt();};$('room-ready').onclick=()=>this.send({type:'ready'});$('room-start').onclick=()=>this.send({type:this.room?.phase==='over'?'reset':'start'});$('room-leave').onclick=()=>{this.leave();this.setView('friends');};for(const b of document.querySelectorAll('[data-room-team]'))b.onclick=()=>this.send({type:'team',team:Number(b.dataset.roomTeam)});for(const b of document.querySelectorAll('[data-formation]'))b.onclick=()=>this.chooseFormation({typeName:b.dataset.formation});$('room-swap-role').onclick=()=>{const f=this.room.formations[this.team()];this.chooseFormation({lead:this.team()*2+(f.lead===this.team()*2?1:0)});};$('room-copy').onclick=async()=>{try{const url=new URL(location.href);url.search='';url.searchParams.set('room',this.room.code);await navigator.clipboard.writeText(url.href);this.status('초대 링크를 복사했어요. 친구에게 보내주세요.');}catch{this.status('방 코드 '+this.room.code+' 를 친구에게 알려주세요.');}};$('room-retry').onclick=()=>this.reconnect();const code=new URLSearchParams(location.search).get('room');if(code&&/^[A-Z2-9]{6}$/i.test(code)){$('room-code-input').value=code.toUpperCase();this.invited=true;}this.timer=setInterval(()=>{if(this.ws?.readyState===1)this.send({type:'ping',at:performance.now()});},5000);}
+ $('room-create').onclick=()=>{
+  this.codeError('');
+  this.connect({
+   type:'create',
+   doubles:!$('room-lineup').disabled,
+   lineup:document.querySelector('[name=room-lineup]:checked').value,
+   bestOf:Number(document.querySelector('[name=room-format]:checked').value),
+   ...this.profile()
+  });
+ };
+ $('room-join-form').onsubmit=e=>{
+  e.preventDefault();
+  const code=$('room-code-input').value.toUpperCase().replace(/\s/g,'');
+  if(!/^[A-Z2-9]{6}$/.test(code)){
+   this.codeError('영문과 숫자로 된 방 코드 6자리를 입력해 주세요.');
+   return;
+  }
+  this.codeError('');
+  this.connect({type:'join',code,...this.profile()});
+ };
+ $('room-code-input').oninput=()=>this.codeError('');
+ $('room-return').onclick=()=>this.returnToCourt();
+ $('room-ready').onclick=()=>this.send({type:'ready'});$('room-start').onclick=()=>this.send({type:this.room?.phase==='over'?'reset':'start'});$('room-leave').onclick=()=>{this.leave();this.setView('friends');};for(const b of document.querySelectorAll('[data-room-team]'))b.onclick=()=>this.send({type:'team',team:Number(b.dataset.roomTeam)});for(const b of document.querySelectorAll('[data-formation]'))b.onclick=()=>this.chooseFormation({typeName:b.dataset.formation});$('room-swap-role').onclick=()=>{const f=this.room.formations[this.team()];this.chooseFormation({lead:this.team()*2+(f.lead===this.team()*2?1:0)});};$('room-copy').onclick=async()=>{try{const url=new URL(location.href);url.search='';url.searchParams.set('room',this.room.code);await navigator.clipboard.writeText(url.href);this.status('초대 링크를 복사했어요. 친구에게 보내주세요.');}catch{this.status('방 코드 '+this.room.code+' 를 친구에게 알려주세요.');}};$('room-retry').onclick=()=>this.reconnect();const code=new URLSearchParams(location.search).get('room');if(code&&/^[A-Z2-9]{6}$/i.test(code)){$('room-code-input').value=code.toUpperCase();this.invited=true;}this.timer=setInterval(()=>{if(this.ws?.readyState===1)this.send({type:'ping',at:performance.now()});},5000);}
  profile(){return {name:$('room-name').value.trim().slice(0,12)||ShuttlePhysics.ATHLETES[this.getAthlete()].name,athlete:this.getAthlete()};}
  status(text){$('room-status').textContent=text;}
+ codeError(message){
+  const input=$('room-code-input'),error=$('room-code-error');
+  error.textContent=message;
+  error.hidden=!message;
+  if(message){
+   this.status('');
+   input.setAttribute('aria-invalid','true');
+   input.focus({preventScroll:true});
+   error.scrollIntoView({block:'nearest'});
+  }else input.removeAttribute('aria-invalid');
+ }
+ syncCourt(){
+  if(!this.active||!this.latest||this.room?.phase!=='playing'||this.ws?.readyState!==1)return;
+  const present=this.isOnCourt();
+  if(present===this.sentCourt)return;
+  this.sentCourt=present;
+  this.send({type:'court',present});
+ }
+ requestResume(){
+  this.syncCourt();
+  this.send({type:'resume'});
+ }
+ returnToCourt(resume=false){
+  this.setView('game');
+  this.focusCourt();
+  if(resume)this.requestResume();
+ }
  connect(request){if(this.ws&&this.ws.readyState<2)return;this.intent=request;this.status('서버에 연결 중이에요. 첫 접속에는 잠시 걸릴 수 있어요.');this.busy(true);let socket;try{socket=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+'/ws');}catch{this.busy(false);return this.status('서버에 연결하지 못했어요. 다시 시도해 주세요.');}this.ws=socket;socket.onopen=()=>{this.retry=0;this.send(request);};socket.onmessage=e=>{if(socket!==this.ws)return;try{this.receive(JSON.parse(e.data));}catch{this.status('경기 정보를 받지 못했어요. 다시 연결해 주세요.');}};socket.onerror=()=>{};socket.onclose=()=>{if(socket!==this.ws)return;this.busy(false);if(this.room){this.match.state='paused';this.clearInput();this.status('연결이 끊겼어요. 다시 연결 중이에요…');this.setView('friends');$('room-retry').hidden=false;if(this.retry<5)setTimeout(()=>this.reconnect(),Math.min(1000*2**this.retry++,8000));}else this.status('서버에 연결하지 못했어요. 다시 시도해 주세요.');};}
  busy(value){for(const id of ['room-create','room-join'])$(id).disabled=value;}
  send(data){if(this.ws?.readyState===1)this.ws.send(JSON.stringify(data));}
- reconnect(){const info=this.room?{code:this.room.code,token:this.token}:this.saved;if(!info)return;this.connect({type:'join',...info,...this.profile()});}
- receive(q){if(q.type==='formation'){this.formationBusy=false;this.room.formations[this.team()]=q.formation;if(this.latest)this.latest.formations[this.team()]=q.formation;this.drawFormation();this.status('우리 팀 포메이션과 역할을 적용했어요.');return;}if(q.type==='input'){const pending=this.match.pending;if(!pending||pending.inputId!==q.inputId)return;if(q.accepted)pending.acknowledged=true;else{this.match.pending=null;this.emit('inputRejected',{reason:q.reason,shot:q.shot});}return;}if(q.type==='error'){this.formationBusy=false;this.drawFormation();this.status(q.message);this.busy(false);if(!this.room){this.ws?.close();this.ws=null;}return;}if(q.type==='pong'){this.rtt=Math.round(performance.now()-q.at);this.hud();return;}if(q.type==='welcome'){this.formationBusy=false;this.seat=q.seat;this.token=q.token;this.room=q.room;this.send({type:'ping',at:performance.now()});this.saved={code:q.room.code,token:q.token};try{sessionStorage.setItem('shuttle-rush-room-v1',JSON.stringify(this.saved));}catch{}this.busy(false);$('room-retry').hidden=true;this.drawRoom();return;}if(q.type==='seat'){this.seat=q.seat;return;}if(q.type==='room'){this.room=q.room;this.drawRoom();return;}if(q.type==='left')return;
- if(q.type==='start'){this.active=true;document.body.classList.add('is-online');this.running=true;this.latest=this.previous=null;this.originalStart({mode:'match',difficulty:'normal',athlete:this.getAthlete()});this.accept(q.snapshot);this.setView('game');this.focusCourt();this.hud();return;}if(q.type==='state'){const restoring=!this.active;if(restoring){this.active=true;document.body.classList.add('is-online');this.running=true;this.originalStart({mode:'match',difficulty:'normal',athlete:this.getAthlete()});}this.accept(q.snapshot);if(restoring){this.setView('game');if(q.snapshot.state==='paused')this.emit('pause');}for(const event of q.events||[])this.event(event);this.hud();}}
+ reconnect(){const info=this.room?{code:this.room.code,token:this.token}:this.saved;if(!info)return;this.connect({type:'join',...info,onCourt:false,...this.profile()});}
+ receive(q){if(q.type==='formation'){this.formationBusy=false;this.room.formations[this.team()]=q.formation;if(this.latest)this.latest.formations[this.team()]=q.formation;this.drawFormation();this.status('우리 팀 포메이션과 역할을 적용했어요.');return;}if(q.type==='input'){const pending=this.match.pending;if(!pending||pending.inputId!==q.inputId)return;if(q.accepted)pending.acknowledged=true;else{this.match.pending=null;this.emit('inputRejected',{reason:q.reason,shot:q.shot});}return;}if(q.type==='error'){this.formationBusy=false;this.drawFormation();if(!this.room&&this.intent?.type==='join'&&!this.intent.token)this.codeError(q.message);else this.status(q.message);this.busy(false);if(!this.room){this.ws?.close();this.ws=null;}return;}if(q.type==='pong'){this.rtt=Math.round(performance.now()-q.at);this.hud();return;}if(q.type==='welcome'){this.formationBusy=false;this.sentCourt=null;this.seat=q.seat;this.token=q.token;this.room=q.room;this.send({type:'ping',at:performance.now()});this.saved={code:q.room.code,token:q.token};try{sessionStorage.setItem('shuttle-rush-room-v1',JSON.stringify(this.saved));}catch{}this.busy(false);$('room-retry').hidden=true;this.drawRoom();return;}if(q.type==='seat'){this.seat=q.seat;return;}if(q.type==='room'){this.room=q.room;this.drawRoom();return;}if(q.type==='left')return;
+ if(q.type==='start'){
+  this.active=true;document.body.classList.add('is-online');this.running=true;
+  this.latest=this.previous=null;this.sentCourt=null;
+  this.originalStart({mode:'match',difficulty:'normal',athlete:this.getAthlete()});
+  this.accept(q.snapshot);this.returnToCourt();this.hud();return;
+ }
+ if(q.type==='state'){
+  const restoring=!this.active,wasOver=this.latest?.state==='over';
+  if(restoring){
+   this.active=true;document.body.classList.add('is-online');this.running=true;
+   this.originalStart({mode:'match',difficulty:'normal',athlete:this.getAthlete()});
+  }
+  this.accept(q.snapshot);
+  if(restoring){
+   this.returnToCourt();
+   if(q.snapshot.state==='paused')this.emit('pause');
+  }
+  const events=q.events||[];
+  for(const event of events)this.event(event);
+  if(q.snapshot.state==='over'&&!wasOver&&!events.some(e=>e.type==='point'&&e.data.over)){
+   this.emit('matchEnd',{winner:this.match.series.winner});
+  }
+  this.syncCourt();
+  this.hud();
+ }}
  accept(s){
   const previous=this.latest,serve=s.players[this.seat].serve;
   const controlsChanged=!previous||s.state!==previous.state||s.server!==previous.server||serve!==this.match.selectedServe;
@@ -50,7 +117,13 @@ class Client{
   $('status').textContent=s.server===this.seat?'내 서브 · 스와이프 / Space':server.bot?server.name+' 서브 준비':server.team===team?'파트너의 서브 차례예요':'상대의 서브를 기다리는 중';
  }$('online-series').hidden=false;write('online-series',s.bestOf===3?s.setNumber+'세트 · 세트 '+this.match.series.sets.join(' : ')+' · 3판 2선승':Competition.RULES.points+'점 · 한 세트');
  $('online-set-break').hidden=s.state!=='setbreak'||!$('line-call').hidden;if(s.state==='setbreak'){const h=this.match.series.history.at(-1);write('online-set-result',h.number+'세트 '+(h.winner===0?'우리 팀 승리':'상대 팀 승리')+' · '+h.score.join(' : '));write('online-set-timer',Math.ceil(s.setBreakRemaining)+'초');$('point-banner').hidden=true;}
- if(s.state==='over'){$('pause-title').textContent=this.match.series.winner===0?'우리 팀 승리!':'상대 팀 승리';$('resume').textContent='대기방으로';const text=Competition.resultText(this.match.series);if(text)write('pause-copy',text);}this.drawFormation();}
+ if(s.state==='paused'){
+  const disconnected=this.room.players.some(p=>!p?.connected);
+  const prompt=disconnected?'연결이 끊긴 선수가 돌아와야 재개할 수 있어요.':
+   s.resumeRequested?'모두 코트로 돌아오면 자동으로 재개해요.':
+   s.waitingForCourt?'설정 중인 선수가 있어요. 재개를 누르면 복귀를 기다려요.':'준비가 되면 다시 코트로.';
+  write('pause-copy',prompt);
+ }this.drawFormation();}
  createRosterSeat(room,player,id){
   const seat=document.createElement('li'),team=Math.floor(id/(room.doubles?2:1));
   seat.dataset.team=team;
@@ -95,7 +168,7 @@ class Client{
   document.body.classList.remove('is-online');
   for(const id of ['online-condition','online-series','online-set-break'])$(id).hidden=true;
  }
- leave(){this.saved=null;try{sessionStorage.removeItem('shuttle-rush-room-v1');}catch{}this.send({type:'leave'});const socket=this.ws;this.ws=null;socket?.close();this.room=null;this.endMatch();this.nextProfile=null;this.busy(false);$('room-entry').hidden=false;$('room-waiting').hidden=true;$('room-retry').hidden=true;this.status('방을 만들거나 친구의 코드로 참가하세요.');}
+ leave(){this.saved=null;try{sessionStorage.removeItem('shuttle-rush-room-v1');}catch{}this.send({type:'leave'});const socket=this.ws;this.ws=null;socket?.close();this.room=null;this.endMatch();this.nextProfile=null;this.busy(false);this.codeError('');$('room-entry').hidden=false;$('room-waiting').hidden=true;$('room-retry').hidden=true;this.status('방을 만들거나 친구의 코드로 참가하세요.');}
  get snapshot(){return {connected:this.ws?.readyState===1,active:this.active,seat:this.seat,room:this.room?copy(this.room):null,series:this.match.series?copy(this.match.series):null,setBreakRemaining:this.latest?.setBreakRemaining,formations:this.latest?copy(this.latest.formations):null,serverSeat:this.latest?.server,serverTick:this.latest?.tick,rtt:this.rtt,players:this.latest?copy(this.latest.players):[]};}
 }
 window.ShuttleOnline={Client};})();
