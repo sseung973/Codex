@@ -377,9 +377,10 @@
     mat(ctx, view, true);
     if (propsArt?.naturalWidth) {
       const tile = propsArt.naturalWidth / 2, rows = propsArt.naturalHeight;
+      // Keep the bench and its gear together along the far fence.
       const props = [
-        {x:-4.9,z:2.8,width:2.24,height:.95},
-        {x:4.61,z:.18,width:1.62,height:.79}
+        {x:5.48,z:6.15,width:2.05,height:.88},
+        {x:6.32,z:4.75,width:1.20,height:.64}
       ];
       props.forEach((prop,index)=>{
         const point = project(prop), w = prop.width*point.s, h = prop.height*point.s;
