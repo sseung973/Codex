@@ -16,6 +16,8 @@ test('the outdoor crosswind changes long flights more and comparison remains cal
  assert.equal(landing('indoor','clear'),0);
  const clear=landing('outdoor','clear'),drive=landing('outdoor','drive');
  assert.ok(clear<-.5&&drive<-.05&&Math.abs(clear)>Math.abs(drive)*3);
+ assert.equal(landing('sunset','clear'),clear);
+ for(let i=0;i<12;i++)assert.equal(windForRally('sunset',i),windForRally('outdoor',i));
  match.start({mode:'compare',venue:'outdoor'});
  assert.equal(match.venue,'indoor');
  assert.equal(match.wind,0);

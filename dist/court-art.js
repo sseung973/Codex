@@ -188,7 +188,7 @@
     ctx.restore();
   }
 
-  function mat(ctx, {width, height, project, palette, tone}, painted = false) {
+  function mat(ctx, {width, height, project, palette, tone, sunset}, painted = false) {
     const quad = (x, z, y = 0) => [{x:-x,z,y}, {x,z,y}, {x,z:-z,y}, {x:-x,z:-z,y}].map(project);
     const edges = quad(3.26, 6.98);
     const far = Math.min(edges[0].y, edges[1].y);
@@ -197,7 +197,8 @@
       polygon(ctx, quad(3.4, 7.11).map(p=>({x:p.x+1,y:p.y+3})), palette.roof + '54');
       polygon(ctx, quad(3.34, 7.07), tone(palette.court, -.4));
     }
-    polygon(ctx, edges, gradient(ctx, 0, far, 0, near, [[0,tone(palette.court,-.18)],[.4,tone(palette.court,.1)],[.67,palette.court],[1,tone(palette.court,-.13)]]));
+    const surface = sunset ? '#365f53' : palette.court;
+    polygon(ctx, edges, gradient(ctx, 0, far, 0, near, [[0,tone(surface,-.18)],[.4,tone(surface,.1)],[.67,surface],[1,tone(surface,-.13)]]));
     ctx.save();
     polygon(ctx, edges);
     ctx.clip();
@@ -251,8 +252,9 @@
         [0, palette.roof+'14'], [.66, palette.roof+'19'], [1, palette.roof+'33']
       ]), 0, 0, width, floor);
       // The artwork's two inset panels are drawn at the same scale as the wall.
+      const artX=value=>(value/1536*imageWidth-x)*width/cropWidth;
       display = {
-        centers: [628,908].map(panel => (panel/1536*imageWidth-x)*width/cropWidth),
+        centers: [628,908].map(artX),
         y: top+panelY*visibleHeight,
         height: 142/912*imageHeight*visibleHeight/cropHeight
       };
@@ -265,7 +267,7 @@
     return display;
   }
 
-  function outdoorBackdrop(ctx, {width, floor, palette, tone, outdoorArt}) {
+  function outdoorBackdrop(ctx, {width, floor, palette, tone, outdoorArt, sunset}) {
     if (outdoorArt?.naturalWidth) {
       const scale = Math.max(width / outdoorArt.naturalWidth, floor / outdoorArt.naturalHeight);
       const cropWidth = width / scale, cropHeight = floor / scale;
@@ -278,7 +280,8 @@
       return;
     }
 
-    const sky = tone(palette.opponent, .28), haze = tone(palette.paint, -.05);
+    const sky = sunset ? '#59677a' : tone(palette.opponent, .28);
+    const haze = sunset ? '#d7a177' : tone(palette.paint, -.05);
     fill(ctx, gradient(ctx, 0, 0, 0, floor, [[0, sky], [.82, haze]]), 0, 0, width, floor);
     for (const [x, y, span] of [[.19, .28, .19], [.66, .19, .24], [.91, .42, .14]]) {
       oval(ctx, x * width, y * floor, span * width, floor * .027, palette.paint + '79');
@@ -354,9 +357,9 @@
   }
 
   function drawOutdoorVenue(ctx, view) {
-    const {width, height, floor, project, palette, tone, propsArt} = view;
+    const {width, height, floor, project, palette, tone, propsArt, sunset} = view;
     outdoorBackdrop(ctx, view);
-    const paving = '#a79a88';
+    const paving = sunset ? '#ac8c75' : '#a79a88';
     fill(ctx, gradient(ctx, 0, floor, 0, height, [
       [0, tone(paving, -.12)], [.35, paving], [1, tone(paving, -.35)]
     ]), 0, floor, width, height-floor);
@@ -421,11 +424,17 @@
     for (const [foot, top] of [[left,upperLeft],[right,upperRight]]) {
       oval(ctx, foot.x+2*scale, foot.y+1.5*scale, 9*scale, 2.2*scale, palette.roof + '64');
       stroke(ctx, {x:foot.x-5*scale,y:foot.y}, {x:foot.x+7*scale,y:foot.y}, palette.roof, 2.8 * scale);
-      stroke(ctx, foot, top, tone(palette.opponent,-.59), 3.8 * scale);
-      stroke(ctx, {x:foot.x+.8*scale,y:foot.y-2}, {x:top.x+.8*scale,y:top.y}, palette.opponent + '7f', .8 * scale);
+      stroke(ctx, foot, top, tone(palette.roof,.13), 4.3 * scale);
+      stroke(ctx, {x:foot.x+.75*scale,y:foot.y-2*scale}, {x:top.x+.75*scale,y:top.y}, tone(palette.opponent,-.29), 1.1 * scale);
+      oval(ctx,top.x,top.y,2.4*scale,1.5*scale,tone(palette.muted,-.29));
     }
-    stroke(ctx, upperLeft, upperRight, tone(palette.paint,-.33), 3.5 * scale);
-    stroke(ctx, {x:upperLeft.x,y:upperLeft.y-.65*scale}, {x:upperRight.x,y:upperRight.y-.65*scale}, palette.paint, 2.2 * scale);
+    const below = (point,dy) => ({x:point.x,y:point.y+dy*scale});
+    polygon(ctx,[below(upperLeft,-.65),below(upperRight,-.65),below(upperRight,2.9),below(upperLeft,2.9)],palette.paint);
+    stroke(ctx,below(upperLeft,2.9),below(upperRight,2.9),tone(palette.paint,-.31),.72*scale);
+    ctx.save();
+    ctx.setLineDash([2.5*scale,1.6*scale]);
+    stroke(ctx,below(upperLeft,1.95),below(upperRight,1.95),tone(palette.paint,-.21),.55*scale);
+    ctx.restore();
   }
 
   window.ShuttleCourtArt = {drawVenue, drawOutdoorVenue, drawWindFlags, drawTape, gradient, surfaceGrain};

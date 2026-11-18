@@ -253,9 +253,9 @@ fieldset input[type=radio]{inset:0;width:100%;height:100%;margin:0;z-index:1;cur
 @media(any-pointer:coarse) and (orientation:landscape) and (max-height:600px){.menu-card{display:flex;gap:6px}.menu-body{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;align-items:center;margin-bottom:3px}.menu-card>.primary{grid-area:auto}.menu-card>.secondary{grid-column:auto}.menu-card>.menu-footnote{grid-column:auto}}
 
 /* Keep telemetry legible against the daytime outdoor court. */
-.stage[data-venue=outdoor] .rally-strip{
+.stage:is([data-venue=outdoor],[data-venue=sunset]) .rally-strip{
  background:var(--surface);border-radius:4px;box-shadow:0 0 0 4px var(--surface)
 }
-.stage[data-venue=outdoor] #mode-label{
+.stage:is([data-venue=outdoor],[data-venue=sunset]) #mode-label{
  background:var(--surface);color:var(--text);border-radius:4px;padding:4px 7px
 }

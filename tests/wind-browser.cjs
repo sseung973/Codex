@@ -62,23 +62,27 @@ async function swipe(page){
 
   const host=await createPage(1440,900),guest=await createPage(390,844,true);
   for(const player of [host,guest])await player.locator('#lobby-friends-tab').click();
-  await host.locator('[name=room-venue][value=outdoor]').check();
+  await host.locator('[name=room-venue][value=sunset]').check();
   await host.locator('#room-create').click();
   await host.locator('#room-number').waitFor({state:'visible'});
   await guest.locator('#room-code-input').fill(await host.locator('#room-number').innerText());
   await guest.locator('#room-join').tap();
-  await guest.waitForFunction(()=>shuttleRush.snapshot.online.room?.venue==='outdoor');
-  assert.match(await guest.locator('#room-kind').textContent(),/야외 코트/);
-  assert.equal(await guest.locator('#lobby-outdoor-art').isVisible(),true);
+  await guest.waitForFunction(()=>shuttleRush.snapshot.online.room?.venue==='sunset');
+  assert.match(await guest.locator('#room-kind').textContent(),/노을 코트/);
+  assert.equal(await guest.locator('#lobby-sunset-art').isVisible(),true);
   await host.locator('#room-ready').click();
   await guest.locator('#room-ready').tap();
   await host.locator('#room-start').click();
   await Promise.all([host,guest].map(player=>player.waitForFunction(()=>shuttleRush.snapshot.online.active)));
   const opening=(await snapshot(host)).wind;
   assert.ok(opening<0);
+  assert.equal((await snapshot(host)).venue,'sunset');
+  assert.equal((await snapshot(guest)).venue,'sunset');
   assert.equal((await snapshot(guest)).wind,-opening);
+  await guest.locator('#arena-sunset-art').evaluate(image=>image.decode());
+  await guest.locator('#arena-equipment-art').evaluate(image=>image.decode());
   await guest.waitForFunction(()=>document.getElementById('wind-status').textContent.includes('오른쪽'));
-  if(process.env.WIND_SCREENSHOTS)await host.screenshot({path:'/tmp/shuttle-outdoor-desktop.png'});
+  if(process.env.WIND_SCREENSHOTS)await host.screenshot({path:'/tmp/shuttle-sunset-desktop.png'});
 
   await host.keyboard.press('Space');
   await guest.waitForFunction(()=>{
@@ -93,7 +97,7 @@ async function swipe(page){
   await guest.waitForFunction(wind=>shuttleRush.snapshot.wind===wind,opening);
   assert.deepEqual((await snapshot(host)).score,[...(await snapshot(guest)).score].reverse());
   assert.deepEqual(errors,[]);
-  console.log('PASS server-owned outdoor venue, mirrored wind, phone return, shared scoring and next-point change');
+  console.log('PASS server-owned sunset venue, mirrored wind, phone return, shared scoring and next-point change');
  }finally{
   await browser.close();
   if(app)await app.close();
