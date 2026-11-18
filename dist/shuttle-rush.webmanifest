@@ -1,0 +1,23 @@
+{
+  "id": "./",
+  "name": "SHUTTLE RUSH · 스와이프 배드민턴",
+  "short_name": "셔틀 러시",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "theme_color": "#17252c",
+  "background_color": "#17252c",
+  "icons": [
+    {
+      "src": "assets/shuttle-rush-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/shuttle-rush-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
