@@ -182,7 +182,7 @@ body[data-hand=left] .shot-selector{direction:rtl}
 .wordmark{letter-spacing:1px}.wordmark>span{color:var(--text)}.wordmark svg{stroke:var(--primary)}
 .title-lockup{font-weight:700;letter-spacing:1px}.title-lockup>strong{color:var(--text)}.title-lockup>strong>span{display:none}
 .menu-eyebrow{letter-spacing:1.2px;color:var(--muted)}.menu-eyebrow>span{display:none}
-.score{font-variant-numeric:tabular-nums;letter-spacing:1px}.scoreboard{background:#1d3038ed}
+.score{font-variant-numeric:tabular-nums;letter-spacing:1px}
 .avatar-dot{border-width:2px;border-radius:3px}.square-button{border-radius:4px}
 .primary,fieldset label>span,.shot-selector,.shot-selector button,.game-dialog,.compact-card,.serve-selector,.serve-selector button,.resume-countdown,.combo-indicator{border-radius:5px}
 fieldset label>span{background:var(--surface);border-color:var(--line)}fieldset label:hover>span{background:#314c57}
@@ -230,6 +230,19 @@ fieldset input[type=radio]{inset:0;width:100%;height:100%;margin:0;z-index:1;cur
 .athlete-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0}.athlete-stats>div{min-width:0}.athlete-stats dt{font-size:9px;color:var(--muted);margin:0 0 4px}.athlete-stats dd{margin:0;display:flex;align-items:center;gap:6px}.stat-track{flex:1;height:4px;background:var(--surface);border-radius:2px;overflow:hidden}.stat-track i{display:block;height:100%;background:var(--primary)}.athlete-stats b{font:600 12px var(--score);color:var(--text)}
 .athlete-persistence{font-size:9px;line-height:1.5;color:var(--muted);margin:7px 0 0;min-height:27px}
 .avatar-dot.cyan{background:var(--active-kit,var(--player))}
+
+/* The score and stroke controls share the painted metal finish of the court. */
+.scoreboard{background:var(--bg);border-color:var(--line);box-shadow:0 2px 0 #0e1c2366}
+.score b{min-width:1.12em;text-align:center;line-height:1.03}
+.arena-top .square-button{background:var(--bg);border-color:var(--line)}
+.arena-top .square-button:hover{background:var(--panel);border-color:var(--muted)}
+.shot-selector:not(.is-free){background:var(--bg);box-shadow:0 2px 0 #0e1c2388}
+.shot-selector button[aria-pressed=true]{box-shadow:inset 0 -2px var(--shot-color)}
+.status-stack .hit-feedback{box-shadow:inset 2px 0 currentColor}
+@media(forced-colors:active){
+ .scoreboard,.arena-top .square-button,.shot-selector:not(.is-free){border-color:CanvasText;box-shadow:none}
+ .shot-selector button[aria-pressed=true]{outline:2px solid Highlight;outline-offset:-3px;box-shadow:none}
+}
 @media(any-pointer:coarse) and (orientation:landscape) and (max-height:600px){.athlete-chooser{grid-area:4/1/5/3;margin:0}.ai-style-options{grid-area:5/1/6/3}.menu-card>.primary{grid-area:6/1/7/3}.athlete-options label>span{min-height:64px;display:grid;grid-template-columns:32px 1fr;column-gap:5px;padding:6px}.athlete-options svg{grid-row:1/3;width:30px;height:33px}.athlete-options b,.athlete-options small{text-align:left}.athlete-note{min-height:16px;margin:6px 0}.athlete-persistence{min-height:14px;margin-top:4px}}
 @media(forced-colors:active){.athlete-options input:checked+span{outline:2px solid Highlight}.stat-track{border:1px solid CanvasText}.stat-track i{background:Highlight}.athlete-options svg{fill:CanvasText}}
 
