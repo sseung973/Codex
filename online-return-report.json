@@ -1,5 +1,5 @@
 {
-  "base": "http://127.0.0.1:43647",
+  "base": "http://127.0.0.1:39055",
   "passed": 6,
   "results": [
     {
@@ -11,8 +11,8 @@
       "rally": 5,
       "firstCounter": "drive",
       "kind": "swipe",
-      "contactHeight": 1.559506050769996,
-      "rtt": 1
+      "contactHeight": 1.304889715476684,
+      "rtt": 2
     },
     {
       "mode": "singles",
@@ -23,8 +23,8 @@
       "rally": 5,
       "firstCounter": "drop",
       "kind": "swipe",
-      "contactHeight": 1.474482613718536,
-      "rtt": 2
+      "contactHeight": 1.474376539320351,
+      "rtt": 4
     },
     {
       "mode": "singles",
@@ -35,8 +35,8 @@
       "rally": 5,
       "firstCounter": "drop",
       "kind": "swipe",
-      "contactHeight": 1.4677197339601307,
-      "rtt": 2
+      "contactHeight": 1.0563524478588362,
+      "rtt": 42
     },
     {
       "mode": "singles",
@@ -48,8 +48,8 @@
       "rally": 5,
       "firstCounter": "clear",
       "kind": "keyboard",
-      "contactHeight": 1.4972742493206874,
-      "rtt": 1
+      "contactHeight": 1.4658216700824662,
+      "rtt": 11
     },
     {
       "mode": "singles",
@@ -62,7 +62,7 @@
       "clients": 4,
       "rally": 5,
       "firstCounter": "drop",
-      "rtt": 3
+      "rtt": 18
     }
   ],
   "errors": []

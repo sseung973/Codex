@@ -29,3 +29,9 @@ test('only the sending client receives matching input acceptance or an actionabl
  r.message(a,{type:'strike',inputId:2,input:{shot:'drive',power:.55,aim:0}});assert.equal(a.messages.at(-1).reason,'not-turn');assert.equal(a.messages.at(-1).inputId,2);
  const m=room.match;m.lastHit=1;m.ball={x:0,y:1.5,z:-2,vx:0,vy:-1,vz:-3};m.retarget();r.message(a,{type:'strike',inputId:3,input:{shot:'smash',power:.55,aim:0}});assert.equal(a.messages.at(-1).reason,'height');assert.equal(m.pending[0],null);assert.equal(m.lastShot.type,'clear');assert.equal(b.messages.length,0);assert.ok(SHOTS.drop.min<1.8);
 });
+
+test('a reachable flat return does not trigger a premature dive that rejects delayed network input',()=>{
+ for(const receiver of [0,1]){const m=make(false),dir=receiver===0?1:-1,p=m.players[receiver];m.state='rally';m.rally=3;m.lastHit=1-receiver;m.time=2.85;m.ball={x:.6165849114392273*dir,y:1.5304731939229717,z:1.8085186630479004*dir,vx:-1.0349266151635834*dir,vy:1.531249949640039,vz:-10.9244635519759*dir};
+ // Canonical near side is the receiver; replay the measured Render return.
+ Object.assign(p,{x:.0789357907419293*dir,z:-3.4847999617859418*dir});m.retarget();let queued=false,dives=0;for(let i=0;i<120&&m.state==='rally'&&m.rally===3;i++){if(i===48){queued=m.strike(receiver,{shot:'clear',power:.51,aim:0,kind:'swipe'});assert.ok(queued,'late-but-physically-reachable command must be accepted');}m.step();if(p.dive)dives++;}assert.ok(queued);assert.equal(m.rally,4);assert.equal(dives,0,'run into contact instead of diving while the ball is still across the net');assert.deepEqual(m.score,[0,0]);}
+});
