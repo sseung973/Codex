@@ -188,18 +188,20 @@
     ctx.restore();
   }
 
-  function mat(ctx, {width, height, project, palette, tone}) {
+  function mat(ctx, {width, height, project, palette, tone}, painted = false) {
     const quad = (x, z, y = 0) => [{x:-x,z,y}, {x,z,y}, {x,z:-z,y}, {x:-x,z:-z,y}].map(project);
     const edges = quad(3.26, 6.98);
     const far = Math.min(edges[0].y, edges[1].y);
     const near = Math.max(edges[2].y, edges[3].y);
-    polygon(ctx, quad(3.4, 7.11).map(p=>({x:p.x+1,y:p.y+3})), palette.roof + '54');
-    polygon(ctx, quad(3.34, 7.07), tone(palette.court, -.4));
+    if (!painted) {
+      polygon(ctx, quad(3.4, 7.11).map(p=>({x:p.x+1,y:p.y+3})), palette.roof + '54');
+      polygon(ctx, quad(3.34, 7.07), tone(palette.court, -.4));
+    }
     polygon(ctx, edges, gradient(ctx, 0, far, 0, near, [[0,tone(palette.court,-.18)],[.4,tone(palette.court,.1)],[.67,palette.court],[1,tone(palette.court,-.13)]]));
     ctx.save();
     polygon(ctx, edges);
     ctx.clip();
-    for (const seam of [-2.03, 0, 2.03]) {
+    for (const seam of painted ? [] : [-2.03, 0, 2.03]) {
       stroke(ctx, project({x:seam,z:6.98}), project({x:seam,z:-6.98}), palette.roof+'23', .55);
     }
     surfaceGrain(ctx, width, height, .09);
@@ -230,8 +232,19 @@
     if (view.wallArt?.naturalWidth) windowLight(ctx, view);
   }
 
-  function drawOutdoorVenue(ctx, view) {
-    const {width, height, floor, project, palette, tone} = view;
+  function outdoorBackdrop(ctx, {width, floor, palette, tone, outdoorArt}) {
+    if (outdoorArt?.naturalWidth) {
+      const scale = Math.max(width / outdoorArt.naturalWidth, floor / outdoorArt.naturalHeight);
+      const cropWidth = width / scale, cropHeight = floor / scale;
+      const x = (outdoorArt.naturalWidth - cropWidth) / 2;
+      const y = outdoorArt.naturalHeight - cropHeight;
+      ctx.drawImage(outdoorArt, x, y, cropWidth, cropHeight, 0, 0, width, floor);
+      fill(ctx, gradient(ctx, 0, 0, 0, floor, [
+        [0, palette.roof + '14'], [.55, palette.roof + '16'], [1, palette.roof + '35']
+      ]), 0, 0, width, floor);
+      return;
+    }
+
     const sky = tone(palette.opponent, .28), haze = tone(palette.paint, -.05);
     fill(ctx, gradient(ctx, 0, 0, 0, floor, [[0, sky], [.82, haze]]), 0, 0, width, floor);
     for (const [x, y, span] of [[.19, .28, .19], [.66, .19, .24], [.91, .42, .14]]) {
@@ -261,15 +274,29 @@
     ctx.restore();
     for (let x = 0; x < width; x += width/8) stroke(ctx,{x,y:fenceTop-3},{x,y:floor},fence,1.8);
     stroke(ctx,{x:0,y:fenceTop},{x:width,y:fenceTop},fence,1.5);
+  }
+
+  function drawOutdoorVenue(ctx, view) {
+    const {width, height, floor, project, palette, tone} = view;
+    outdoorBackdrop(ctx, view);
+    const paving = '#a79a88';
     fill(ctx, gradient(ctx, 0, floor, 0, height, [
-      [0, tone(palette.muted, -.14)], [.65, tone(palette.muted, -.31)], [1, tone(palette.court, -.4)]
+      [0, tone(paving, -.12)], [.35, paving], [1, tone(paving, -.35)]
     ]), 0, floor, width, height-floor);
+    fill(ctx, gradient(ctx, 0, floor, 0, floor + 14, [
+      [0, palette.roof + '35'], [1, palette.roof + '00']
+    ]), 0, floor, width, 14);
     for (const z of [-7.4, -3.7, 0, 3.7, 7.4]) {
       const a=project({x:-14,z}),b=project({x:14,z});
-      if(a.y>floor)stroke(ctx,a,b,palette.roof+'2d',1);
+      if(a.y>floor)stroke(ctx,a,b,palette.roof+'1e',.7);
     }
-    mat(ctx, view);
-    surfaceGrain(ctx, width, height, .13);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, floor, width, height - floor);
+    ctx.clip();
+    surfaceGrain(ctx, width, height, .065);
+    ctx.restore();
+    mat(ctx, view, true);
   }
 
   function drawWindFlags(ctx, project, palette, wind, time) {

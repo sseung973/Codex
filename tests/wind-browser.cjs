@@ -31,11 +31,13 @@ async function swipe(page){
  }
  try{
   const phone=await createPage(320,568,true);
+  assert.equal(await phone.locator('#arena-outdoor-art').getAttribute('src'),null);
   await phone.locator('[name=venue][value=indoor]').focus();
   await phone.keyboard.press('ArrowRight');
   assert.equal(await phone.locator('[name=venue][value=outdoor]').isChecked(),true);
   assert.equal(await phone.locator('#lobby-outdoor-art').isVisible(),true);
-  await phone.waitForFunction(()=>document.getElementById('lobby-outdoor-art').naturalWidth===1200);
+  await phone.waitForFunction(()=>document.getElementById('lobby-outdoor-art').naturalWidth===1440);
+  await phone.waitForFunction(()=>document.getElementById('arena-outdoor-art').naturalWidth===1440);
   await phone.locator('[name=mode][value=practice]').check();
   await phone.locator('#start').tap();
   await phone.waitForFunction(()=>shuttleRush.snapshot.venue==='outdoor'&&shuttleRush.snapshot.wind<0);

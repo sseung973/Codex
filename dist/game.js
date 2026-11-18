@@ -9,8 +9,10 @@ const {drawVenue,drawOutdoorVenue,drawWindFlags,drawTape,gradient,surfaceGrain}=
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const director=new ShuttleCamera.CameraDirector(CFG,{reduced});let pendingFinish=null;
 let W=720,H=1060,cameraScale=1,wideView=false,chosen='drive',debug=false,audio=false,ac=null,last=0,gesture=null,feedbackTimer=0,particles=[],trail=[],best=0,staticLayer=null,helpWasRunning=false;
-const wallArt=$('arena-wall-art');
+const wallArt=$('arena-wall-art'),outdoorArt=$('arena-outdoor-art');
 wallArt.addEventListener('load',()=>{staticLayer=null;});
+outdoorArt.addEventListener('load',()=>{if(renderedVenue==='outdoor')staticLayer=null;});
+function loadOutdoorArt(){if(!outdoorArt.hasAttribute('src'))outdoorArt.src=outdoorArt.dataset.src;}
 try{best=Number(localStorage.getItem('shuttle-rush-best'))||0;}catch{}$('best').textContent=best;
 const shotNames=Object.fromEntries(Object.entries(SHOTS).map(([key,value])=>[key,value.label]));
 let controls=ShuttleInput.preferences(),controlsStorage=true,savedControls=null;try{savedControls=localStorage.getItem('shuttle-rush-controls-v1');}catch{controlsStorage=false;}try{controls=ShuttleInput.preferences(JSON.parse(savedControls));}catch{}
@@ -52,6 +54,7 @@ function syncLobbyArtwork(){
  const outdoor=friends?roomVenue==='outdoor':showCourt&&selectedVenue()==='outdoor'&&!document.querySelector('[name=mode][value=compare]').checked;
  $('lobby-court-art').hidden=!showCourt||outdoor;
  $('lobby-outdoor-art').hidden=!outdoor;
+ if(outdoor)loadOutdoorArt();
  $('lobby-friends-art').hidden=!friends||outdoor;
  $('lobby-court-caption').hidden=!showCourt;
  $('lobby-athlete-caption').hidden=!showPortrait;
@@ -297,8 +300,9 @@ function rect(x,y,w,h,r,color,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);c
 function worldLine(a,b,color,width=1){line(project(a),project(b),color,width);}
 function courtBackground(){
  const floor=Math.min(H*.31+42,project({x:3.34,z:7.07}).y-7);
- const draw=match.venue==='outdoor'?drawOutdoorVenue:drawVenue;
- draw(ctx,{width:W,height:H,floor,project,palette:ART,tone,compact:!wideView,wallArt});
+ const outdoor=match.venue==='outdoor',draw=outdoor?drawOutdoorVenue:drawVenue;
+ if(outdoor)loadOutdoorArt();
+ draw(ctx,{width:W,height:H,floor,project,palette:ART,tone,compact:!wideView,wallArt,outdoorArt});
  const stripe=(a,b)=>worldLine(a,b,ART.paint,1.3);
  for(const x of [-3.05,-CFG.halfWidth,CFG.halfWidth,3.05])stripe({x,z:-6.7},{x,z:6.7});
  for(const z of [-6.7,-5.94,-1.98,1.98,5.94,6.7])stripe({x:-3.05,z},{x:3.05,z});
