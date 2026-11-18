@@ -201,8 +201,16 @@
     ctx.save();
     polygon(ctx, edges);
     ctx.clip();
-    for (const seam of painted ? [] : [-2.03, 0, 2.03]) {
-      stroke(ctx, project({x:seam,z:6.98}), project({x:seam,z:-6.98}), palette.roof+'23', .55);
+    if (painted) {
+      for (let i = 0; i < 82; i++) {
+        const x = (seed(i*5+81)-.5)*6.5, z = (seed(i*7+32)-.5)*13.9;
+        const start = project({x,z}), end = project({x:x+.025+seed(i*3+5)*.09,z:z+.12});
+        stroke(ctx, start, end, i%3===0 ? palette.roof+'16' : palette.paint+'13', .65);
+      }
+    } else {
+      for (const seam of [-2.03, 0, 2.03]) {
+        stroke(ctx, project({x:seam,z:6.98}), project({x:seam,z:-6.98}), palette.roof+'23', .55);
+      }
     }
     surfaceGrain(ctx, width, height, .09);
     ctx.restore();
@@ -276,6 +284,50 @@
     stroke(ctx,{x:0,y:fenceTop},{x:width,y:fenceTop},fence,1.5);
   }
 
+  function outdoorGroundDetail(ctx, {project, palette}) {
+    for (let i = 0; i < 110; i++) {
+      const side=i%2?1:-1, x=side*(3.32+seed(i*5+511)*7), z=(seed(i*13+23)-.5)*15;
+      const start=project({x,z}), end=project({x:x+.035+seed(i*3+7)*.12,z:z+.05});
+      stroke(ctx,start,end,i%3===0?palette.roof+'21':palette.paint+'1f',.75);
+    }
+
+    // Project the branches and gaps in the foliage onto the paving.
+    for (const [index,{x,z,reach}] of [
+      {x:-6.9,z:-2.5,reach:2.8},
+      {x:6.2,z:3.0,reach:2.35},
+      {x:8.5,z:-5.4,reach:2.25},
+    ].entries()) {
+      const side=Math.sign(x), root=project({x:x+side*2.5,z:z+.34});
+      const fork=project({x:x+side*.36,z:z-.16});
+      polygon(ctx,[
+        {x:root.x,y:root.y+root.s*.055},
+        {x:root.x,y:root.y-root.s*.055},
+        {x:fork.x,y:fork.y-fork.s*.014},
+        {x:fork.x,y:fork.y+fork.s*.014}
+      ],palette.roof+'20');
+      const inner=project({x:x-side*reach,z}), edge=project({x:x+side*reach,z});
+      ctx.fillStyle=gradient(ctx,edge.x,edge.y,inner.x,inner.y,[
+        [0,palette.roof+'36'],[.55,palette.roof+'28'],[1,palette.roof+'0c']
+      ]);
+      ctx.beginPath();
+      const boughs=[[-.82,-.62],[-.51,.48],[-.33,-1.16],[.13,.77],[.32,-.76],[.69,.34],[.79,-.43]];
+      for (const [branch,[dx,dz]] of boughs.entries()) {
+        for (let i=0;i<30;i++) {
+          const key=index*251+branch*31+i, angle=seed(key*23+6)*Math.PI*2;
+          const distance=.82*Math.sqrt(seed(key*11+83));
+          const px=x+dx*reach*side+Math.cos(angle)*distance;
+          const pz=z+dz+Math.sin(angle)*distance;
+          const size=.07+seed(key*7+90)*.26;
+          const center=project({x:px,z:pz}), front=project({x:px,z:pz-size*1.4});
+          const rx=center.s*size, ry=Math.max(.6,Math.abs(front.y-center.y));
+          ctx.moveTo(center.x+rx,center.y);
+          ctx.ellipse(center.x,center.y,rx,ry,0,0,Math.PI*2);
+        }
+      }
+      ctx.fill();
+    }
+  }
+
   function drawOutdoorVenue(ctx, view) {
     const {width, height, floor, project, palette, tone} = view;
     outdoorBackdrop(ctx, view);
@@ -294,6 +346,7 @@
     ctx.beginPath();
     ctx.rect(0, floor, width, height - floor);
     ctx.clip();
+    outdoorGroundDetail(ctx,view);
     surfaceGrain(ctx, width, height, .065);
     ctx.restore();
     mat(ctx, view, true);

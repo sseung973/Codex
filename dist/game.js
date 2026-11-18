@@ -339,6 +339,8 @@ function racketPose(p,side,contact=match.contact){
 function athlete(p,side,variant=null){
  const identity=variant?.identity||(online?.active?online.identity(side):match.athlete),pose=variant?.pose||poses[side],{spot,scale}=pose,isBack=side===0,s=scale*.85,shirt=online?.active?ART.kits[identity.id]:isBack?ART.kits[identity.id]:ART.opponent,skin=isBack?'#b68b6d':'#c6a18a',hair='#263134',racketSide=pose.handSign;
  const speed=Math.hypot(p.vx,p.vz),step=reduced||p.dive?0:Math.sin(p.steps)*Math.min(9,speed*1.35),ready=reduced?0:Math.sin(Math.PI*clamp(1-p.split/CFG.splitDuration,0,1))*4;
+ const dive=pose.dive,pelvis=dive.hip||{x:0,y:-88};
+ const feet=[-1,1].map(side=>dive.hip?(side===dive.lead?dive.leadFoot:dive.trailFoot):{x:side*(16+ready-step),y:-10});
  if(!reduced&&pose.impact&&pose.age>.055&&pose.age<pose.profile.duration*.62){
   const hit=project(pose.impact.point);
   let previous=racketAt(pose,hit).point;
@@ -353,23 +355,36 @@ function athlete(p,side,variant=null){
  const ground=project({x:p.x,z:p.z});
  const shadow=ctx.createRadialGradient(ground.x+4*s,ground.y+2*s,2*s,ground.x+4*s,ground.y+2*s,25*s);
  shadow.addColorStop(0,ART.roof+'86');shadow.addColorStop(1,ART.roof+'00');
- ctx.save();ctx.translate(ground.x,ground.y);ctx.scale(1,.34);ctx.translate(-ground.x,-ground.y);
+ ctx.save();ctx.globalAlpha*=clamp(1-pose.jump/.65,.3,1);
+ ctx.translate(ground.x,ground.y);ctx.scale(1,.34);ctx.translate(-ground.x,-ground.y);
  ellipse(ground.x+4*s,ground.y+2*s,28*s,22*s,shadow);ctx.restore();
+ for(const foot of feet){
+  const lift=(ground.y-spot.y)/s+Math.max(0,-foot.y-10);
+  const pressure=clamp(1-lift/13,0,1);
+  if(!pressure)continue;
+  const y=ground.y+clamp(foot.y+10,-3,4)*s;
+  ctx.save();ctx.globalAlpha*=pressure;
+  ellipse(ground.x+(foot.x+1)*s,y,9*s,2.3*s,ART.roof+'76');
+  ctx.restore();
+ }
  if(online?.active&&online.room?.doubles&&p.id===online.seat){
   ellipse(ground.x,ground.y+1.5*s,24*s,5.4*s,ART.roof+'35',ART.player+'d8',Math.max(.95,1.5*s));
  }
  ctx.save();ctx.translate(spot.x,spot.y);ctx.scale(s,s);ctx.lineCap='round';ctx.lineJoin='round';
- const leg=(side,bend)=>{
-  const active=!!pose.dive.hip,leading=side===pose.dive.lead,pelvis=pose.dive.hip||{x:0,y:-88},hip={x:pelvis.x+side*10,y:pelvis.y+9},knee=active?(leading?pose.dive.leadKnee:pose.dive.trailKnee):{x:side*(13+ready)+bend*.35,y:-43+Math.abs(bend)*.22},ankle=active?(leading?pose.dive.leadFoot:pose.dive.trailFoot):{x:side*(16+ready)+bend,y:-10};
+ const leg=(side,bend,ankle)=>{
+  const hip={x:pelvis.x+side*10,y:pelvis.y+9};
+  const knee=dive.hip?(side===dive.lead?dive.leadKnee:dive.trailKnee):{x:side*(13+ready)+bend*.35,y:-43+Math.abs(bend)*.22};
   line(hip,knee,tone(skin,side<0?-.12:0),10);
   line(knee,ankle,tone(skin,side<0?-.08:.02),7.5);
   line({x:knee.x-1.6,y:knee.y+1},{x:ankle.x-1.6,y:ankle.y-14},tone(skin,.19)+'a8',1.6);
   line({x:ankle.x,y:ankle.y-12},ankle,ART.paint,7);
   line({x:ankle.x-2.6,y:ankle.y-10},{x:ankle.x+2.6,y:ankle.y-10},tone(shirt,-.31),1.4);
-  path([{x:ankle.x-5,y:ankle.y-1},{x:ankle.x+4,y:ankle.y-1},{x:ankle.x+9,y:ankle.y+5},{x:ankle.x+8,y:ankle.y+9},{x:ankle.x-7,y:ankle.y+9},{x:ankle.x-7,y:ankle.y+4}],ART.paint,tone(ART.paint,-.38),.7);line({x:ankle.x-6,y:ankle.y+9},{x:ankle.x+8,y:ankle.y+9},tone(ART.roof,.18),1.5);
+  path([{x:ankle.x-5,y:ankle.y-1},{x:ankle.x+4,y:ankle.y-1},{x:ankle.x+9,y:ankle.y+5},{x:ankle.x+8,y:ankle.y+9},{x:ankle.x-7,y:ankle.y+9},{x:ankle.x-7,y:ankle.y+4}],ART.paint,tone(ART.paint,-.38),.7);
+  line({x:ankle.x-5,y:ankle.y+6},{x:ankle.x+7,y:ankle.y+5},tone(ART.paint,-.24),1.4);
+  line({x:ankle.x-6,y:ankle.y+9},{x:ankle.x+8,y:ankle.y+9},tone(ART.roof,.18),1.5);
  };
- leg(-1,step);leg(1,-step);
- ctx.save();const pelvis=pose.dive.hip||{x:0,y:-88};ctx.translate(pelvis.x,pelvis.y);ctx.rotate(pose.dive.angle);ctx.translate(0,88);ctx.transform(1,0,pose.turn,1,pose.turn*88,0);
+ leg(-1,step,feet[0]);leg(1,-step,feet[1]);
+ ctx.save();ctx.translate(pelvis.x,pelvis.y);ctx.rotate(dive.angle);ctx.translate(0,88);ctx.transform(1,0,pose.turn,1,pose.turn*88,0);
  // Fitted shorts, long legs, a narrow neck and small head establish adult proportions.
  const shorts=gradient(ctx,-18,-90,22,-75,[[0,tone(ART.roof,.14)],[.6,ART.roof],[1,tone(ART.roof,-.18)]]);
  path([{x:-19,y:-88},{x:18,y:-88},{x:20,y:-66},{x:3,y:-65},{x:0,y:-76},{x:-3,y:-65},{x:-20,y:-66}],shorts,ART.roof+'88',.8);
@@ -378,10 +393,15 @@ function athlete(p,side,variant=null){
  const freeShoulder={x:-racketSide*20,y:-128},freeElbow={x:-racketSide*31,y:pose.jump>.1?-145:-105},freeHand={x:pose.stroke==='backhand'?racketSide*5:-racketSide*25,y:pose.stroke==='backhand'?-115:pose.jump>.1?-165:-91};
  if(!pose.dive.hip)line(freeShoulder,freeElbow,tone(skin,-.09),8);if(!pose.dive.hip){line(freeElbow,freeHand,skin,6.5);ellipse(freeHand.x,freeHand.y,3.4,4.2,skin);}
  rect(-5,-145,10,15,2,skin);
- const fabric=gradient(ctx,-25,-135,23,-93,[[0,tone(shirt,.16)],[.47,shirt],[1,tone(shirt,-.21)]]);
+ const fabric=gradient(ctx,-24,-135,24,-91,[[0,tone(shirt,.28)],[.28,tone(shirt,.13)],[.55,shirt],[1,tone(shirt,-.27)]]);
  path([{x:-13,y:-138},{x:13,y:-138},{x:24,y:-129},{x:21,y:-116},{x:16,y:-119},{x:16,y:-88},{x:-16,y:-88},{x:-16,y:-119},{x:-22,y:-116},{x:-25,y:-129}],fabric,ART.roof+'70',1.15);
  const trim=tone(shirt,-.38);
  path([{x:-13,y:-137},{x:-22,y:-128},{x:-18,y:-118},{x:-13,y:-91},{x:-8,y:-91},{x:-12,y:-120}],tone(shirt,-.18));
+ path([{x:-13,y:-129},{x:-8,y:-133},{x:6,y:-130},{x:0,y:-127}],tone(shirt,.37)+'85');
+ path([{x:-13,y:-105},{x:-8,y:-97},{x:0,y:-94},{x:-9,y:-95}],tone(shirt,-.29)+'b0');
+ path([{x:3,y:-93},{x:13,y:-99},{x:15,y:-94},{x:14,y:-91}],tone(shirt,-.30)+'ab');
+ line({x:-7,y:-96},{x:-2,y:-94},tone(shirt,.31)+'aa',1.15);
+ line({x:5,y:-93},{x:12,y:-97},tone(shirt,.29)+'9c',.9);
  line({x:-23,y:-121},{x:-17,y:-124},trim,2.4);
  line({x:23,y:-121},{x:17,y:-124},trim,2.4);
  line({x:-9,y:-137},{x:0,y:-132},trim,2.1);line({x:0,y:-132},{x:9,y:-137},trim,2.1);
@@ -395,8 +415,8 @@ function athlete(p,side,variant=null){
  if(isBack){if(identity.hair==='tied'){ellipse(-14,-151,5,12,hair);line({x:-11,y:-159},{x:-18,y:-143},hair,6);}path([{x:-14,y:-156},{x:-14,y:-166},{x:-8,y:-175},{x:7,y:-176},{x:14,y:-168},{x:14,y:-155},{x:8,y:-148},{x:-8,y:-149}],hair);line({x:-9,y:-166},{x:7,y:-169},tone(hair,.13),1);if(identity.hair==='sweep'){path([{x:-13,y:-165},{x:-4,y:-178},{x:12,y:-171},{x:13,y:-161},{x:2,y:-169}],tone(hair,.2));line({x:-13,y:-159},{x:12,y:-159},ART.paint,2.5);}}
  else{path([{x:-14,y:-159},{x:-13,y:-169},{x:-6,y:-176},{x:7,y:-174},{x:14,y:-166},{x:12,y:-156},{x:7,y:-164},{x:-6,y:-164}],hair);line({x:-7,y:-158},{x:-4,y:-158},hair,1.2);line({x:4,y:-158},{x:7,y:-158},hair,1.2);line({x:0,y:-156},{x:-1,y:-150},tone(skin,-.2),.8);line({x:-3,y:-147},{x:3,y:-147},tone(skin,-.22),.8);}
  ctx.restore();ctx.restore();
- if(pose.dive.hip){
-  const dive=pose.dive,sh=ShuttleFeel.bodyPoint(freeShoulder,dive),rest=ShuttleFeel.bodyPoint(freeHand,dive);
+ if(dive.hip){
+  const sh=ShuttleFeel.bodyPoint(freeShoulder,dive),rest=ShuttleFeel.bodyPoint(freeHand,dive);
   const target={x:mix(rest.x,dive.palm.x,dive.palmWeight),y:mix(rest.y,dive.palm.y,dive.palmWeight)};
   const {hand,elbow}=ShuttleFeel.supportArm(sh,target,racketSide);
   line(sh,elbow,tone(skin,-.09),8);line(elbow,hand,skin,6.5);ellipse(hand.x,hand.y,4.4,2.7,skin);
@@ -427,10 +447,11 @@ function drawTeam(side){
   ctx.restore();
  }
 }
+const shuttleSkirt=[{x:-.4,y:-2.9},{x:-16,y:-8},{x:-21,y:-6.3},{x:-21,y:6.3},{x:-16,y:8},{x:-.4,y:2.9}];
 function drawShuttle(){
  const b=match.ball,p=project(b),shadow=project({x:b.x,z:b.z});
  const pixel=W/canvas.getBoundingClientRect().width;
- const scale=Math.max(.62*pixel,p.s/(director.call&&!director.reduced?140:200));
+ const scale=Math.max(.70*pixel,p.s/(director.call&&!director.reduced?140:200));
  ctx.save();ctx.globalAlpha=.56/(1+b.y*.2);
  ellipse(shadow.x,shadow.y,(7+Math.min(7,b.y)*1.65)*scale,3.1*scale,ART.roof);
  ctx.restore();
@@ -453,11 +474,16 @@ function drawShuttle(){
  ctx.save();ctx.translate(p.x,p.y);
  ctx.rotate(match.state==='rally'?Math.atan2(next.y-p.y,next.x-p.x):-.8);
  ctx.scale(scale,scale);
- const feather=gradient(ctx,-18,-8,-8,8,[[0,'#fff9e8'],[.5,ART.paint],[1,'#c3c7b7']]);
- path([{x:0,y:-3},{x:-16,y:-8},{x:-21,y:-6},{x:-21,y:6},{x:-16,y:8},{x:0,y:3}],feather,ART.roof,Math.max(.7,pixel/scale*.85));
- for(let i=-1;i<=1;i++)line({x:-19,y:i*4.8},{x:-2,y:i*1.9},tone(ART.muted,-.26),.75);
- ellipse(0,0,4.1,4.1,'#e4c392',ART.roof,.9);
- ellipse(1,-1.2,1.7,1.1,ART.paint);
+ ctx.lineJoin='round';
+ const edge=pixel/scale,halo='#fff7e5a8';
+ const feather=gradient(ctx,-19,-8,-6,8,[[0,'#fffdf2'],[.55,ART.paint],[1,'#bfc7bb']]);
+ const cork=gradient(ctx,2,-3,-3,3,[[0,'#f0d6a6'],[.55,'#cfaa76'],[1,'#9f774b']]);
+ path(shuttleSkirt,null,halo,2.35*edge);
+ ellipse(0,0,4.25,4.25,null,halo,2.35*edge);
+ path(shuttleSkirt,feather,ART.roof,1.2*edge);
+ for(let i=-1;i<=1;i++)line({x:-19,y:i*4.8},{x:-2.2,y:i*1.65},tone(ART.muted,-.29),.85);
+ ellipse(0,0,4.25,4.25,cork,ART.roof,1.15*edge);
+ ellipse(1,-1.25,1.5,1,ART.paint);
  ctx.restore();
 }
 function drawLanding(){
