@@ -240,6 +240,11 @@ function drawServiceCourt(){
  path(corners,color+'1c');ctx.save();ctx.setLineDash([7,6]);path(corners,null,color+'a6',1.5);ctx.restore();
  const center=project({x:(court.minX+court.maxX)/2,z:(court.minZ+court.maxZ)/2}),from=project(match.ball);ctx.save();ctx.setLineDash([4,7]);line(from,center,color+'80',1.2);ctx.restore();
 }
+function racketAt(pose,target){
+ const {spot,scale,shoulder,handSign,elbow}=pose,s=scale*.85;
+ const arm=ShuttleFeel.racketArm(shoulder,{x:(target.x-spot.x)/s,y:(target.y-spot.y)/s},handSign,elbow);
+ return {arm,point:{x:spot.x+arm.head.x*s,y:spot.y+arm.head.y*s}};
+}
 function racketPose(p,side,contact=match.contact){
  const impact=p.impact,age=impact?match.time-impact.time:99,impactKind=impact?.variant==='block'?'block':impact?.type,active=impact&&age<ShuttleFeel.SWINGS[impactKind].duration,receiving=(match.state==='rally'||['paused','countdown'].includes(match.state)&&match.previous==='rally')&&match.lastHit===1-side&&contact;
  const type=active?impact.type:side===0?chosen:match.difficulty==='hard'&&contact?.y>=2.65?'smash':'clear',pendingBlock=side===0&&type==='drive'&&match.pending&&(match.pending.block||match.pending.power<=CFG.block.maxPower),kind=active?impactKind:pendingBlock?'block':type,profile=ShuttleFeel.SWINGS[kind];
@@ -249,15 +254,24 @@ function racketPose(p,side,contact=match.contact){
  const dive=ShuttleFeel.divePose(p.dive,match.time,CFG.dive,reduced),spot=project({x:p.x,y:jump,z:p.z}),scale=spot.s/100,s=scale*.85,wind=receiving?Math.sin(Math.PI*clamp((profile.windup-contact.t)/profile.windup,0,1)):0,back=active?clamp((age-profile.duration*.62)/(profile.duration*.38),0,1):0,ease=back*back*(3-2*back),effort=active?(.45+.55*Math.sin(Math.PI*clamp(age/profile.duration,0,1)))*(1-ease):wind,turn=reduced?0:motion.turn*handSign*effort*(1-(dive.weight||0)*.7);
  const shoulder=ShuttleFeel.bodyPoint({x:handSign*21-turn*39,y:-127},dive),ready={x:spot.x+shoulder.x*s+dir*25*scale,y:spot.y+shoulder.y*s-(45-23*(dive.weight||0))*scale};let point={...ready},tilt=0;
  if(receiving&&contact.t<.85){const target=project(contact),t=clamp((.85-contact.t)/.6,0,1);point={x:mix(ready.x,target.x,t)+dir*profile.backX*motion.backX*scale*wind,y:mix(ready.y,target.y,t)+profile.backY*motion.backY*scale*wind};tilt=-profile.tilt*motion.tilt*wind;}
- if(!active){const origin={x:spot.x+shoulder.x*s,y:spot.y+shoulder.y*s},dx=point.x-origin.x,dy=point.y-origin.y,length=Math.hypot(dx,dy),reach=110*scale;if(length>reach)point={x:origin.x+dx/length*reach,y:origin.y+dy/length*reach};}
  if(active){const hit=project(impact.point),end=ShuttleFeel.follow(kind,age,stroke);point={x:mix(hit.x+dir*end.x*scale,ready.x,ease),y:mix(hit.y+end.y*scale,ready.y,ease)};tilt=end.tilt*(1-ease);}
- if(p.dive&&active&&age>.055){const origin={x:spot.x+shoulder.x*s,y:spot.y+shoulder.y*s},dx=point.x-origin.x,dy=point.y-origin.y,len=Math.hypot(dx,dy),reach=121*s,t=clamp((age-.055)/.06,0,1),ease=t*t*(3-2*t);if(len>reach){point.x-=dx/len*(len-reach)*ease;point.y-=dy/len*(len-reach)*ease;}}
- return {spot,scale,dir,point,age,impact,jump,type,kind,profile,tilt,stroke,handSign,dive,shoulder,elbow:motion.elbow,turn};
+ const pose={spot,scale,dir,age,impact,jump,type,kind,profile,tilt,stroke,handSign,dive,shoulder,elbow:motion.elbow,turn};
+ return Object.assign(pose,racketAt(pose,point));
 }
 function athlete(p,side,preview=null){
  const identity=preview?.identity||(online?.active?online.identity(side):match.athlete),pose=preview?.pose||poses[side],{spot,scale}=pose,isBack=side===0,s=scale*.85,shirt=online?.active?ART.kits[identity.id]:isBack?ART.kits[identity.id]:ART.opponent,skin=isBack?'#b68b6d':'#c6a18a',hair='#263134',racketSide=pose.handSign;
  const speed=Math.hypot(p.vx,p.vz),step=reduced||p.dive?0:Math.sin(p.steps)*Math.min(9,speed*1.35),ready=reduced?0:Math.sin(Math.PI*clamp(1-p.split/CFG.splitDuration,0,1))*4;
- if(!reduced&&pose.impact&&pose.age>.055&&pose.age<pose.profile.duration*.62){const hit=project(pose.impact.point);let prev=hit;for(let i=1;i<=5;i++){const f=ShuttleFeel.follow(pose.kind,pose.age*i/5,pose.stroke),q={x:hit.x+pose.dir*f.x*scale,y:hit.y+f.y*scale};line(prev,q,SHOTS[pose.type].color+'35',1.6*scale);prev=q;}}
+ if(!reduced&&pose.impact&&pose.age>.055&&pose.age<pose.profile.duration*.62){
+  const hit=project(pose.impact.point);
+  let previous=racketAt(pose,hit).point;
+  for(let i=1;i<=5;i++){
+   const follow=ShuttleFeel.follow(pose.kind,pose.age*i/5,pose.stroke);
+   const target={x:hit.x+pose.dir*follow.x*scale,y:hit.y+follow.y*scale};
+   const next=racketAt(pose,target).point;
+   line(previous,next,SHOTS[pose.type].color+'35',1.6*scale);
+   previous=next;
+  }
+ }
  const ground=preview?.ground||project({x:p.x,z:p.z});
  const shadow=ctx.createRadialGradient(ground.x+4*s,ground.y+2*s,2*s,ground.x+4*s,ground.y+2*s,25*s);
  shadow.addColorStop(0,ART.roof+'86');shadow.addColorStop(1,ART.roof+'00');
@@ -300,9 +314,14 @@ function athlete(p,side,preview=null){
  if(isBack){if(identity.hair==='tied'){ellipse(-14,-151,5,12,hair);line({x:-11,y:-159},{x:-18,y:-143},hair,6);}path([{x:-14,y:-156},{x:-14,y:-166},{x:-8,y:-175},{x:7,y:-176},{x:14,y:-168},{x:14,y:-155},{x:8,y:-148},{x:-8,y:-149}],hair);line({x:-9,y:-166},{x:7,y:-169},tone(hair,.13),1);if(identity.hair==='sweep'){path([{x:-13,y:-165},{x:-4,y:-178},{x:12,y:-171},{x:13,y:-161},{x:2,y:-169}],tone(hair,.2));line({x:-13,y:-159},{x:12,y:-159},ART.paint,2.5);}}
  else{path([{x:-14,y:-159},{x:-13,y:-169},{x:-6,y:-176},{x:7,y:-174},{x:14,y:-166},{x:12,y:-156},{x:7,y:-164},{x:-6,y:-164}],hair);line({x:-7,y:-158},{x:-4,y:-158},hair,1.2);line({x:4,y:-158},{x:7,y:-158},hair,1.2);line({x:0,y:-156},{x:-1,y:-150},tone(skin,-.2),.8);line({x:-3,y:-147},{x:3,y:-147},tone(skin,-.22),.8);}
  ctx.restore();ctx.restore();
- if(pose.dive.hip){const sh=ShuttleFeel.bodyPoint(freeShoulder,pose.dive),rest=ShuttleFeel.bodyPoint(freeHand,pose.dive),hand={x:mix(rest.x,pose.dive.palm.x,pose.dive.palmWeight),y:mix(rest.y,pose.dive.palm.y,pose.dive.palmWeight)},dx=hand.x-sh.x,dy=hand.y-sh.y,length=Math.hypot(dx,dy)||1,bend=Math.sqrt(Math.max(0,36*36-length*length/4)),elbow={x:(sh.x+hand.x)/2-dy/length*bend*racketSide,y:(sh.y+hand.y)/2+dx/length*bend*racketSide};line(sh,elbow,tone(skin,-.09),8);line(elbow,hand,skin,6.5);ellipse(hand.x,hand.y,4.4,2.7,skin);}
- // Racket geometry remains anchored to the original physical impact point.
- const head={x:(pose.point.x-spot.x)/s,y:(pose.point.y-spot.y)/s},shoulder=pose.shoulder,dx=head.x-shoulder.x,dy=head.y-shoulder.y,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len,hand={x:head.x-ux*49,y:head.y-uy*49},hx=hand.x-shoulder.x,hy=hand.y-shoulder.y,hd=Math.hypot(hx,hy)||1,bend=Math.sqrt(Math.max(0,36*36-hd*hd/4)),elbow={x:(shoulder.x+hand.x)/2-hy/hd*bend*racketSide*pose.elbow,y:(shoulder.y+hand.y)/2+hx/hd*bend*racketSide*pose.elbow};
+ if(pose.dive.hip){
+  const dive=pose.dive,sh=ShuttleFeel.bodyPoint(freeShoulder,dive),rest=ShuttleFeel.bodyPoint(freeHand,dive);
+  const target={x:mix(rest.x,dive.palm.x,dive.palmWeight),y:mix(rest.y,dive.palm.y,dive.palmWeight)};
+  const {hand,elbow}=ShuttleFeel.supportArm(sh,target,racketSide);
+  line(sh,elbow,tone(skin,-.09),8);line(elbow,hand,skin,6.5);ellipse(hand.x,hand.y,4.4,2.7,skin);
+ }
+ const {head,hand,elbow,axis}=pose.arm||racketAt(pose,pose.point).arm;
+ const shoulder=pose.shoulder,ux=axis.x,uy=axis.y;
  line(shoulder,elbow,tone(skin,-.06),8);line(elbow,hand,skin,6.5);ellipse(hand.x,hand.y,3.7,4.2,skin);line(hand,{x:head.x-ux*21,y:head.y-uy*21},tone(ART.roof,.15),2);line(hand,{x:hand.x+ux*12,y:hand.y+uy*12},ART.roof,4);
  ctx.save();ctx.translate(head.x,head.y);ctx.rotate(Math.atan2(uy,ux)+Math.PI/2+pose.tilt);ellipse(0,0,14,22,ART.paint+'06',ART.roof,3);ellipse(0,0,14,22,null,tone(shirt,.28),1.4);
  for(let x=-10;x<=10;x+=4)line({x,y:-17},{x,y:17},ART.paint+'7a',.55);for(let y=-16;y<=16;y+=4)line({x:-11,y},{x:11,y},ART.paint+'7a',.55);ctx.restore();ctx.restore();

@@ -21,6 +21,29 @@ const SOUNDS={
 function jumpHeight(type,height){const p=SWINGS[type]||SWINGS.drive;return Math.min(p.maxJump??Infinity,Math.max(0,height-2.15)*p.lift);}
 function follow(type,age,stroke='forehand'){const p=SWINGS[type]||SWINGS.drive,s=STROKES[stroke]||STROKES.forehand,t=Math.max(0,Math.min(1,(age-.055)/(p.duration-.055))),ease=1-(1-t)*(1-t);return {x:p.followX*ease*s.followX,y:p.followY*ease*s.followY,tilt:p.tilt*ease*s.tilt};}
 const smooth=n=>{const t=Math.max(0,Math.min(1,n));return t*t*(3-2*t);};
+// Dimensions in the athlete drawing's local coordinates.
+const ARM_SEGMENT=36, ARM_REACH=70, RACKET_LENGTH=49;
+function reachAxis(shoulder,target,facing){
+ const x=target.x-shoulder.x,y=target.y-shoulder.y,distance=Math.hypot(x,y);
+ return distance>1e-8?{x:x/distance,y:y/distance,distance}:{x:facing,y:0,distance:0};
+}
+function bendArm(shoulder,axis,extension,side){
+ const hand={x:shoulder.x+axis.x*extension,y:shoulder.y+axis.y*extension};
+ const bend=Math.sqrt(ARM_SEGMENT**2-extension**2/4)*side;
+ const elbow={x:(shoulder.x+hand.x)/2-axis.y*bend,y:(shoulder.y+hand.y)/2+axis.x*bend};
+ return {hand,elbow};
+}
+function supportArm(shoulder,target,facing){
+ const axis=reachAxis(shoulder,target,facing);
+ return bendArm(shoulder,axis,Math.min(axis.distance,ARM_REACH),facing);
+}
+function racketArm(shoulder,target,facing,bendSide){
+ const axis=reachAxis(shoulder,target,facing);
+ const length=Math.min(axis.distance,ARM_REACH+RACKET_LENGTH);
+ const head={x:shoulder.x+axis.x*length,y:shoulder.y+axis.y*length};
+ // Keep the elbow on the same side of the shaft as the grip passes the shoulder.
+ return {...bendArm(shoulder,axis,length-RACKET_LENGTH,facing*bendSide),head,axis};
+}
 function kneeBetween(hip,foot,bend,guide,weight){
  const dx=foot.x-hip.x,dy=foot.y-hip.y,length=Math.max(.001,Math.hypot(dx,dy)),arc=Math.sqrt(Math.max(0,36*36-length*length/4)),mid={x:(hip.x+foot.x)/2,y:(hip.y+foot.y)/2},sign=dy*bend>=0?-1:1,mix=smooth(weight/.1);
  return {x:guide.x+(mid.x-dy/length*arc*sign-guide.x)*mix,y:guide.y+(mid.y+dx/length*arc*sign-guide.y)*mix};
@@ -53,5 +76,5 @@ function cheer(ctx,level,output=ctx.destination,time=ctx.currentTime){
  const source=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();source.buffer=buffer;filter.type='bandpass';filter.frequency.value=900+amount*100;filter.Q.value=.45;gain.gain.value=.025+amount*.012;source.connect(filter);filter.connect(gain);gain.connect(output);source.start(time);source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();};
  return duration;
 }
-const API={SWINGS,STROKES,SOUNDS,jumpHeight,follow,divePose,bodyPoint,sound,cheer};root.ShuttleFeel=API;if(typeof module!=='undefined')module.exports=API;
+const API={SWINGS,STROKES,SOUNDS,jumpHeight,follow,divePose,bodyPoint,racketArm,supportArm,sound,cheer};root.ShuttleFeel=API;if(typeof module!=='undefined')module.exports=API;
 })(typeof globalThis!=='undefined'?globalThis:this);

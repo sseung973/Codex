@@ -9,3 +9,21 @@ test('recovery positions are independent of render frame rate',()=>{const result
 test('higher sensitivity commits a shorter swipe without reversing its course',()=>{const high=new Swipe({x:100,y:200},0,{sensitivity:1.5}),low=new Swipe({x:100,y:200},0,{sensitivity:.7});const h=high.move({x:105,y:185},80),l=low.move({x:105,y:185},80);assert.equal(h.commit,true);assert.equal(l.commit,false);assert.equal(h.aim,l.aim);assert.ok(h.power>l.power);assert.equal(high.end({x:105,y:185},100),null);assert.equal(low.move({x:105,y:170},120).commit,true);});
 test('preference normalization bounds corrupt or missing stored values',()=>{assert.deepEqual(preferences(null),{sensitivity:1,hand:'right',buttonSize:'normal',camera:'normal',keys:{clear:'KeyQ',drop:'KeyW',drive:'KeyE',smash:'KeyR'}});assert.deepEqual(preferences({sensitivity:Infinity,hand:'bad',buttonSize:88}),preferences());assert.equal(preferences({sensitivity:99}).sensitivity,1.5);assert.equal(preferences({sensitivity:-9}).sensitivity,.7);assert.deepEqual(preferences({sensitivity:1.2,hand:'left',buttonSize:'large',camera:'normal',keys:{clear:'KeyQ',drop:'KeyW',drive:'KeyE',smash:'KeyR'}}),{sensitivity:1.2,hand:'left',buttonSize:'large',camera:'normal',keys:{clear:'KeyQ',drop:'KeyW',drive:'KeyE',smash:'KeyR'}});});
 test('each swing preserves exact impact anchor before a distinct follow-through',()=>{for(const type of Object.keys(SWINGS)){assert.ok(Object.values(follow(type,0)).every(n=>n===0));assert.ok(Object.values(follow(type,.05)).every(n=>n===0));assert.ok(Number.isFinite(follow(type,.2).x));}assert.ok(follow('drive',.2).x>follow('drop',.2).x*3);assert.ok(follow('smash',.2).y>follow('drop',.2).y*3);assert.ok(SWINGS.smash.lift>SWINGS.clear.lift);assert.equal(SWINGS.drop.lift,0);});
+
+test('the racket and diving support arm keep fixed-length joints as the targets move',()=>{
+ const {racketArm,supportArm}=require('../dist/feel.js'),shoulder={x:0,y:0};
+ const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+ for(const facing of [-1,1])for(const bendSide of [-1,1]){
+  for(const target of [{x:49,y:0},{x:0,y:0},{x:66,y:-20},{x:210*facing,y:-180}]){
+   const arm=racketArm(shoulder,target,facing,bendSide),support=supportArm(shoulder,target,facing);
+   for(const {hand,elbow} of [arm,support]){
+    assert.ok(Math.abs(distance(shoulder,elbow)-36)<1e-8);
+    assert.ok(Math.abs(distance(elbow,hand)-36)<1e-8);
+    assert.ok(distance(shoulder,hand)<=70.000001);
+   }
+   assert.ok(Math.abs(distance(arm.hand,arm.head)-49)<1e-8);
+   assert.ok(Math.abs(distance(shoulder,arm.head)-Math.min(distance(shoulder,target),119))<1e-8);
+   if(distance(shoulder,target)<119)assert.ok(distance(arm.head,target)<1e-8);
+  }
+ }
+});
