@@ -144,7 +144,24 @@ const match=new Rally((event,data)=>{
  if(event==='netcord'){beep('net');burst(data.point,ART.player);flash('NET CORD','네트를 스치며 짧게 넘어갔어요',ART.player);say('네트를 스치고 넘어갔어요 · 짧은 공을 준비하세요');trail=[];}
  if(event==='miss'){flash('TOO EARLY','셔틀콕이 조금 더 가까이 왔을 때',ART.player);say('너무 일렀어요 · 셔틀콕이 가까워지면 다시 스윙하세요');}
  if(event==='unavailable'){const shot=typeof data==='string'?data:data?.shot||chosen;flash(shotNames[shot]+' 높이가 아니에요','낮은 공은 드라이브 / 클리어로 받아주세요',ART.out);say(shotNames[shot]+'를 칠 높이가 아니에요 · 드라이브나 클리어를 골라주세요');}
- if(event==='inputRejected'){if(gesture){gesture.reset(gesture.last,performance.now());gesture.accepted=false;}if(data.reason==='height'){flash(shotNames[data.shot]+' 높이가 아니에요','드라이브 / 클리어를 골라 다시 스윙하세요',ART.out);say('낮은 공이에요 · 드라이브나 클리어로 바꿔 다시 스윙하세요');}else if(data.reason==='recovering'){say('다이빙에서 일어나는 중이에요 · 다음 공을 준비하세요');}else if(data.reason==='not-turn'||data.reason==='not-server'){say(data.reason==='not-server'?'다른 선수의 서브 차례예요':'상대 타격 후 다시 스윙하세요');}else if(data.reason==='connection'){say('연결 중이에요 · 연결이 돌아오면 다시 스윙하세요');}else say('랠리가 멈췄어요 · 다음 서브를 준비하세요');}
+ if(event==='inputRejected'){
+  if(gesture){gesture.reset(gesture.last,performance.now());gesture.accepted=false;}
+  if(data.reason==='late'){
+   const tip='다음 공은 조금 더 일찍 스윙하세요';
+   flash('스윙이 늦었어요',tip,ART.out);
+   say('스윙이 늦었어요 · '+tip);
+  }else if(data.reason==='height'){
+   const tip=data.shot==='smash'?'낮은 공은 드라이브나 클리어로 받아주세요':'셔틀콕이 더 높을 때 스윙하세요';
+   flash(shotNames[data.shot]+' 높이가 아니에요',tip,ART.out);
+   say('낮은 공이에요 · '+tip);
+  }else if(data.reason==='recovering'){
+   say('다이빙에서 일어나는 중이에요 · 다음 공을 준비하세요');
+  }else if(data.reason==='not-turn'||data.reason==='not-server'){
+   say(data.reason==='not-server'?'다른 선수의 서브 차례예요':'상대 타격 후 다시 스윙하세요');
+  }else if(data.reason==='connection'){
+   say('연결 중이에요 · 연결이 돌아오면 다시 스윙하세요');
+  }else say('랠리가 멈췄어요 · 다음 서브를 준비하세요');
+ }
  if(event==='swing')say('스와이프 인식 · 타격 범위에 오면 스윙합니다');
  if(event==='point'){clearGesture();const reasons={forfeit:'선수가 나가 기권으로 끝났어요',service:'대각선 서비스 구역 밖에 떨어졌어요',net:'네트에 걸렸어요',out:'코트 밖에 떨어졌어요',ground:'셔틀콕이 코트에 닿았어요'};$('score-you').textContent=match.score[0];$('score-ai').textContent=match.score[1];$('point-banner').hidden=false;$('point-banner').style.color=data.winner===0?ART.player:ART.opponent;$('point-banner').innerHTML=(!match.scored?'다음 랠리 준비':data.winner===0?(online?.active?'우리 팀 포인트!':'나의 포인트!'):(online?.active?'상대 팀 포인트':'AI의 포인트'))+'<small>'+reasons[data.reason]+' · '+data.rally+'회 랠리</small>';say((data.winner===0?(online?.active?'우리 팀 득점. ':'나의 득점. '):(online?.active?'상대 팀 득점. ':'AI 득점. '))+reasons[data.reason]);beep('point');const halfWidth=online?.active&&online.room.doubles?ShuttleCompetition.RULES.doublesHalfWidth:CFG.halfWidth;const call=director.point({reason:data.reason,lastHit:match.lastHit,landing:{...match.ball}},halfWidth);if(call){$('point-banner').hidden=true;hideFeedback();showLineCall(call);}if(data.over){if(match.mode==='tournament')tournament.finish({winner:data.winner,score:match.score,stats:match.summary,condition:match.condition});$('pause').disabled=true;if(call)pendingFinish=data;else showMatchEnd(data);}}
  if(event==='setstart'){clearGesture();director.reset();pendingFinish=null;$('line-call').hidden=true;$('point-banner').hidden=true;$('pause').disabled=false;trail=[];particles=[];hideFeedback();say(data.number+'세트 시작 · 서브를 준비하세요');}

@@ -35,3 +35,27 @@ test('a reachable flat return does not trigger a premature dive that rejects del
  // Canonical near side is the receiver; replay the measured Render return.
  Object.assign(p,{x:.0789357907419293*dir,z:-3.4847999617859418*dir});m.retarget();let queued=false,dives=0;for(let i=0;i<120&&m.state==='rally'&&m.rally===3;i++){if(i===48){queued=m.strike(receiver,{shot:'clear',power:.51,aim:0,kind:'swipe'});assert.ok(queued,'late-but-physically-reachable command must be accepted');}m.step();if(p.dive)dives++;}assert.ok(queued);assert.equal(m.rally,4);assert.equal(dives,0,'run into contact instead of diving while the ball is still across the net');assert.deepEqual(m.score,[0,0]);}
 });
+
+test('a delayed first drive is rejected as late once the shuttle falls below its contact window',()=>{
+ for(const receiver of [0,1]){
+  const m=make(false),dir=m.dir(receiver);
+  m.state='rally';
+  m.rally=2;
+  m.lastHit=1-receiver;
+  // Replay the fast first return from the production match.
+  m.ball={x:-1.08*dir,y:2.33,z:4.77*dir,vx:1.84*dir,vy:.95,vz:-15.79*dir};
+  m.retarget();
+  const input={shot:'drive',power:.51,aim:0,kind:'swipe'};
+  assert.ok(m.contacts[receiver].y>=SHOTS.drive.min);
+  assert.equal(m.strike(receiver,input),true);
+  m.cancel(receiver);
+  for(let i=0;i<120&&m.state==='rally'&&m.ball.y>=SHOTS.drive.min;i++)m.step();
+  assert.equal(m.state,'rally');
+  assert.ok(m.ball.y>0&&m.ball.y<SHOTS.drive.min);
+  assert.equal(m.strike(receiver,input),false);
+  assert.deepEqual(m.inputFeedback,{reason:'late',shot:'drive'});
+  assert.equal(m.pending[receiver],null);
+  assert.equal(m.rally,2);
+  assert.deepEqual(m.score,[0,0]);
+ }
+});

@@ -14,7 +14,35 @@ class OnlineMatch{
  prepare(){this.wind=windForRally(this.venue,this.pointCount);this.state='serve';this.botServeDelay=BOT.serveDelay;this.lastHit=-1;this.rally=0;this.pending.fill(null);this.contacts.fill(null);this.landing=null;this.activeServe=null;this.service=this.court();const serverTeam=this.team(this.server);for(const p of this.players){const dir=this.dir(p.id);p.x=dir*(this.doubles?p.serviceSide*1.25:(p.team===serverTeam?this.service.serverX/dir:this.service.receiverX/dir));p.z=-dir*(p.id===this.server?4.2:4.7);p.vx=p.vz=p.swing=p.split=p.recovery=0;p.impact=null;p.dive=null;p.diveCooldown=0;}const p=this.players[this.server];p.x=this.service.serverX;this.ball={x:p.x,y:1.55,z:p.z,vx:0,vy:0,vz:0};this.event('serve',{server:this.server});}
  select(id,type){if(!Object.hasOwn(SHOTS,type))return false;this.players[id].shot=type;if(this.pending[id])this.pending[id].shot=type;if(this.state==='rally'&&this.team(id)!==this.team(this.lastHit))this.retarget();return true;}
  selectServe(id,type){if(id!==this.server||this.state!=='serve'||!['short','long'].includes(type))return false;this.players[id].serve=type;return true;}
- strike(id,input){const q=cleanInput(input),p=this.players[id];this.inputFeedback=null;const reject=reason=>{if(reason==='height'||reason==='recovering')this.pending[id]=null;this.inputFeedback={reason,shot:q?.shot};return false;};if(!q||!p)return reject('invalid');this.select(id,q.shot);if(this.state==='serve'){if(id!==this.server)return reject('not-server');return this.hit(id,{...q,shot:'clear'},'serve');}if(this.state!=='rally')return reject('inactive');if(p.team===this.team(this.lastHit))return reject('not-turn');const c=this.contacts[id],profile=SHOTS[q.shot];if(c&&c.y<profile.min)return reject('height');if(p.dive&&this.time-p.dive.time>=CFG.dive.duration)return reject('recovering');const t=c?.t??0;this.pending[id]={...q,ttl:Math.max(CFG.buffer,Math.min(CFG.bufferMax,t+CFG.bufferGrace)),inputLead:t};return true;}
+ strike(id,input){
+  const q=cleanInput(input),p=this.players[id];
+  this.inputFeedback=null;
+  const reject=reason=>{
+   if(reason==='height'||reason==='late'||reason==='recovering')this.pending[id]=null;
+   this.inputFeedback={reason,shot:q?.shot};
+   return false;
+  };
+  if(!q||!p)return reject('invalid');
+  this.select(id,q.shot);
+  if(this.state==='serve'){
+   if(id!==this.server)return reject('not-server');
+   return this.hit(id,{...q,shot:'clear'},'serve');
+  }
+  if(this.state!=='rally')return reject('inactive');
+  if(p.team===this.team(this.lastHit))return reject('not-turn');
+
+  const contact=this.contacts[id],profile=SHOTS[q.shot],ball=this.ball;
+  const minHeight=p.dive?CFG.dive.minHeight:profile.min;
+  // A shot playable below the tape has already passed its height window
+  // when the shuttle is falling below that height on the receiver's side.
+  if(profile.min<CFG.netHeight&&ball.z*this.dir(id)<0&&ball.vy<0&&ball.y<minHeight)return reject('late');
+  if(contact&&contact.y<profile.min)return reject('height');
+  if(p.dive&&this.time-p.dive.time>=CFG.dive.duration)return reject('recovering');
+
+  const t=contact?.t??0;
+  this.pending[id]={...q,ttl:Math.max(CFG.buffer,Math.min(CFG.bufferMax,t+CFG.bufferGrace)),inputLead:t};
+  return true;
+ }
  adjust(id,input){const q=cleanInput(input),pending=this.pending[id];if(q&&pending&&pending.kind==='swipe'){pending.aim=q.aim;pending.power=q.power;pending.block=q.block;} }
  cancel(id){this.pending[id]=null;}
  retarget(){if(this.lastHit<0)return;const receiving=1-this.team(this.lastHit);this.contacts=this.players.map(p=>{if(p.team!==receiving)return null;const dir=this.dir(p.id),profile=SHOTS[this.pending[p.id]?.shot||p.shot],prediction=predict(point(this.ball,dir),0,profile.contact,{player:point(p,dir),speed:this.speed(p),minHeight:profile.min,preferredMinHeight:p.shot==='drive'?CFG.netHeight:profile.min},this.wind*dir);return point(prediction.contact,dir);});const prediction=predict(this.ball,receiving,CFG.contactHeight,null,this.wind);this.landing=prediction.landing;}
